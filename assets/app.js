@@ -13,6 +13,10 @@ function byId(id) {
   return document.getElementById(id);
 }
 
+function hasNumericValue(v) {
+  return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
+}
+
 function setText(id, value) {
   const el = byId(id);
   if (el) el.textContent = value ?? '';
@@ -34,16 +38,16 @@ function uniqueLeagues(games) {
 }
 
 function marketSpreadText(game) {
-  return Number.isFinite(Number(game.marketSpread)) ? fmtSigned(game.marketSpread) : 'N/A';
+  return hasNumericValue(game.marketSpread) ? fmtSigned(game.marketSpread) : 'N/A';
 }
 
 function marketTotalText(game) {
-  return Number.isFinite(Number(game.marketTotal)) ? fmt(game.marketTotal) : 'N/A';
+  return hasNumericValue(game.marketTotal) ? fmt(game.marketTotal) : 'N/A';
 }
 
 function gameCard(game) {
-  const edgeSpread = Number.isFinite(Number(game.marketSpread)) ? Number(game.modelHomeSpread) - Number(game.marketSpread) : NaN;
-  const edgeTotal = Number.isFinite(Number(game.marketTotal)) ? Number(game.modelTotal) - Number(game.marketTotal) : NaN;
+  const edgeSpread = hasNumericValue(game.marketSpread) ? Number(game.modelHomeSpread) - Number(game.marketSpread) : NaN;
+  const edgeTotal = hasNumericValue(game.marketTotal) ? Number(game.modelTotal) - Number(game.marketTotal) : NaN;
   return `
       <article class="game-card">
         <div class="meta-row">
