@@ -20,12 +20,12 @@ function setText(id, value) {
 
 function fmt(num, digits = 1) {
   const n = Number(num);
-  return Number.isFinite(n) ? n.toFixed(digits) : '—';
+  return Number.isFinite(n) ? n.toFixed(digits) : 'N/A';
 }
 
 function fmtSigned(num, digits = 1) {
   const n = Number(num);
-  if (!Number.isFinite(n)) return '—';
+  if (!Number.isFinite(n)) return 'N/A';
   return `${n >= 0 ? '+' : ''}${n.toFixed(digits)}`;
 }
 
@@ -33,34 +33,21 @@ function uniqueLeagues(games) {
   return [...new Set((games || []).map(g => g.league).filter(Boolean))].sort();
 }
 
-function leagueName(g) {
-  return g.league || '';
-}
-
 function marketSpreadText(game) {
-  return Number.isFinite(Number(game.marketSpread)) ? fmtSigned(game.marketSpread) : '—';
+  return Number.isFinite(Number(game.marketSpread)) ? fmtSigned(game.marketSpread) : 'N/A';
 }
 
 function marketTotalText(game) {
-  return Number.isFinite(Number(game.marketTotal)) ? fmt(game.marketTotal) : '—';
+  return Number.isFinite(Number(game.marketTotal)) ? fmt(game.marketTotal) : 'N/A';
 }
 
-function renderGames(games, league = 'ALL') {
-  const root = byId('games-grid');
-  if (!root) return;
-  const filtered = league === 'ALL' ? games : games.filter(g => g.league === league);
-  if (!filtered.length) {
-    root.innerHTML = '<div class="empty-state">No games found for this league.</div>';
-    return;
-  }
-
-  root.innerHTML = filtered.map(game => {
-    const edgeSpread = Number.isFinite(Number(game.marketSpread)) ? Number(game.modelHomeSpread) - Number(game.marketSpread) : NaN;
-    const edgeTotal = Number.isFinite(Number(game.marketTotal)) ? Number(game.modelTotal) - Number(game.marketTotal) : NaN;
-    return `
+function gameCard(game) {
+  const edgeSpread = Number.isFinite(Number(game.marketSpread)) ? Number(game.modelHomeSpread) - Number(game.marketSpread) : NaN;
+  const edgeTotal = Number.isFinite(Number(game.marketTotal)) ? Number(game.modelTotal) - Number(game.marketTotal) : NaN;
+  return `
       <article class="game-card">
         <div class="meta-row">
-          <span class="tag">${leagueName(game)}</span>
+          <span class="tag">${game.league || ''}</span>
           <span>${game.gameDate || ''}</span>
         </div>
         <div>
@@ -78,16 +65,26 @@ function renderGames(games, league = 'ALL') {
         </div>
         <div class="kpi-row">
           <div class="kpi"><span>Model total</span><strong>${fmt(game.modelTotal)}</strong></div>
-          <div class="kpi"><span>Spread edge</span><strong>${fmtSigned(edgeSpread)}</strong></div>
-          <div class="kpi"><span>Total edge</span><strong>${fmtSigned(edgeTotal)}</strong></div>
+          <div class="kpi"><span>Spread edge</span><strong>${Number.isFinite(edgeSpread) ? fmtSigned(edgeSpread) : 'N/A'}</strong></div>
+          <div class="kpi"><span>Total edge</span><strong>${Number.isFinite(edgeTotal) ? fmtSigned(edgeTotal) : 'N/A'}</strong></div>
         </div>
         <div class="meta-row">
-          <span>Confidence: ${game.confidence || '—'}</span>
+          <span>Confidence: ${game.confidence || 'N/A'}</span>
           <a href="game.html?id=${encodeURIComponent(game.id)}">Open detail</a>
         </div>
       </article>
     `;
-  }).join('');
+}
+
+function renderGameSection(games, rootId, league = 'ALL') {
+  const root = byId(rootId);
+  if (!root) return;
+  const filtered = league === 'ALL' ? games : games.filter(g => g.league === league);
+  if (!filtered.length) {
+    root.innerHTML = '<div class="empty-state">No games found for this league.</div>';
+    return;
+  }
+  root.innerHTML = filtered.map(gameCard).join('');
 }
 
 function renderProps(props) {
@@ -115,35 +112,51 @@ function renderResults(results) {
       <td>${r.date || ''}</td>
       <td>${r.league || ''}</td>
       <td>${r.matchup || ''}</td>
-      <td>${r.predicted || r.pick || ''}</td>
+      <td>${r.predicted || ''}</td>
       <td>${r.actual || ''}</td>
-      <td>${r.status || ''}</td>
+      <td>${r.mlResult || 'N/A'}</td>
+      <td>${r.spreadResult || 'N/A'}</td>
+      <td>${r.totalResult || 'N/A'}</td>
     </tr>
   `).join('');
 }
 
-function fillHeader(meta, games, props) {
-  setText('site-title', meta?.siteTitle || 'Sports Predictions Showcase');
+function fillHeader(meta, todayGames, tomorrowGames, props) {
+  setText('site-title', meta?.siteTitle || 'Lets Parlay ML');
   setText('hero-leagues', Array.isArray(meta?.leagues) ? meta.leagues.join(' • ') : 'NBA • NHL • CBB');
-  setText('hero-game-count', String((games || []).length));
+  setText('hero-game-count', String((todayGames || []).length));
+  setText('hero-next-game-count', String((tomorrowGames || []).length));
   setText('hero-prop-count', String((props || []).length));
   setText('hero-updated', meta?.lastUpdated || '—');
+  setText('today-date-label', meta?.targetDate || '');
+  setText('tomorrow-date-label', meta?.nextDate || '');
+  setText('results-date-label', meta?.resultsDate || '');
 }
 
-function setupLeagueFilter(games) {
+function setupLeagueFilter(allGames, meta) {
   const select = byId('league-filter');
   if (!select) return;
-  uniqueLeagues(games).forEach(league => {
+  uniqueLeagues(allGames).forEach(league => {
     const option = document.createElement('option');
     option.value = league;
     option.textContent = league;
     select.appendChild(option);
   });
-  select.addEventListener('change', () => renderGames(games, select.value));
+
+  const rerender = () => {
+    const league = select.value;
+    const today = (allGames || []).filter(g => g.gameDate === meta.targetDate);
+    const tomorrow = (allGames || []).filter(g => g.gameDate === meta.nextDate);
+    renderGameSection(today, 'today-games-grid', league);
+    renderGameSection(tomorrow, 'tomorrow-games-grid', league);
+  };
+
+  select.addEventListener('change', rerender);
+  rerender();
 }
 
 (async function init() {
-  const root = byId('games-grid');
+  const root = byId('today-games-grid') || byId('games-grid');
   try {
     const [meta, games, props, results] = await Promise.all([
       loadJson('data/site.json'),
@@ -152,9 +165,11 @@ function setupLeagueFilter(games) {
       loadJson('data/results.json', [])
     ]);
 
-    fillHeader(meta, games, props);
-    setupLeagueFilter(games);
-    renderGames(games);
+    const todayGames = (games || []).filter(g => g.gameDate === meta.targetDate);
+    const tomorrowGames = (games || []).filter(g => g.gameDate === meta.nextDate);
+
+    fillHeader(meta, todayGames, tomorrowGames, props);
+    setupLeagueFilter(games, meta);
     renderProps(props);
     renderResults(results);
   } catch (err) {
