@@ -108,14 +108,15 @@ function renderProps(props) {
 function renderResults(results) {
   const body = byId('results-body');
   if (!body) return;
+
   body.innerHTML = (results || []).map(r => `
     <tr>
       <td>${r.date || ''}</td>
       <td>${r.league || ''}</td>
       <td>${r.matchup || ''}</td>
-      <td>${r.predicted || ''}</td>
+      <td>${r.predicted || r.pick || ''}</td>
       <td>${r.actual || ''}</td>
-      <td>${r.mlResult || 'N/A'}</td>
+      <td>${r.mlResult || r.status || 'N/A'}</td>
       <td>${r.spreadResult || 'N/A'}</td>
       <td>${r.totalResult || 'N/A'}</td>
     </tr>
