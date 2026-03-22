@@ -1,120 +1,77 @@
-async function loadJson(path) {
+async function fetchJson(path) {
   const res = await fetch(path);
   if (!res.ok) throw new Error(`Failed to load ${path}`);
   return res.json();
 }
 
-function fmt(num) {
-  return Number(num).toFixed(1);
-}
-
-function uniqueLeagues(games) {
-  return [...new Set(games.map(g => g.league))].sort();
-}
-
-function renderGames(games, league = 'ALL') {
-  const root = document.getElementById('games-grid');
-  const filtered = league === 'ALL' ? games : games.filter(g => g.league === league);
-  if (!filtered.length) {
-    root.innerHTML = '<div class="empty-state">No games found for this league.</div>';
-    return;
-  }
-
-  root.innerHTML = filtered.map(game => {
-    const edgeSpread = game.modelHomeSpread - game.marketSpread;
-    const edgeTotal = game.modelTotal - game.marketTotal;
-    return `
-      <article class="game-card">
-        <div class="meta-row">
-          <span class="tag">${game.league}</span>
-          <span>${game.gameDate}</span>
+function gameCard(game) {
+  const href = `game.html?id=${encodeURIComponent(game.id)}`;
+  return `
+    <a class="card-link" href="${href}">
+      <article class="card">
+        <div class="card-head">
+          <span class="league-pill">${game.league}</span>
+          <span class="game-date">${game.date}</span>
         </div>
-        <div>
-          <h3>${game.awayTeam} @ ${game.homeTeam}</h3>
-          <p class="muted">${game.summary}</p>
-        </div>
-        <div class="score-box">
-          <div class="score-row"><span>${game.awayTeam}</span><strong>${fmt(game.modelAwayScore)}</strong></div>
-          <div class="score-row"><span>${game.homeTeam}</span><strong>${fmt(game.modelHomeScore)}</strong></div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi"><span>Model spread</span><strong>${fmt(game.modelHomeSpread)}</strong></div>
-          <div class="kpi"><span>Spread edge</span><strong>${edgeSpread >= 0 ? '+' : ''}${fmt(edgeSpread)}</strong></div>
-          <div class="kpi"><span>Total edge</span><strong>${edgeTotal >= 0 ? '+' : ''}${fmt(edgeTotal)}</strong></div>
-        </div>
-        <div class="meta-row">
-          <span>Confidence: ${game.confidence}</span>
-          <a href="game.html?id=${encodeURIComponent(game.id)}">Open detail</a>
-        </div>
+        <h3>${game.awayTeam} @ ${game.homeTeam}</h3>
+        <p class="pred-line">Model: ${game.modelAwayScore} - ${game.modelHomeScore}</p>
+        <p class="market-line">Market: ${game.marketSpreadText || ""} ${game.marketTotalText || ""}</p>
+        <p>${game.summary || ""}</p>
       </article>
-    `;
-  }).join('');
+    </a>
+  `;
 }
 
-function renderProps(props) {
-  const body = document.getElementById('props-body');
-  body.innerHTML = props.map(p => `
+function propRow(prop) {
+  return `
     <tr>
-      <td>${p.league}</td>
-      <td>${p.player}</td>
-      <td>${p.stat}</td>
-      <td>${p.line}</td>
-      <td>${p.model}</td>
-      <td>${p.edge >= 0 ? '+' : ''}${p.edge}</td>
-      <td>${p.confidence}</td>
-      <td>${p.note}</td>
+      <td>${prop.league || ""}</td>
+      <td>${prop.game || ""}</td>
+      <td>${prop.player || ""}</td>
+      <td>${prop.stat || ""}</td>
+      <td>${prop.line ?? ""}</td>
+      <td>${prop.model ?? ""}</td>
+      <td>${prop.edge ?? ""}</td>
+      <td>${prop.note || ""}</td>
     </tr>
-  `).join('');
+  `;
 }
 
-function renderResults(results) {
-  const body = document.getElementById('results-body');
-  body.innerHTML = results.map(r => `
+function resultRow(result) {
+  return `
     <tr>
-      <td>${r.date}</td>
-      <td>${r.league}</td>
-      <td>${r.matchup}</td>
-      <td>${r.pick}</td>
-      <td>${r.actual}</td>
-      <td>${r.status}</td>
+      <td>${result.league || ""}</td>
+      <td>${result.matchup || ""}</td>
+      <td>${result.predicted || result.pick || ""}</td>
+      <td>${result.actual || ""}</td>
+      <td>${result.status || ""}</td>
     </tr>
-  `).join('');
+  `;
 }
 
-function fillHeader(meta, games, props) {
-  document.getElementById('site-title').textContent = meta.siteTitle;
-  document.getElementById('hero-leagues').textContent = meta.leagues.join(' • ');
-  document.getElementById('hero-game-count').textContent = games.length;
-  document.getElementById('hero-prop-count').textContent = props.length;
-  document.getElementById('hero-updated').textContent = meta.lastUpdated;
+async function init() {
+  const [site, games, props, results] = await Promise.all([
+    fetchJson("data/site.json"),
+    fetchJson("data/games.json"),
+    fetchJson("data/props.json"),
+    fetchJson("data/results.json"),
+  ]);
+
+  document.getElementById("site-title").textContent = site.title || "Sports Predictions";
+  document.getElementById("site-subtitle").textContent =
+    site.subtitle || "Daily model predictions and results";
+  document.getElementById("last-updated").textContent =
+    `Last updated: ${site.lastUpdated || ""}`;
+
+  document.getElementById("games-grid").innerHTML = games.map(gameCard).join("");
+
+  document.getElementById("props-body").innerHTML = props.map(propRow).join("");
+
+  document.getElementById("results-body").innerHTML = results.map(resultRow).join("");
 }
 
-function setupLeagueFilter(games) {
-  const select = document.getElementById('league-filter');
-  uniqueLeagues(games).forEach(league => {
-    const option = document.createElement('option');
-    option.value = league;
-    option.textContent = league;
-    select.appendChild(option);
-  });
-  select.addEventListener('change', () => renderGames(games, select.value));
-}
-
-(async function init() {
-  try {
-    const [meta, games, props, results] = await Promise.all([
-      loadJson('data/site.json'),
-      loadJson('data/games.json'),
-      loadJson('data/props.json'),
-      loadJson('data/results.json')
-    ]);
-
-    fillHeader(meta, games, props);
-    setupLeagueFilter(games);
-    renderGames(games);
-    renderProps(props);
-    renderResults(results);
-  } catch (err) {
-    document.getElementById('games-grid').innerHTML = `<div class="empty-state">${err.message}</div>`;
-  }
-})();
+init().catch((err) => {
+  console.error(err);
+  const el = document.getElementById("games-grid");
+  if (el) el.innerHTML = `<p>Failed to load site data.</p>`;
+});
