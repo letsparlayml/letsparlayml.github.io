@@ -90,16 +90,17 @@ function renderGameSection(games, rootId, league = 'ALL') {
 function renderProps(props) {
   const body = byId('props-body');
   if (!body) return;
+
   body.innerHTML = (props || []).map(p => `
     <tr>
       <td>${p.league || ''}</td>
       <td>${p.player || ''}</td>
       <td>${p.stat || ''}</td>
       <td>${p.line ?? ''}</td>
-      <td>${p.model ?? ''}</td>
-      <td>${Number.isFinite(Number(p.edge)) ? fmtSigned(p.edge) : ''}</td>
+      <td>${p.modelPrediction ?? p.model ?? ''}</td>
+      <td>${Number.isFinite(Number(p.probability)) ? `${Number(p.probability).toFixed(1)}%` : 'N/A'}</td>
       <td>${p.confidence || ''}</td>
-      <td>${p.note || ''}</td>
+      <td>${p.matchup || p.note || ''}</td>
     </tr>
   `).join('');
 }
