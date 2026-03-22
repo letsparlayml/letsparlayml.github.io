@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sports Predictions Showcase</title>
+  <title>Lets Parlay ML</title>
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
@@ -12,8 +12,8 @@
       <div class="brand-row">
         <div>
           <p class="eyebrow">Daily model updates</p>
-          <h1 id="site-title">Sports Predictions Showcase</h1>
-          <p class="subhead">A simple site for game picks, line movement, weekly model movement, and top props.</p>
+          <h1 id="site-title">Lets Parlay ML</h1>
+          <p class="subhead">Daily game predictions, top NBA props, and results grading across moneyline, spread, and total.</p>
         </div>
         <nav class="top-nav">
           <a href="#games">Games</a>
@@ -32,6 +32,10 @@
           <strong id="hero-game-count">0</strong>
         </div>
         <div class="hero-card">
+          <span class="stat-label">Next-day games</span>
+          <strong id="hero-next-game-count">0</strong>
+        </div>
+        <div class="hero-card">
           <span class="stat-label">Top props</span>
           <strong id="hero-prop-count">0</strong>
         </div>
@@ -48,7 +52,7 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Games</p>
-          <h2>Today’s predictions</h2>
+          <h2>Predictions</h2>
         </div>
         <div class="filter-row">
           <label>
@@ -59,7 +63,22 @@
           </label>
         </div>
       </div>
-      <div id="games-grid" class="card-grid"></div>
+
+      <div class="section-heading" style="margin-top: 0.75rem;">
+        <div>
+          <h3>Today’s board</h3>
+          <p class="muted">Games for <span id="today-date-label"></span></p>
+        </div>
+      </div>
+      <div id="today-games-grid" class="card-grid"></div>
+
+      <div class="section-heading" style="margin-top: 1.25rem;">
+        <div>
+          <h3>Next-day early look</h3>
+          <p class="muted">Games for <span id="tomorrow-date-label"></span>. Market lines stay N/A until they are available.</p>
+        </div>
+      </div>
+      <div id="tomorrow-games-grid" class="card-grid"></div>
     </section>
 
     <section class="panel" id="props">
@@ -93,6 +112,7 @@
         <div>
           <p class="eyebrow">Results</p>
           <h2>Previous-day results</h2>
+          <p class="muted">Graded for <span id="results-date-label"></span></p>
         </div>
       </div>
       <div class="table-wrap">
@@ -102,9 +122,11 @@
               <th>Date</th>
               <th>League</th>
               <th>Matchup</th>
-              <th>Predicted</th>
-              <th>Actual</th>
-              <th>Status</th>
+              <th>Predicted score</th>
+              <th>Actual score</th>
+              <th>ML</th>
+              <th>Spread</th>
+              <th>Total</th>
             </tr>
           </thead>
           <tbody id="results-body"></tbody>
@@ -116,32 +138,29 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">About</p>
-          <h2>How to use this site</h2>
+          <h2>How to read this page</h2>
         </div>
       </div>
       <div class="about-grid">
         <div class="info-card">
-          <h3>What visitors should see first</h3>
-          <p>Keep the front page focused on the most useful items: today’s game predictions, the movement of each prediction across the week, and a short list of your best props.</p>
+          <h3>Start with the score prediction</h3>
+          <p>The core model output is the projected final score. Spread, total, and moneyline leans all come from that score projection rather than being picked independently.</p>
         </div>
         <div class="info-card">
-          <h3>How weekly movement works</h3>
-          <p>Each game card links to a detail page with a simple movement chart and a daily table. You only need to export one record per game per day.</p>
+          <h3>Use today and next day differently</h3>
+          <p>Today’s board is the actionable slate. The next-day section is an early look for matchup research. Those games intentionally show N/A for market lines until reliable numbers are available.</p>
         </div>
         <div class="info-card">
-          <h3>How to update it</h3>
-          <p>Replace the JSON files in the <code>/data</code> folder with your newest outputs, commit to GitHub, and the site updates automatically.</p>
+          <h3>Interpret edges carefully</h3>
+          <p>Spread edge is model spread minus market spread. Total edge is model total minus market total. Bigger edges are stronger signals, but lineup news and late market movement still matter.</p>
+        </div>
+        <div class="info-card">
+          <h3>What the results section means</h3>
+          <p>Each completed game shows the predicted score, the actual score, and whether the model would have won on moneyline, spread, and total using the lines that were available in the prediction snapshot.</p>
         </div>
       </div>
     </section>
   </main>
-
-  <footer class="site-footer">
-    <div class="wrap footer-row">
-      <p>Built to start simple and grow later.</p>
-      <p><a href="game.html?id=demo-nba-lal-den">Open a sample game detail</a></p>
-    </div>
-  </footer>
 
   <script src="assets/app.js"></script>
 </body>
