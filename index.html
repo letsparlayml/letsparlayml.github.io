@@ -96,10 +96,10 @@
               <th>Player</th>
               <th>Prop</th>
               <th>Line</th>
-              <th>Model</th>
-              <th>Edge</th>
+              <th>Model prediction</th>
+              <th>Probability</th>
               <th>Confidence</th>
-              <th>Note</th>
+              <th>Matchup</th>
             </tr>
           </thead>
           <tbody id="props-body"></tbody>
@@ -138,25 +138,25 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">About</p>
-          <h2>How to read this page</h2>
+          <h2>How to use this page</h2>
         </div>
       </div>
       <div class="about-grid">
         <div class="info-card">
-          <h3>Start with the score prediction</h3>
-          <p>The core model output is the projected final score. Spread, total, and moneyline leans all come from that score projection rather than being picked independently.</p>
+          <h3>Start with the projected score</h3>
+          <p>The model is built to predict final scores first. Moneyline, spread, and total leans are all derived from that score projection rather than picked independently.</p>
         </div>
         <div class="info-card">
-          <h3>Use today and next day differently</h3>
-          <p>Today’s board is the actionable slate. The next-day section is an early look for matchup research. Those games intentionally show N/A for market lines until reliable numbers are available.</p>
+          <h3>Today vs next day</h3>
+          <p>Today’s board is the playable slate. The next-day section is an early research board. Those games stay at N/A for market lines until reliable numbers are available.</p>
         </div>
         <div class="info-card">
-          <h3>Interpret edges carefully</h3>
-          <p>Spread edge is model spread minus market spread. Total edge is model total minus market total. Bigger edges are stronger signals, but lineup news and late market movement still matter.</p>
+          <h3>How to read the props table</h3>
+          <p>Model prediction is the expected stat output. Probability is the model-estimated chance of clearing the listed threshold. Confidence is a rough bucket, not a guarantee.</p>
         </div>
         <div class="info-card">
-          <h3>What the results section means</h3>
-          <p>Each completed game shows the predicted score, the actual score, and whether the model would have won on moneyline, spread, and total using the lines that were available in the prediction snapshot.</p>
+          <h3>How results are graded</h3>
+          <p>The results table compares the predicted score to the actual final score and grades how the model would have done on moneyline, spread, and total using the market lines available for that game date.</p>
         </div>
       </div>
     </section>
