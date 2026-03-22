@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Detail</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="wrap">
+      <nav class="top-nav solo-nav">
+        <a href="index.html">← Back to home</a>
+      </nav>
+      <p class="eyebrow" id="game-league">League</p>
+      <h1 id="game-title">Loading game…</h1>
+      <p class="subhead" id="game-summary">Movement details and current model view.</p>
+    </div>
+  </header>
+
+  <main class="wrap detail-grid">
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Current prediction</p>
+          <h2>Snapshot</h2>
+        </div>
+      </div>
+      <div class="snapshot-grid">
+        <div class="hero-card"><span class="stat-label">Model score</span><strong id="snapshot-score">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Market spread</span><strong id="snapshot-spread">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Market total</span><strong id="snapshot-total">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Confidence</span><strong id="snapshot-confidence">—</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Prediction movement</p>
+          <h2>Week-to-game trend</h2>
+        </div>
+      </div>
+      <div id="movement-chart" class="chart-box"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Daily records</p>
+          <h2>Movement table</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Away pred</th>
+              <th>Home pred</th>
+              <th>Model spread</th>
+              <th>Market spread</th>
+              <th>Model total</th>
+              <th>Market total</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="movement-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/game.js"></script>
+</body>
+</html>

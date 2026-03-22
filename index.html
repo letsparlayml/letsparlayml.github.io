@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sports Predictions Showcase</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">Daily model updates</p>
+          <h1 id="site-title">Sports Predictions Showcase</h1>
+          <p class="subhead">A simple site for game picks, line movement, weekly model movement, and top props.</p>
+        </div>
+        <nav class="top-nav">
+          <a href="#games">Games</a>
+          <a href="#props">Props</a>
+          <a href="#results">Results</a>
+          <a href="#about">About</a>
+        </nav>
+      </div>
+      <div class="hero-grid">
+        <div class="hero-card">
+          <span class="stat-label">Leagues</span>
+          <strong id="hero-leagues">NBA • NHL • CBB</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Today’s games</span>
+          <strong id="hero-game-count">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Top props</span>
+          <strong id="hero-prop-count">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Last updated</span>
+          <strong id="hero-updated">—</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap page-grid">
+    <section class="panel" id="games">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Games</p>
+          <h2>Today’s predictions</h2>
+        </div>
+        <div class="filter-row">
+          <label>
+            League
+            <select id="league-filter">
+              <option value="ALL">All</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <div id="games-grid" class="card-grid"></div>
+    </section>
+
+    <section class="panel" id="props">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Props</p>
+          <h2>Top props for today</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>League</th>
+              <th>Player</th>
+              <th>Prop</th>
+              <th>Line</th>
+              <th>Model</th>
+              <th>Edge</th>
+              <th>Confidence</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="props-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="results">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Results</p>
+          <h2>Recent results</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>League</th>
+              <th>Matchup</th>
+              <th>Pick</th>
+              <th>Outcome</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="about">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">About</p>
+          <h2>How to use this site</h2>
+        </div>
+      </div>
+      <div class="about-grid">
+        <div class="info-card">
+          <h3>What visitors should see first</h3>
+          <p>Keep the front page focused on the most useful items: today’s game predictions, the movement of each prediction across the week, and a short list of your best props.</p>
+        </div>
+        <div class="info-card">
+          <h3>How weekly movement works</h3>
+          <p>Each game card links to a detail page with a simple movement chart and a daily table. You only need to export one record per game per day.</p>
+        </div>
+        <div class="info-card">
+          <h3>How to update it</h3>
+          <p>Replace the JSON files in the <code>/data</code> folder with your newest outputs, commit to GitHub, and the site updates automatically.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-row">
+      <p>Built to start simple and grow later.</p>
+      <p><a href="game.html?id=demo-nba-lal-den">Open a sample game detail</a></p>
+    </div>
+  </footer>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
