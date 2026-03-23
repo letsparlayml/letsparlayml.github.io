@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lets Parlay ML</title>
-  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/style.css?v=4" />
 </head>
 <body>
   <header class="site-header">
@@ -13,16 +13,18 @@
         <div>
           <p class="eyebrow">Daily model updates</p>
           <h1 id="site-title">Lets Parlay ML</h1>
-          <p class="subhead">Daily game predictions, top NBA props, and results grading across moneyline, spread, and total.</p>
+          <p class="subhead">Daily game predictions, top NBA props, league-by-league grading, and a deeper NBA props lab built from the daily outputs.</p>
         </div>
         <nav class="top-nav">
           <a href="#games">Games</a>
           <a href="#props">Props</a>
+          <a href="#nba-quick-looks">NBA quick looks</a>
+          <a href="props_lab.html">Props lab</a>
           <a href="#results">Results</a>
           <a href="#about">About</a>
         </nav>
       </div>
-      <div class="hero-grid">
+      <div class="hero-grid hero-grid-five">
         <div class="hero-card">
           <span class="stat-label">Leagues</span>
           <strong id="hero-leagues">NBA • NHL • CBB</strong>
@@ -64,7 +66,7 @@
         </div>
       </div>
 
-      <div class="section-heading" style="margin-top: 0.75rem;">
+      <div class="section-heading compact-gap">
         <div>
           <h3>Today’s board</h3>
           <p class="muted">Games for <span id="today-date-label"></span></p>
@@ -72,7 +74,7 @@
       </div>
       <div id="today-games-grid" class="card-grid"></div>
 
-      <div class="section-heading" style="margin-top: 1.25rem;">
+      <div class="section-heading compact-gap">
         <div>
           <h3>Next-day early look</h3>
           <p class="muted">Games for <span id="tomorrow-date-label"></span>. Market lines stay N/A until they are available.</p>
@@ -86,7 +88,9 @@
         <div>
           <p class="eyebrow">Props</p>
           <h2>Top props for today</h2>
+          <p class="muted">Quick board on the homepage. Use the props lab for filters, drivers, hit rates, and strategy buckets.</p>
         </div>
+        <a class="button-link" href="props_lab.html">Open NBA props lab</a>
       </div>
       <div class="table-wrap">
         <table>
@@ -107,6 +111,51 @@
       </div>
     </section>
 
+    <section class="panel" id="nba-quick-looks">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">NBA</p>
+          <h2>Quick looks</h2>
+          <p class="muted">Fast-glance edges from the daily game and prop outputs.</p>
+        </div>
+        <a class="button-link button-link-subtle" href="props_lab.html">See full props lab</a>
+      </div>
+
+      <div class="subsection-stack">
+        <div>
+          <h3 class="subsection-title">Game edge board</h3>
+          <div id="nba-game-edges-grid" class="insight-pair-grid"></div>
+        </div>
+
+        <div>
+          <h3 class="subsection-title">Consensus props</h3>
+          <div id="home-consensus-grid" class="insight-card-grid"></div>
+        </div>
+
+        <div class="insight-pair-grid">
+          <div>
+            <h3 class="subsection-title">Floor spots</h3>
+            <div id="home-floor-grid" class="insight-card-grid compact-cards"></div>
+          </div>
+          <div>
+            <h3 class="subsection-title">Ceiling and ladder ideas</h3>
+            <div id="home-ceiling-grid" class="insight-card-grid compact-cards"></div>
+          </div>
+        </div>
+
+        <div class="insight-pair-grid">
+          <div>
+            <h3 class="subsection-title">Most above recent baseline</h3>
+            <div id="home-role-up-grid" class="insight-card-grid compact-cards"></div>
+          </div>
+          <div>
+            <h3 class="subsection-title">Most below recent baseline</h3>
+            <div id="home-role-down-grid" class="insight-card-grid compact-cards"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="panel" id="results">
       <div class="section-heading">
         <div>
@@ -117,11 +166,6 @@
       </div>
 
       <div id="results-summary-grid" class="results-summary-grid"></div>
-
-      <div class="results-subhead">
-        <h3>Game-by-game grading</h3>
-        <p class="muted">Tracks yesterday plus current week, month, and year using the available market lines.</p>
-      </div>
 
       <div class="table-wrap">
         <table>
@@ -155,21 +199,21 @@
           <p>The model is built to predict individual team final scores first. Moneyline, spread, and total leans are all derived from that score projection rather than picked independently.</p>
         </div>
         <div class="info-card">
-          <h3>Today vs next day</h3>
-          <p>Today’s board is the playable slate. The next-day section is an early research board. Those games stay at N/A for market lines until reliable numbers are available.</p>
+          <h3>Use the quick looks for a fast scan</h3>
+          <p>The NBA quick looks section highlights spread and total edges, stronger floor-style prop spots, higher-variance ceiling ideas, and props that sit far above or below a player’s recent baseline.</p>
         </div>
         <div class="info-card">
-          <h3>How to read the props table</h3>
-          <p>Model prediction is the expected stat output. Probability is the model-estimated chance of clearing the listed threshold. Confidence is a rough bucket, not a guarantee.</p>
+          <h3>Open the props lab for deeper analysis</h3>
+          <p>The props lab adds player search, stat filters, L5/L10/L25 hit rates, projected minutes, fair odds, and the main reasons for and against each prop.</p>
         </div>
         <div class="info-card">
           <h3>How results are graded</h3>
-          <p>The results table compares the predicted score to the actual final score and grades how the model would have done on moneyline, spread, and total using the market lines available for that game date.</p>
+          <p>The results area tracks moneyline, spread, and total performance for yesterday plus current week, month, and year, both overall and separated by league.</p>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="assets/app.js"></script>
+  <script src="assets/app.js?v=4"></script>
 </body>
 </html>

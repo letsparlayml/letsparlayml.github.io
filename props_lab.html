@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Props Lab</title>
+  <link rel="stylesheet" href="assets/style.css?v=4" />
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="wrap">
+      <nav class="top-nav solo-nav">
+        <a href="index.html">← Back to home</a>
+        <a href="#explorer">Explorer</a>
+      </nav>
+      <p class="eyebrow">NBA props lab</p>
+      <h1>NBA prop explorer</h1>
+      <p class="subhead">Search today’s or upcoming NBA props by player and stat, then use the strategy boards, hit rates, fair odds, minutes, and driver notes to dig into the spot.</p>
+
+      <div class="hero-grid hero-grid-five hero-grid-tight">
+        <div class="hero-card">
+          <span class="stat-label">Date</span>
+          <strong id="lab-date-hero">—</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Available props</span>
+          <strong id="lab-prop-count">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Consensus board</span>
+          <strong id="lab-consensus-count">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Floor board</span>
+          <strong id="lab-floor-count">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Ceiling board</span>
+          <strong id="lab-ceiling-count">0</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap page-grid">
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Filters</p>
+          <h2>Find a prop</h2>
+        </div>
+      </div>
+      <div class="control-grid">
+        <label>
+          Date
+          <select id="lab-date-filter"></select>
+        </label>
+        <label>
+          Stat
+          <select id="lab-stat-filter">
+            <option value="ALL">All</option>
+          </select>
+        </label>
+        <label>
+          Search player
+          <input id="lab-search" type="search" placeholder="Search player name" />
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Boards</p>
+          <h2>Top strategy buckets</h2>
+        </div>
+      </div>
+      <div class="subsection-stack">
+        <div>
+          <h3 class="subsection-title">Overall consensus</h3>
+          <div id="lab-consensus-grid" class="insight-card-grid"></div>
+        </div>
+        <div class="insight-pair-grid">
+          <div>
+            <h3 class="subsection-title">Floor spots</h3>
+            <div id="lab-floor-grid" class="insight-card-grid compact-cards"></div>
+          </div>
+          <div>
+            <h3 class="subsection-title">Consistency spots</h3>
+            <div id="lab-consistency-grid" class="insight-card-grid compact-cards"></div>
+          </div>
+        </div>
+        <div>
+          <h3 class="subsection-title">Ceiling and ladder ideas</h3>
+          <div id="lab-ceiling-grid" class="insight-card-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Role and form</p>
+          <h2>Baseline gaps</h2>
+          <p class="muted">These compare the model projection to the player’s recent anchored average.</p>
+        </div>
+      </div>
+      <div class="insight-pair-grid">
+        <div>
+          <h3 class="subsection-title">Most above recent baseline</h3>
+          <div id="lab-role-up-grid" class="insight-card-grid compact-cards"></div>
+        </div>
+        <div>
+          <h3 class="subsection-title">Most below recent baseline</h3>
+          <div id="lab-role-down-grid" class="insight-card-grid compact-cards"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="explorer">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Explorer</p>
+          <h2>All available props</h2>
+          <p class="muted">Sorted by probability first, then projected clearance over the line.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Matchup</th>
+              <th>Stat</th>
+              <th>Line</th>
+              <th>Model</th>
+              <th>Avg</th>
+              <th>L10</th>
+              <th>L25</th>
+              <th>Prob</th>
+              <th>Fair odds</th>
+              <th>Exp min</th>
+              <th>Driver</th>
+            </tr>
+          </thead>
+          <tbody id="lab-explorer-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/props_lab.js?v=4"></script>
+</body>
+</html>

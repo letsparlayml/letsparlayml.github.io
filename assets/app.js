@@ -33,6 +33,11 @@ function fmtSigned(num, digits = 1) {
   return `${n >= 0 ? '+' : ''}${n.toFixed(digits)}`;
 }
 
+function fmtPct(num, digits = 1) {
+  const n = Number(num);
+  return Number.isFinite(n) ? `${(n * 100).toFixed(digits)}%` : 'N/A';
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -101,32 +106,15 @@ function renderGameSection(games, rootId, league = 'ALL') {
 }
 
 function probabilitySourceText(p) {
-  return String(
-    p.probabilityText ??
-    p.probability_note ??
-    p.matchup ??
-    p.note ??
-    ''
-  );
+  return String(p.probabilityText ?? p.probability_note ?? p.matchup ?? p.note ?? '');
 }
 
 function propProbabilityText(p) {
-  const candidates = [
-    p.probability,
-    p.clearProbability,
-    p.clear_probability,
-    p.prob,
-    p.winProbability,
-    p.win_probability
-  ];
-
+  const candidates = [p.probability, p.clearProbability, p.clear_probability, p.prob, p.winProbability, p.win_probability];
   for (const value of candidates) {
     const n = Number(value);
-    if (Number.isFinite(n)) {
-      return `${n.toFixed(1)}%`;
-    }
+    if (Number.isFinite(n)) return `${n.toFixed(1)}%`;
   }
-
   const src = probabilitySourceText(p);
   const match = src.match(/(\d+(?:\.\d+)?)%\s*(?:to\s+clear|clear|over|under|hit)?/i);
   return match ? `${Number(match[1]).toFixed(1)}%` : 'N/A';
@@ -135,17 +123,13 @@ function propProbabilityText(p) {
 function propMatchupText(p) {
   const src = probabilitySourceText(p);
   if (!src) return 'N/A';
-  const cleaned = src
-    .replace(/\s*[•\-|–—]\s*\d+(?:\.\d+)?%.*$/i, '')
-    .replace(/\s+\d+(?:\.\d+)?%.*$/i, '')
-    .trim();
+  const cleaned = src.replace(/\s*[•\-|–—]\s*\d+(?:\.\d+)?%.*$/i, '').replace(/\s+\d+(?:\.\d+)?%.*$/i, '').trim();
   return cleaned || 'N/A';
 }
 
 function renderProps(props) {
   const body = byId('props-body');
   if (!body) return;
-
   body.innerHTML = (props || []).map(p => `
     <tr>
       <td>${escapeHtml(p.league || '')}</td>
@@ -171,7 +155,6 @@ function resultBadgeClass(result) {
 function renderResults(results) {
   const body = byId('results-body');
   if (!body) return;
-
   body.innerHTML = (results || []).map(r => `
     <tr>
       <td>${escapeHtml(r.date || '')}</td>
@@ -192,35 +175,17 @@ function summaryMetricParts(metric) {
   const pushes = Number(metric?.pushes || 0);
   const graded = Number(metric?.graded || 0);
   const winPct = metric?.winPct;
-
   return {
     record: pushes > 0 ? `${wins}-${losses}-${pushes}` : `${wins}-${losses}`,
-    pctText: graded > 0 && winPct !== null && winPct !== undefined ? `${Number(winPct).toFixed(1)}%` : 'N/A',
-    gradedText: graded > 0 ? `${graded} graded` : 'No graded plays',
-    graded
+    pctText: graded > 0 && winPct !== null && winPct !== undefined ? `${Number(winPct).toFixed(1)}%` : 'N/A'
   };
-}
-
-function metricSummaryHtml(label, metric) {
-  const parts = summaryMetricParts(metric);
-
-  return `
-    <div class="summary-metric">
-      <span class="summary-label">${escapeHtml(label)}</span>
-      <strong>${escapeHtml(parts.record)}</strong>
-      <span class="summary-note">${escapeHtml(parts.pctText)} • ${escapeHtml(parts.gradedText)}</span>
-    </div>
-  `;
 }
 
 function sportSummaryBlockHtml(label, metrics, emphasized = false) {
   const classes = emphasized ? 'sport-summary sport-summary-overall' : 'sport-summary';
-
   return `
     <section class="${classes}">
-      <div class="sport-summary-head">
-        <h4>${escapeHtml(label)}</h4>
-      </div>
+      <div class="sport-summary-head"><h4>${escapeHtml(label)}</h4></div>
       <div class="sport-summary-metrics">
         ${['ML', 'Spread', 'Total'].map(metricName => {
           const parts = summaryMetricParts(metrics?.[metricName]);
@@ -238,56 +203,123 @@ function sportSummaryBlockHtml(label, metrics, emphasized = false) {
 }
 
 function periodTitle(key) {
-  switch (key) {
-    case 'yesterday':
-      return 'Previous day';
-    case 'weekToDate':
-      return 'Current week';
-    case 'monthToDate':
-      return 'Current month';
-    case 'yearToDate':
-      return 'Current year';
-    default:
-      return key;
-  }
+  return ({ yesterday: 'Previous day', weekToDate: 'Current week', monthToDate: 'Current month', yearToDate: 'Current year' })[key] || key;
 }
 
 function renderResultsSummary(summary) {
   const root = byId('results-summary-grid');
   if (!root) return;
-
   const periods = summary?.periods || {};
   const order = ['yesterday', 'weekToDate', 'monthToDate', 'yearToDate'];
   const leagueOrder = ['NBA', 'NHL', 'CBB'];
-
-  const cards = order
-    .filter(key => periods[key])
-    .map(key => {
-      const period = periods[key];
-      const byLeague = period.byLeague || {};
-      const leagues = [
-        ...leagueOrder.filter(league => byLeague[league]),
-        ...Object.keys(byLeague).filter(league => !leagueOrder.includes(league)).sort()
-      ];
-
-      return `
-        <article class="summary-card">
-          <div class="summary-card-head">
-            <div>
-              <span class="summary-kicker">${escapeHtml(periodTitle(key))}</span>
-              <h3>${escapeHtml(period.startDate === period.endDate ? period.endDate : `${period.startDate} to ${period.endDate}`)}</h3>
-            </div>
-            <span class="summary-rows">${escapeHtml(period.rowCount ?? 0)} games</span>
+  const cards = order.filter(key => periods[key]).map(key => {
+    const period = periods[key];
+    const byLeague = period.byLeague || {};
+    const leagues = [...leagueOrder.filter(league => byLeague[league]), ...Object.keys(byLeague).filter(league => !leagueOrder.includes(league)).sort()];
+    return `
+      <article class="summary-card">
+        <div class="summary-card-head">
+          <div>
+            <span class="summary-kicker">${escapeHtml(periodTitle(key))}</span>
+            <h3>${escapeHtml(period.startDate === period.endDate ? period.endDate : `${period.startDate} to ${period.endDate}`)}</h3>
           </div>
-          <div class="sport-breakdown-grid">
-            ${sportSummaryBlockHtml('Overall', period.overall, true)}
-            ${leagues.map(league => sportSummaryBlockHtml(league, byLeague[league])).join('')}
-          </div>
-        </article>
-      `;
-    });
-
+          <span class="summary-rows">${escapeHtml(period.rowCount ?? 0)} games</span>
+        </div>
+        <div class="sport-breakdown-grid">
+          ${sportSummaryBlockHtml('Overall', period.overall, true)}
+          ${leagues.map(league => sportSummaryBlockHtml(league, byLeague[league])).join('')}
+        </div>
+      </article>
+    `;
+  });
   root.innerHTML = cards.length ? cards.join('') : '<div class="empty-state">No summary results available yet.</div>';
+}
+
+function propInsightCard(prop) {
+  return `
+    <article class="insight-card">
+      <div class="insight-topline">
+        <span class="tag">${escapeHtml(prop.stat || '')}</span>
+        <span class="muted">${escapeHtml(prop.location || '')}</span>
+      </div>
+      <h4>${escapeHtml(prop.player || '')}</h4>
+      <p class="muted">${escapeHtml(prop.team || '')} vs ${escapeHtml(prop.opp || '')}</p>
+      <div class="mini-chip-row">
+        <span class="mini-chip">Line ${escapeHtml(fmt(prop.line, 1))}</span>
+        <span class="mini-chip">Model ${escapeHtml(fmt(prop.pred_anchor ?? prop.mu_cons, 1))}</span>
+        <span class="mini-chip">Prob ${escapeHtml(fmtPct(prop.prob_cons))}</span>
+      </div>
+      <p class="insight-copy">${escapeHtml(prop.boardDriver || prop.summary || '')}</p>
+    </article>
+  `;
+}
+
+function roleCard(prop) {
+  const gap = Number(prop.trend_gap);
+  return `
+    <article class="insight-card compact-card">
+      <div class="insight-topline">
+        <span class="tag">${escapeHtml(prop.stat || '')}</span>
+        <span class="muted">${Number.isFinite(gap) ? fmtSigned(gap, 1) : 'N/A'} vs avg</span>
+      </div>
+      <h4>${escapeHtml(prop.player || '')}</h4>
+      <p class="muted">${escapeHtml(prop.team || '')} vs ${escapeHtml(prop.opp || '')}</p>
+      <div class="mini-chip-row">
+        <span class="mini-chip">Line ${escapeHtml(fmt(prop.line, 1))}</span>
+        <span class="mini-chip">Model ${escapeHtml(fmt(prop.pred_anchor, 1))}</span>
+        <span class="mini-chip">Avg ${escapeHtml(fmt(prop.avg_anchor, 1))}</span>
+      </div>
+    </article>
+  `;
+}
+
+function renderInsightGrid(rootId, items, role = false) {
+  const root = byId(rootId);
+  if (!root) return;
+  if (!items || !items.length) {
+    root.innerHTML = '<div class="empty-state">No props available.</div>';
+    return;
+  }
+  root.innerHTML = items.map(item => role ? roleCard(item) : propInsightCard(item)).join('');
+}
+
+function edgeBoardCard(title, items, kind) {
+  if (!items.length) return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No lined NBA games yet.</div></article>`;
+  const rows = items.map(item => {
+    const edge = kind === 'spread' ? item.spreadEdge : item.totalEdge;
+    const market = kind === 'spread' ? item.marketSpread : item.marketTotal;
+    const model = kind === 'spread' ? item.modelHomeSpread : item.modelTotal;
+    return `
+      <div class="edge-row">
+        <div>
+          <strong>${escapeHtml(`${item.awayTeam} @ ${item.homeTeam}`)}</strong>
+          <span>${kind === 'spread' ? `Model ${escapeHtml(fmtSigned(model))} vs market ${escapeHtml(fmtSigned(market))}` : `Model ${escapeHtml(fmt(model))} vs market ${escapeHtml(fmt(market))}`}</span>
+        </div>
+        <strong>${escapeHtml(fmtSigned(edge))}</strong>
+      </div>
+    `;
+  }).join('');
+  return `<article class="insight-board"><h4>${escapeHtml(title)}</h4>${rows}</article>`;
+}
+
+function renderNbaGameEdges(games, meta) {
+  const root = byId('nba-game-edges-grid');
+  if (!root) return;
+  const nba = (games || []).filter(g => g.league === 'NBA' && g.gameDate === meta.targetDate);
+  const lined = nba.map(g => ({ ...g, spreadEdge: hasNumericValue(g.marketSpread) ? Number(g.modelHomeSpread) - Number(g.marketSpread) : NaN, totalEdge: hasNumericValue(g.marketTotal) ? Number(g.modelTotal) - Number(g.marketTotal) : NaN }));
+  const spreadTop = lined.filter(g => Number.isFinite(g.spreadEdge)).sort((a, b) => Math.abs(b.spreadEdge) - Math.abs(a.spreadEdge)).slice(0, 4);
+  const totalTop = lined.filter(g => Number.isFinite(g.totalEdge)).sort((a, b) => Math.abs(b.totalEdge) - Math.abs(a.totalEdge)).slice(0, 4);
+  root.innerHTML = [edgeBoardCard('Biggest spread gaps', spreadTop, 'spread'), edgeBoardCard('Biggest total gaps', totalTop, 'total')].join('');
+}
+
+function renderHomeInsights(homeInsights, meta) {
+  const day = homeInsights?.byDate?.[meta.targetDate];
+  if (!day) return;
+  renderInsightGrid('home-consensus-grid', day.consensusTop);
+  renderInsightGrid('home-floor-grid', day.floorTop);
+  renderInsightGrid('home-ceiling-grid', day.ceilingTop);
+  renderInsightGrid('home-role-up-grid', day.roleUp, true);
+  renderInsightGrid('home-role-down-grid', day.roleDown, true);
 }
 
 function fillHeader(meta, todayGames, tomorrowGames, props) {
@@ -311,7 +343,6 @@ function setupLeagueFilter(allGames, meta) {
     option.textContent = league;
     select.appendChild(option);
   });
-
   const rerender = () => {
     const league = select.value;
     const today = (allGames || []).filter(g => g.gameDate === meta.targetDate);
@@ -319,7 +350,6 @@ function setupLeagueFilter(allGames, meta) {
     renderGameSection(today, 'today-games-grid', league);
     renderGameSection(tomorrow, 'tomorrow-games-grid', league);
   };
-
   select.addEventListener('change', rerender);
   rerender();
 }
@@ -327,26 +357,25 @@ function setupLeagueFilter(allGames, meta) {
 (async function init() {
   const root = byId('today-games-grid') || byId('games-grid');
   try {
-    const [meta, games, props, results, resultsSummary] = await Promise.all([
+    const [meta, games, props, results, resultsSummary, homeInsights] = await Promise.all([
       loadJson('data/site.json'),
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/results.json', []),
-      loadJson('data/results_summary.json', {})
+      loadJson('data/results_summary.json', {}),
+      loadJson('data/nba_home_insights.json', {})
     ]);
-
     const todayGames = (games || []).filter(g => g.gameDate === meta.targetDate);
     const tomorrowGames = (games || []).filter(g => g.gameDate === meta.nextDate);
-
     fillHeader(meta, todayGames, tomorrowGames, props);
     setupLeagueFilter(games, meta);
     renderProps(props);
+    renderNbaGameEdges(games, meta);
+    renderHomeInsights(homeInsights, meta);
     renderResultsSummary(resultsSummary);
     renderResults(results);
   } catch (err) {
     console.error(err);
-    if (root) {
-      root.innerHTML = `<div class="empty-state">Failed to load site data: ${escapeHtml(err.message || err)}</div>`;
-    }
+    if (root) root.innerHTML = `<div class="empty-state">Failed to load site data: ${escapeHtml(err.message || err)}</div>`;
   }
 })();
