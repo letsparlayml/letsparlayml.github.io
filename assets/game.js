@@ -46,8 +46,6 @@ function renderChart(movement) {
   const rawMin = Math.min(...all);
   const rawMax = Math.max(...all);
   const rawRange = rawMax - rawMin;
-
-  // Dynamic padding so tiny movement still shows clearly
   const padY = Math.max(rawRange * 0.2, 0.08);
   const minY = rawMin - padY;
   const maxY = rawMax + padY;
@@ -105,10 +103,7 @@ function renderMovementTable(movement) {
       <td>${fmt(row.predictedAway, 2)}</td>
       <td>${fmt(row.predictedHome, 2)}</td>
       <td>${fmtSigned(row.modelHomeSpread, 2)}</td>
-      <td>${fmtSigned(row.marketSpread, 2)}</td>
       <td>${fmt(row.modelTotal, 2)}</td>
-      <td>${fmt(row.marketTotal, 2)}</td>
-      <td>${row.note || ''}</td>
     </tr>
   `).join('');
 }
