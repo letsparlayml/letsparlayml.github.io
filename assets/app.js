@@ -62,16 +62,16 @@ function gameCard(game) {
           <div class="score-row"><span>${game.awayTeam}</span><strong>${fmt(game.modelAwayScore)}</strong></div>
           <div class="score-row"><span>${game.homeTeam}</span><strong>${fmt(game.modelHomeScore)}</strong></div>
         </div>
-        <div class="kpi-row">
-          <div class="kpi"><span>Model spread</span><strong>${fmtSigned(game.modelHomeSpread)}</strong></div>
-          <div class="kpi"><span>Market spread</span><strong>${marketSpreadText(game)}</strong></div>
-          <div class="kpi"><span>Market total</span><strong>${marketTotalText(game)}</strong></div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi"><span>Model total</span><strong>${fmt(game.modelTotal)}</strong></div>
-          <div class="kpi"><span>Spread edge</span><strong>${Number.isFinite(edgeSpread) ? fmtSigned(edgeSpread) : 'N/A'}</strong></div>
-          <div class="kpi"><span>Total edge</span><strong>${Number.isFinite(edgeTotal) ? fmtSigned(edgeTotal) : 'N/A'}</strong></div>
-        </div>
+	<div class="kpi-row">
+  	  <div class="kpi"><span>Model spread</span><strong>${fmtSigned(game.modelHomeSpread)}</strong></div>
+   	  <div class="kpi"><span>Market spread</span><strong>${marketSpreadText(game)}</strong></div>
+  	  <div class="kpi"><span>Spread edge</span><strong>${Number.isFinite(edgeSpread) ? fmtSigned(edgeSpread) : 'N/A'}</strong></div>
+	</div>
+	<div class="kpi-row">
+  	  <div class="kpi"><span>Model total</span><strong>${fmt(game.modelTotal)}</strong></div>
+  	  <div class="kpi"><span>Market total</span><strong>${marketTotalText(game)}</strong></div>
+  	  <div class="kpi"><span>Total edge</span><strong>${Number.isFinite(edgeTotal) ? fmtSigned(edgeTotal) : 'N/A'}</strong></div>
+	</div>
         <div class="meta-row">
           <span>Confidence: ${game.confidence || 'N/A'}</span>
           <a href="game.html?id=${encodeURIComponent(game.id)}">Open detail</a>
