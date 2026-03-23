@@ -1,11 +1,21 @@
 async function loadJson(path) {
-  const res = await fetch(path);
+  const res = await fetch(path, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Failed to load ${path}`);
   return res.json();
 }
 
-function fmt(num) {
-  return Number(num).toFixed(1);
+function hasNumericValue(v) {
+  return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
+}
+
+function fmt(num, digits = 2) {
+  return hasNumericValue(num) ? Number(num).toFixed(digits) : 'N/A';
+}
+
+function fmtSigned(num, digits = 2) {
+  if (!hasNumericValue(num)) return 'N/A';
+  const n = Number(num);
+  return `${n >= 0 ? '+' : ''}${n.toFixed(digits)}`;
 }
 
 function qs(name) {
@@ -22,29 +32,52 @@ function renderChart(movement) {
   const labels = movement.map(d => d.date);
   const away = movement.map(d => Number(d.predictedAway));
   const home = movement.map(d => Number(d.predictedHome));
+
   const width = 900;
   const height = 280;
-  const pad = 32;
-  const all = [...away, ...home];
-  const minY = Math.min(...all) - 2;
-  const maxY = Math.max(...all) + 2;
+  const pad = 36;
+  const all = [...away, ...home].filter(v => Number.isFinite(v));
+
+  if (!all.length) {
+    box.innerHTML = '<div class="empty-state">No chartable movement records available.</div>';
+    return;
+  }
+
+  const rawMin = Math.min(...all);
+  const rawMax = Math.max(...all);
+  const rawRange = rawMax - rawMin;
+
+  // Dynamic padding so tiny movement still shows clearly
+  const padY = Math.max(rawRange * 0.2, 0.08);
+  const minY = rawMin - padY;
+  const maxY = rawMax + padY;
+
   const stepX = (width - pad * 2) / Math.max(1, labels.length - 1);
 
   const x = i => pad + i * stepX;
   const y = v => height - pad - ((v - minY) / (maxY - minY || 1)) * (height - pad * 2);
-  const path = series => series.map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(v)}`).join(' ');
 
-  const labelHtml = labels.map((label, i) => `<text x="${x(i)}" y="${height - 8}" text-anchor="middle" fill="#9db0d0" font-size="11">${label.slice(5)}</text>`).join('');
-  const grid = Array.from({ length: 5 }, (_, i) => {
-    const val = minY + (i / 4) * (maxY - minY);
+  const path = series =>
+    series.map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(v)}`).join(' ');
+
+  const gridCount = 5;
+  const grid = Array.from({ length: gridCount }, (_, i) => {
+    const ratio = i / (gridCount - 1);
+    const val = minY + ratio * (maxY - minY);
     const yy = y(val);
     return `
       <line x1="${pad}" x2="${width - pad}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.10)" />
-      <text x="8" y="${yy + 4}" fill="#9db0d0" font-size="11">${fmt(val)}</text>
+      <text x="8" y="${yy + 4}" fill="#9db0d0" font-size="11">${fmt(val, 2)}</text>
     `;
   }).join('');
 
-  const points = (series, color) => series.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${color}" />`).join('');
+  const labelHtml = labels.map((label, i) => {
+    const shortLabel = String(label).slice(5);
+    return `<text x="${x(i)}" y="${height - 8}" text-anchor="middle" fill="#9db0d0" font-size="11">${shortLabel}</text>`;
+  }).join('');
+
+  const points = (series, color) =>
+    series.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${color}" />`).join('');
 
   box.innerHTML = `
     <div class="legend">
@@ -64,15 +97,17 @@ function renderChart(movement) {
 
 function renderMovementTable(movement) {
   const body = document.getElementById('movement-body');
+  if (!body) return;
+
   body.innerHTML = movement.map(row => `
     <tr>
-      <td>${row.date}</td>
-      <td>${fmt(row.predictedAway)}</td>
-      <td>${fmt(row.predictedHome)}</td>
-      <td>${fmt(row.modelHomeSpread)}</td>
-      <td>${fmt(row.marketSpread)}</td>
-      <td>${fmt(row.modelTotal)}</td>
-      <td>${fmt(row.marketTotal)}</td>
+      <td>${row.date || ''}</td>
+      <td>${fmt(row.predictedAway, 2)}</td>
+      <td>${fmt(row.predictedHome, 2)}</td>
+      <td>${fmtSigned(row.modelHomeSpread, 2)}</td>
+      <td>${fmtSigned(row.marketSpread, 2)}</td>
+      <td>${fmt(row.modelTotal, 2)}</td>
+      <td>${fmt(row.marketTotal, 2)}</td>
       <td>${row.note || ''}</td>
     </tr>
   `).join('');
@@ -86,16 +121,16 @@ function renderMovementTable(movement) {
     if (!game) throw new Error('No game records found.');
 
     document.title = `${game.awayTeam} @ ${game.homeTeam}`;
-    document.getElementById('game-league').textContent = game.league;
+    document.getElementById('game-league').textContent = game.league || '';
     document.getElementById('game-title').textContent = `${game.awayTeam} @ ${game.homeTeam}`;
-    document.getElementById('game-summary').textContent = game.summary;
-    document.getElementById('snapshot-score').textContent = `${fmt(game.modelAwayScore)} - ${fmt(game.modelHomeScore)}`;
-    document.getElementById('snapshot-spread').textContent = fmt(game.marketSpread);
-    document.getElementById('snapshot-total').textContent = fmt(game.marketTotal);
-    document.getElementById('snapshot-confidence').textContent = game.confidence;
+    document.getElementById('game-summary').textContent = game.summary || '';
+    document.getElementById('snapshot-score').textContent = `${fmt(game.modelAwayScore, 2)} - ${fmt(game.modelHomeScore, 2)}`;
+    document.getElementById('snapshot-spread').textContent = fmtSigned(game.marketSpread, 2);
+    document.getElementById('snapshot-total').textContent = fmt(game.marketTotal, 2);
+    document.getElementById('snapshot-confidence').textContent = game.confidence || 'N/A';
 
-    renderChart(game.movement);
-    renderMovementTable(game.movement);
+    renderChart(game.movement || []);
+    renderMovementTable(game.movement || []);
   } catch (err) {
     document.getElementById('game-title').textContent = 'Unable to load game';
     document.getElementById('game-summary').textContent = err.message;
