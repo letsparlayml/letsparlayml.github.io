@@ -91,6 +91,20 @@ function renderGameSection(games, rootId, league = 'ALL') {
   root.innerHTML = filtered.map(gameCard).join('');
 }
 
+function propProbabilityText(p) {
+  if (Number.isFinite(Number(p.probability))) {
+    return `${Number(p.probability).toFixed(1)}%`;
+  }
+  const src = String(p.matchup || p.note || '');
+  const m = src.match(/(\d+(?:\.\d+)?)%\s+to clear/i);
+  return m ? `${Number(m[1]).toFixed(1)}%` : 'N/A';
+}
+
+function propMatchupText(p) {
+  const src = String(p.matchup || p.note || '');
+  return src.replace(/\s*•\s*\d+(?:\.\d+)?%\s+to clear.*$/i, '').trim();
+}
+
 function renderProps(props) {
   const body = byId('props-body');
   if (!body) return;
@@ -102,13 +116,12 @@ function renderProps(props) {
       <td>${p.stat || ''}</td>
       <td>${p.line ?? ''}</td>
       <td>${p.modelPrediction ?? p.model ?? ''}</td>
-      <td>${Number.isFinite(Number(p.probability)) ? `${Number(p.probability).toFixed(1)}%` : 'N/A'}</td>
+      <td>${propProbabilityText(p)}</td>
       <td>${p.confidence || ''}</td>
-      <td>${p.matchup || p.note || ''}</td>
+      <td>${propMatchupText(p)}</td>
     </tr>
   `).join('');
 }
-
 function renderResults(results) {
   const body = byId('results-body');
   if (!body) return;
