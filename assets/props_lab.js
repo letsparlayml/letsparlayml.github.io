@@ -364,7 +364,16 @@ function applyDate(lab, date) {
     const dateSelect = byId('lab-date-filter');
     const statSelect = byId('lab-stat-filter');
     const searchInput = byId('lab-search');
-    const targetDate = site?.targetDate || lab.targetDate || lab.dates?.[0];
+    const dates = lab.dates || [];
+
+    const now = new Date();
+    const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const targetDate =
+      (dates.includes(todayIso) && todayIso) ||
+      (dates.includes(site?.targetDate) && site.targetDate) ||
+      (dates.includes(lab?.targetDate) && lab.targetDate) ||
+      dates[0];
 
     populateDateOptions(dateSelect, lab.dates || [], targetDate);
 
