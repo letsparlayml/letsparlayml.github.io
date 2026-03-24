@@ -40,6 +40,17 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+function normalizeLookupToken(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function normalizeTeamToken(value) {
   return String(value ?? '')
     .toUpperCase()
@@ -47,9 +58,58 @@ function normalizeTeamToken(value) {
     .trim();
 }
 
+const NBA_TEAM_TOKEN_MAP = {
+  ATL: 'ATL', ATLANTAHAWKS: 'ATL',
+  BOS: 'BOS', BOSTONCELTICS: 'BOS',
+  BKN: 'BKN', BROOKLYNNETS: 'BKN',
+  BRK: 'BKN',
+  CHA: 'CHA', CHARLOTTEHORNETS: 'CHA',
+  CHI: 'CHI', CHICAGOBULLS: 'CHI',
+  CLE: 'CLE', CLEVELANDCAVALIERS: 'CLE',
+  DAL: 'DAL', DALLASMAVERICKS: 'DAL',
+  DEN: 'DEN', DENVERNUGGETS: 'DEN',
+  DET: 'DET', DETROITPISTONS: 'DET',
+  GSW: 'GSW', GOLDENSTATEWARRIORS: 'GSW',
+  HOU: 'HOU', HOUSTONROCKETS: 'HOU',
+  IND: 'IND', INDIANAPACERS: 'IND',
+  LAC: 'LAC', LOSANGELESCLIPPERS: 'LAC',
+  CLIPPERS: 'LAC',
+  LAL: 'LAL', LOSANGELESLAKERS: 'LAL',
+  MEM: 'MEM', MEMPHISGRIZZLIES: 'MEM',
+  MIA: 'MIA', MIAMIHEAT: 'MIA',
+  MIL: 'MIL', MILWAUKEEBUCKS: 'MIL',
+  MIN: 'MIN', MINNESOTATIMBERWOLVES: 'MIN',
+  NOP: 'NOP', NEWORLEANSPELICANS: 'NOP',
+  NO: 'NOP',
+  NYK: 'NYK', NEWYORKKNICKS: 'NYK',
+  OKC: 'OKC', OKLAHOMACITYTHUNDER: 'OKC',
+  ORL: 'ORL', ORLANDOMAGIC: 'ORL',
+  PHI: 'PHI', PHILADELPHIAERS: 'PHI',
+  PHILADELPHIA76ERS: 'PHI',
+  PHX: 'PHX', PHOENIXSUNS: 'PHX',
+  POR: 'POR', PORTLANDTRAILBLAZERS: 'POR',
+  SAC: 'SAC', SACRAMENTOKINGS: 'SAC',
+  SAS: 'SAS', SANANTONIOSPURS: 'SAS',
+  SA: 'SAS',
+  TOR: 'TOR', TORONTORAPTORS: 'TOR',
+  UTA: 'UTA', UTAHJAZZ: 'UTA',
+  WAS: 'WAS', WASHINGTONWIZARDS: 'WAS'
+};
+
+function canonicalTeamToken(value) {
+  const token = normalizeTeamToken(value);
+  return NBA_TEAM_TOKEN_MAP[token] || token;
+}
+
 function normalizeGameId(a, b) {
-  const parts = [normalizeTeamToken(a), normalizeTeamToken(b)].filter(Boolean).sort();
+  const parts = [canonicalTeamToken(a), canonicalTeamToken(b)].filter(Boolean).sort();
   return parts.join('|');
+}
+
+function normalizeGameNumericId(value) {
+  const raw = String(value ?? '');
+  const match = raw.match(/(\d{7,})/);
+  return match ? match[1] : '';
 }
 
 function propTeamValue(prop) {
@@ -59,7 +119,6 @@ function propTeamValue(prop) {
     prop?.teamAbbr ||
     prop?.TEAM ||
     prop?.TEAM_ABBR ||
-    prop?.TEAM_NAME_MAP ||
     ''
   );
 }
@@ -72,15 +131,8 @@ function propOppValue(prop) {
     prop?.opponent_abbr ||
     prop?.OPP ||
     prop?.OPP_ABBR ||
-    prop?.OPP_NAME_MAP ||
     ''
   );
-}
-
-function normalizeGameNumericId(value) {
-  const raw = String(value ?? '');
-  const match = raw.match(/(\d{7,})/);
-  return match ? match[1] : '';
 }
 
 function propGameNumericId(prop) {
@@ -107,7 +159,13 @@ function propDateValue(prop) {
 }
 
 function propProbabilityValue(prop) {
-  const candidates = [prop?.probability, prop?.prob, prop?.prob_cons, prop?.clearProbability, prop?.clear_probability];
+  const candidates = [
+    prop?.probability,
+    prop?.prob,
+    prop?.prob_cons,
+    prop?.clearProbability,
+    prop?.clear_probability
+  ];
   for (const value of candidates) {
     const n = Number(value);
     if (Number.isFinite(n)) return n;
@@ -118,6 +176,122 @@ function propProbabilityValue(prop) {
 function propProbabilityText(prop) {
   const n = propProbabilityValue(prop);
   return Number.isFinite(n) ? `${(n > 1 ? n : n * 100).toFixed(1)}%` : 'N/A';
+}
+
+function propLineValue(prop) {
+  const n = Number(prop?.line);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function propPredictionValue(prop) {
+  const candidates = [
+    prop?.modelPrediction,
+    prop?.prediction,
+    prop?.pred_anchor,
+    prop?.mu_cons,
+    prop?.pred_stat,
+    prop?.mu
+  ];
+  for (const value of candidates) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function propAverageValue(prop) {
+  const candidates = [
+    prop?.avg_anchor,
+    prop?.average,
+    prop?.avg
+  ];
+  for (const value of candidates) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function propLineRatio(prop) {
+  const line = propLineValue(prop);
+  if (!Number.isFinite(line) || line <= 0) return NaN;
+
+  const avg = propAverageValue(prop);
+  if (Number.isFinite(avg) && avg > 0) return line / avg;
+
+  const pred = propPredictionValue(prop);
+  if (Number.isFinite(pred) && pred > 0) return line / pred;
+
+  return NaN;
+}
+
+function propClosenessScore(prop) {
+  const ratio = propLineRatio(prop);
+  if (!Number.isFinite(ratio)) return 0;
+  const clamped = Math.max(0, Math.min(ratio, 1.25));
+  return Math.max(0, 1 - Math.abs(1 - clamped));
+}
+
+function propDisplayScore(prop) {
+  const prob = Number.isFinite(propProbabilityValue(prop)) ? propProbabilityValue(prop) : 0;
+  const closeness = propClosenessScore(prop);
+  return prob * 0.55 + closeness * 0.45;
+}
+
+function isReasonablePropLine(prop, { ratioFloor = 0.7, probFloor = 0.55 } = {}) {
+  const prob = propProbabilityValue(prop);
+  if (Number.isFinite(prob) && prob < probFloor) return false;
+
+  const ratio = propLineRatio(prop);
+  if (Number.isFinite(ratio)) return ratio >= ratioFloor;
+
+  return true;
+}
+
+function pickBestPropVariant(rows) {
+  return rows
+    .slice()
+    .sort((a, b) => {
+      const scoreDiff = propDisplayScore(b) - propDisplayScore(a);
+      if (scoreDiff) return scoreDiff;
+
+      const probDiff = propProbabilityValue(b) - propProbabilityValue(a);
+      if (Number.isFinite(probDiff) && probDiff) return probDiff;
+
+      return propLineValue(b) - propLineValue(a);
+    })[0] || null;
+}
+
+function selectGameProps(rows, limit = 6) {
+  const byPlayerStat = new Map();
+
+  rows.forEach(prop => {
+    const key = `${normalizeLookupToken(prop?.player || prop?.PLAYER_NAME || '')}|${String(prop?.stat || prop?.stat_display || '').toUpperCase()}`;
+    if (!byPlayerStat.has(key)) byPlayerStat.set(key, []);
+    byPlayerStat.get(key).push(prop);
+  });
+
+  const deduped = Array.from(byPlayerStat.values())
+    .map(group => pickBestPropVariant(group))
+    .filter(Boolean);
+
+  const preferred = deduped.filter(prop => isReasonablePropLine(prop, { ratioFloor: 0.7, probFloor: 0.55 }));
+  const fallback = deduped.filter(prop => isReasonablePropLine(prop, { ratioFloor: 0.62, probFloor: 0.5 }));
+
+  const chosen = (preferred.length >= limit ? preferred : fallback.length >= limit ? fallback : deduped)
+    .slice()
+    .sort((a, b) => {
+      const scoreDiff = propDisplayScore(b) - propDisplayScore(a);
+      if (scoreDiff) return scoreDiff;
+
+      const probDiff = propProbabilityValue(b) - propProbabilityValue(a);
+      if (Number.isFinite(probDiff) && probDiff) return probDiff;
+
+      return propLineValue(b) - propLineValue(a);
+    })
+    .slice(0, limit);
+
+  return chosen;
 }
 
 function flattenPropsData(propsData) {
@@ -141,21 +315,26 @@ function flattenPropsData(propsData) {
 function renderChart(movement) {
   const box = byId('movement-chart');
   if (!box) return;
+
   if (!movement || !movement.length) {
     box.innerHTML = '<div class="empty-state">No movement records available.</div>';
     return;
   }
+
   const labels = movement.map(d => d.date);
   const away = movement.map(d => Number(d.predictedAway));
   const home = movement.map(d => Number(d.predictedHome));
+
   const width = 900;
   const height = 280;
   const pad = 36;
   const all = [...away, ...home].filter(v => Number.isFinite(v));
+
   if (!all.length) {
     box.innerHTML = '<div class="empty-state">No chartable movement records available.</div>';
     return;
   }
+
   const rawMin = Math.min(...all);
   const rawMax = Math.max(...all);
   const rawRange = rawMax - rawMin;
@@ -163,9 +342,11 @@ function renderChart(movement) {
   const minY = rawMin - padY;
   const maxY = rawMax + padY;
   const stepX = (width - pad * 2) / Math.max(1, labels.length - 1);
+
   const x = i => pad + i * stepX;
   const y = v => height - pad - ((v - minY) / (maxY - minY || 1)) * (height - pad * 2);
   const path = series => series.map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(v)}`).join(' ');
+
   const gridCount = 5;
   const grid = Array.from({ length: gridCount }, (_, i) => {
     const ratio = i / (gridCount - 1);
@@ -173,8 +354,14 @@ function renderChart(movement) {
     const yy = y(val);
     return `<line x1="${pad}" x2="${width - pad}" y1="${yy}" y2="${yy}" stroke="rgba(255,255,255,.10)" /><text x="8" y="${yy + 4}" fill="#9db0d0" font-size="11">${fmt(val, 2)}</text>`;
   }).join('');
-  const labelHtml = labels.map((label, i) => `<text x="${x(i)}" y="${height - 8}" text-anchor="middle" fill="#9db0d0" font-size="11">${String(label).slice(5)}</text>`).join('');
-  const points = (series, color) => series.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${color}" />`).join('');
+
+  const labelHtml = labels.map((label, i) =>
+    `<text x="${x(i)}" y="${height - 8}" text-anchor="middle" fill="#9db0d0" font-size="11">${String(label).slice(5)}</text>`
+  ).join('');
+
+  const points = (series, color) =>
+    series.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="${color}" />`).join('');
+
   box.innerHTML = `
     <div class="legend">
       <span><span class="legend-dot" style="background:#7bf1c8"></span>Away prediction</span>
@@ -194,6 +381,7 @@ function renderChart(movement) {
 function renderMovementTable(movement) {
   const body = byId('movement-body');
   if (!body) return;
+
   body.innerHTML = (movement || []).map(row => `
     <tr>
       <td>${escapeHtml(row.date || '')}</td>
@@ -221,12 +409,10 @@ function renderGameProps(game, propsData) {
 
   let rows = [];
 
-  // First try: exact GAME_ID match
   if (gameIdNum) {
     rows = allRows.filter(p => propGameNumericId(p) === gameIdNum);
   }
 
-  // Fallback: date + normalized matchup
   if (!rows.length) {
     rows = allRows
       .filter(p => {
@@ -236,15 +422,7 @@ function renderGameProps(game, propsData) {
       .filter(p => normalizeGameId(propTeamValue(p), propOppValue(p)) === gameTeamMatch);
   }
 
-  // Final sort + limit
-  rows = rows
-    .sort((a, b) => {
-      const bp = propProbabilityValue(b);
-      const ap = propProbabilityValue(a);
-      if (Number.isFinite(bp) && Number.isFinite(ap) && bp !== ap) return bp - ap;
-      return Number(b?.line || 0) - Number(a?.line || 0);
-    })
-    .slice(0, 6);
+  rows = selectGameProps(rows, 6);
 
   if (!rows.length) {
     body.innerHTML = '';
@@ -274,8 +452,10 @@ function renderGameProps(game, propsData) {
       loadJson('data/games.json', []),
       loadJson('data/nba_props_lab.json', null).then(data => data ?? loadJson('data/props.json', []))
     ]);
+
     const game = (games || []).find(g => g.id === id) || (games || [])[0];
     if (!game) throw new Error('No game records found.');
+
     document.title = `${game.awayTeam} @ ${game.homeTeam}`;
     byId('game-league').textContent = game.league || '';
     byId('game-title').textContent = `${game.awayTeam} @ ${game.homeTeam}`;
@@ -284,6 +464,7 @@ function renderGameProps(game, propsData) {
     byId('snapshot-spread').textContent = fmtSigned(game.marketSpread, 2);
     byId('snapshot-total').textContent = fmt(game.marketTotal, 2);
     byId('snapshot-confidence').textContent = game.confidence || 'N/A';
+
     renderChart(game.movement || []);
     renderMovementTable(game.movement || []);
     renderGameProps(game, propsData);
