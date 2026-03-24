@@ -53,7 +53,6 @@ function setText(id, value) {
   if (el) el.textContent = value ?? '';
 }
 
-
 function normalizeLookupToken(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -113,8 +112,6 @@ function buildInjuryLookup(injuryData) {
     if (teamKey) {
       lookup.set(`${playerKey}|${teamKey}`, normalized);
     }
-
-    // Always create a player-only fallback too
     if (!lookup.has(`${playerKey}|`)) {
       lookup.set(`${playerKey}|`, normalized);
     }
@@ -146,10 +143,35 @@ function shouldHideProp(prop) {
   return status === 'out' || status === 'doubtful';
 }
 
+function propModelAnchor(prop) {
+  const candidates = [prop?.pred_anchor, prop?.mu_cons, prop?.modelPrediction, prop?.model, prop?.prediction];
+  for (const value of candidates) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function propLineCutoff(stat) {
+  const s = String(stat || '').toUpperCase().trim();
+  if (s === 'TPM' || s === '3PM') return 1;
+  if (s === 'REB' || s === 'AST') return 2;
+  if (s === 'PTS' || s === 'PRA') return 3;
+  return 2;
+}
+
+function failsLineCutoff(prop) {
+  const line = Number(prop?.line);
+  const model = propModelAnchor(prop);
+  if (!Number.isFinite(line) || !Number.isFinite(model)) return false;
+  return line < (model - propLineCutoff(prop?.stat));
+}
+
 function applyInjuryContextToList(items, injuryLookup) {
   return (items || [])
     .map(item => decoratePropInjury(item, injuryLookup))
-    .filter(item => !shouldHideProp(item));
+    .filter(item => !shouldHideProp(item))
+    .filter(item => !failsLineCutoff(item));
 }
 
 function applyInjuryContextToLab(lab, injuryLookup) {
@@ -176,18 +198,49 @@ function playerBadgeHtml(name, prop) {
   return `<span class="player-with-badge"><span class="player-name-only">${escapeHtml(name || '')}</span>${injuryBadgeHtml(prop)}</span>`;
 }
 
+function propTeamValue(prop) {
+  return prop?.team || prop?.team_abbr || prop?.teamAbbr || '';
+}
+
+function propOppValue(prop) {
+  return prop?.opp || prop?.opponent || prop?.opp_abbr || prop?.opponent_abbr || '';
+}
+
+function normalizeGameId(a, b) {
+  const parts = [normalizeTeamToken(a), normalizeTeamToken(b)].filter(Boolean).sort();
+  return parts.join('|');
+}
+
+function propGameId(prop) {
+  return normalizeGameId(propTeamValue(prop), propOppValue(prop));
+}
+
+function propGameLabel(prop) {
+  const a = propTeamValue(prop);
+  const b = propOppValue(prop);
+  if (a && b) {
+    const teams = [a, b].sort();
+    return `${teams[0]} vs ${teams[1]}`;
+  }
+  return '';
+}
 
 function getFilters() {
   return {
     stat: byId('lab-stat-filter')?.value || 'ALL',
+    game: byId('game-filter')?.value || 'ALL',
     query: (byId('lab-search')?.value || '').trim().toLowerCase()
   };
 }
 
 function propMatchesFilters(prop, filters = getFilters()) {
-  if (shouldHideProp(prop)) return false;
-  const statOk = filters.stat === 'ALL' || prop.stat === filters.stat;
+  if (shouldHideProp(prop) || failsLineCutoff(prop)) return false;
+
+  const statOk = filters.stat === 'ALL' || String(prop.stat || '').toUpperCase() === filters.stat;
   if (!statOk) return false;
+
+  const gameOk = filters.game === 'ALL' || propGameId(prop) === filters.game;
+  if (!gameOk) return false;
 
   if (!filters.query) return true;
 
@@ -271,7 +324,7 @@ function renderGrid(rootId, items, role = false, limit = 9) {
 function populateDateOptions(select, dates, targetDate) {
   if (!select) return;
   select.innerHTML = '';
-  dates.forEach(date => {
+  (dates || []).forEach(date => {
     const option = document.createElement('option');
     option.value = date;
     option.textContent = date;
@@ -286,12 +339,37 @@ function populateStatOptions(select, props, selectedValue = 'ALL') {
   select.innerHTML = '<option value="ALL">All</option>';
   stats.forEach(stat => {
     const option = document.createElement('option');
-    option.value = stat;
+    option.value = String(stat).toUpperCase();
     option.textContent = stat;
     select.appendChild(option);
   });
-  const nextValue = stats.includes(selectedValue) ? selectedValue : 'ALL';
-  select.value = nextValue;
+  const desired = String(selectedValue || 'ALL').toUpperCase();
+  select.value = stats.map(s => String(s).toUpperCase()).includes(desired) ? desired : 'ALL';
+}
+
+function populateGameOptions(select, props, selectedValue = 'ALL') {
+  if (!select) return;
+  const seen = new Map();
+  (props || []).forEach(prop => {
+    const id = propGameId(prop);
+    const label = propGameLabel(prop);
+    if (id && label && !seen.has(id)) {
+      seen.set(id, label);
+    }
+  });
+
+  select.innerHTML = '<option value="ALL">All games</option>';
+
+  Array.from(seen.entries())
+    .sort((a, b) => a[1].localeCompare(b[1]))
+    .forEach(([id, label]) => {
+      const option = document.createElement('option');
+      option.value = id;
+      option.textContent = label;
+      select.appendChild(option);
+    });
+
+  select.value = seen.has(selectedValue) ? selectedValue : 'ALL';
 }
 
 function filterBoardItems(items, filters) {
@@ -334,6 +412,8 @@ function applyDate(lab, date) {
 
   const currentFilters = getFilters();
   populateStatOptions(byId('lab-stat-filter'), day.allProps || [], currentFilters.stat);
+  populateGameOptions(byId('game-filter'), day.allProps || [], currentFilters.game);
+
   const filters = getFilters();
   const filteredAll = filterProps(day.allProps || [], filters);
 
@@ -363,24 +443,25 @@ function applyDate(lab, date) {
     const lab = applyInjuryContextToLab(rawLab, injuryLookup);
     const dateSelect = byId('lab-date-filter');
     const statSelect = byId('lab-stat-filter');
+    const gameSelect = byId('game-filter');
     const searchInput = byId('lab-search');
-    const dates = lab.dates || [];
 
+    const dates = lab.dates || [];
     const now = new Date();
     const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
     const targetDate =
       (dates.includes(todayIso) && todayIso) ||
       (dates.includes(site?.targetDate) && site.targetDate) ||
       (dates.includes(lab?.targetDate) && lab.targetDate) ||
       dates[0];
 
-    populateDateOptions(dateSelect, lab.dates || [], targetDate);
+    populateDateOptions(dateSelect, dates, targetDate);
 
     const rerender = () => applyDate(lab, dateSelect.value);
-    dateSelect.addEventListener('change', rerender);
-    statSelect.addEventListener('change', rerender);
-    searchInput.addEventListener('input', rerender);
+    dateSelect?.addEventListener('change', rerender);
+    statSelect?.addEventListener('change', rerender);
+    gameSelect?.addEventListener('change', rerender);
+    searchInput?.addEventListener('input', rerender);
 
     applyDate(lab, targetDate);
   } catch (err) {

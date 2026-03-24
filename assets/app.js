@@ -13,6 +13,17 @@ function byId(id) {
   return document.getElementById(id);
 }
 
+function propDateValue(prop) {
+  return prop?.gameDate || prop?.date || prop?.propDate || prop?.game_date || '';
+}
+
+function filterPropsByDate(props, date) {
+  if (!date) return props || [];
+  const dated = (props || []).filter(p => propDateValue(p));
+  if (!dated.length) return props || [];
+  return dated.filter(p => propDateValue(p) === date);
+}
+
 function hasNumericValue(v) {
   return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
 }
@@ -251,8 +262,8 @@ function propMatchupText(p) {
   return cleaned || 'N/A';
 }
 
-function renderProps(props) {
-  const body = byId('props-body');
+function renderProps(props, bodyId = 'props-body') {
+  const body = byId(bodyId);
   if (!body) return;
   const visibleProps = props || [];
   body.innerHTML = visibleProps.map(p => `
@@ -494,12 +505,15 @@ function setupLeagueFilter(allGames, meta) {
     ]);
     const injuryLookup = buildInjuryLookup(injuries);
     const props = applyInjuryContextToList(rawProps, injuryLookup);
+    const todayProps = props.filter(p => propDateValue(p) === meta.targetDate);
+    const nextProps = props.filter(p => propDateValue(p) === meta.nextDate);
     const homeInsights = applyInjuryContextToHomeInsights(rawHomeInsights, injuryLookup);
     const todayGames = (games || []).filter(g => g.gameDate === meta.targetDate);
     const tomorrowGames = (games || []).filter(g => g.gameDate === meta.nextDate);
-    fillHeader(meta, todayGames, tomorrowGames, props);
+    fillHeader(meta, todayGames, tomorrowGames, todayProps);
     setupLeagueFilter(games, meta);
-    renderProps(props);
+    renderProps(todayProps, 'props-body');
+    renderProps(nextProps, 'props-next-body');
     renderNbaGameEdges(games, meta);
     renderHomeInsights(homeInsights, meta);
     renderResultsSummary(resultsSummary);
