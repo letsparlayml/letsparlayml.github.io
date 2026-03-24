@@ -53,6 +53,166 @@ function setText(id, value) {
   if (el) el.textContent = value ?? '';
 }
 
+
+function normalizeLookupToken(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeTeamToken(value) {
+  return String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .trim();
+}
+
+function canonicalInjuryStatus(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return '';
+  const map = {
+    p: 'probable',
+    probable: 'probable',
+    q: 'questionable',
+    questionable: 'questionable',
+    gtd: 'questionable',
+    out: 'out',
+    o: 'out',
+    doubtful: 'doubtful',
+    d: 'doubtful'
+  };
+  return map[raw] || raw;
+}
+
+function titleCaseWord(value) {
+  if (!value) return '';
+  return String(value).charAt(0).toUpperCase() + String(value).slice(1).toLowerCase();
+}
+
+function buildInjuryLookup(injuryData) {
+  const lookup = new Map();
+  const players = injuryData?.players || injuryData?.entries || [];
+  (players || []).forEach(entry => {
+    const playerKey = normalizeLookupToken(entry.player || entry.player_name);
+    if (!playerKey) return;
+
+    const teamKey = normalizeTeamToken(entry.team || entry.team_abbr);
+    const normalized = {
+      status: titleCaseWord(canonicalInjuryStatus(entry.status)),
+      note: entry.note || entry.injury_note || '',
+      team: entry.team || entry.team_abbr || '',
+      lastUpdated: entry.lastUpdated || entry.last_updated || entry.updated_at || '',
+      gameDate: entry.gameDate || entry.game_date || ''
+    };
+
+    if (teamKey) {
+      lookup.set(`${playerKey}|${teamKey}`, normalized);
+    }
+
+    // Always create a player-only fallback too
+    if (!lookup.has(`${playerKey}|`)) {
+      lookup.set(`${playerKey}|`, normalized);
+    }
+  });
+  return lookup;
+}
+
+function getPropInjuryContext(prop, injuryLookup) {
+  if (!injuryLookup || !injuryLookup.size) return null;
+  const playerKey = normalizeLookupToken(prop?.player);
+  if (!playerKey) return null;
+  const teamKey = normalizeTeamToken(prop?.team);
+  return injuryLookup.get(`${playerKey}|${teamKey}`) || injuryLookup.get(`${playerKey}|`) || null;
+}
+
+function decoratePropInjury(prop, injuryLookup) {
+  const context = getPropInjuryContext(prop, injuryLookup);
+  if (!context) return { ...prop };
+  return {
+    ...prop,
+    injuryStatus: context.status || '',
+    injuryNote: context.note || '',
+    injuryUpdated: context.lastUpdated || ''
+  };
+}
+
+function shouldHideProp(prop) {
+  const status = canonicalInjuryStatus(prop?.injuryStatus || prop?.playerStatus || '');
+  return status === 'out' || status === 'doubtful';
+}
+
+function applyInjuryContextToList(items, injuryLookup) {
+  return (items || [])
+    .map(item => decoratePropInjury(item, injuryLookup))
+    .filter(item => !shouldHideProp(item));
+}
+
+function applyInjuryContextToLab(lab, injuryLookup) {
+  if (!lab || !lab.byDate) return lab || {};
+  const next = JSON.parse(JSON.stringify(lab));
+  Object.keys(next.byDate).forEach(date => {
+    const day = next.byDate[date];
+    day.allProps = applyInjuryContextToList(day.allProps || [], injuryLookup);
+    if (day.meta) day.meta.propCount = day.allProps.length;
+    Object.keys(day.sections || {}).forEach(key => {
+      day.sections[key] = applyInjuryContextToList(day.sections[key] || [], injuryLookup);
+    });
+  });
+  return next;
+}
+
+function injuryBadgeHtml(prop) {
+  const status = canonicalInjuryStatus(prop?.injuryStatus || prop?.playerStatus || '');
+  if (status !== 'probable' && status !== 'questionable') return '';
+  return `<span class="injury-badge injury-${status}">${escapeHtml(titleCaseWord(status))}</span>`;
+}
+
+function playerBadgeHtml(name, prop) {
+  return `<span class="player-with-badge"><span class="player-name-only">${escapeHtml(name || '')}</span>${injuryBadgeHtml(prop)}</span>`;
+}
+
+
+function getFilters() {
+  return {
+    stat: byId('lab-stat-filter')?.value || 'ALL',
+    query: (byId('lab-search')?.value || '').trim().toLowerCase()
+  };
+}
+
+function propMatchesFilters(prop, filters = getFilters()) {
+  if (shouldHideProp(prop)) return false;
+  const statOk = filters.stat === 'ALL' || prop.stat === filters.stat;
+  if (!statOk) return false;
+
+  if (!filters.query) return true;
+
+  const haystack = [
+    prop.player,
+    prop.team,
+    prop.opp,
+    prop.stat,
+    prop.matchup,
+    prop.summary,
+    prop.boardDriver,
+    prop.injuryStatus,
+    prop.injuryNote
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return haystack.includes(filters.query);
+}
+
+function filterProps(props, filters = getFilters()) {
+  return (props || []).filter(prop => propMatchesFilters(prop, filters));
+}
+
 function propCard(prop) {
   return `
     <article class="insight-card">
@@ -60,7 +220,7 @@ function propCard(prop) {
         <span class="tag">${escapeHtml(prop.stat || '')}</span>
         <span class="muted">${escapeHtml(prop.location || '')}</span>
       </div>
-      <h4>${escapeHtml(prop.player || '')}</h4>
+      <h4>${playerBadgeHtml(prop.player || '', prop)}</h4>
       <p class="muted">${escapeHtml(prop.team || '')} vs ${escapeHtml(prop.opp || '')}</p>
       <div class="mini-chip-row">
         <span class="mini-chip">Line ${escapeHtml(fmt(prop.line, 1))}</span>
@@ -85,7 +245,7 @@ function roleCard(prop) {
         <span class="tag">${escapeHtml(prop.stat || '')}</span>
         <span class="muted">${Number.isFinite(gap) ? fmtSigned(gap, 1) : 'N/A'} vs avg</span>
       </div>
-      <h4>${escapeHtml(prop.player || '')}</h4>
+      <h4>${playerBadgeHtml(prop.player || '', prop)}</h4>
       <p class="muted">${escapeHtml(prop.team || '')} vs ${escapeHtml(prop.opp || '')}</p>
       <div class="mini-chip-row">
         <span class="mini-chip">Line ${escapeHtml(fmt(prop.line, 1))}</span>
@@ -109,6 +269,8 @@ function renderGrid(rootId, items, role = false, limit = 9) {
 }
 
 function populateDateOptions(select, dates, targetDate) {
+  if (!select) return;
+  select.innerHTML = '';
   dates.forEach(date => {
     const option = document.createElement('option');
     option.value = date;
@@ -118,30 +280,28 @@ function populateDateOptions(select, dates, targetDate) {
   });
 }
 
-function populateStatOptions(select, props) {
+function populateStatOptions(select, props, selectedValue = 'ALL') {
+  if (!select) return;
+  const stats = [...new Set((props || []).map(p => p.stat).filter(Boolean))].sort();
   select.innerHTML = '<option value="ALL">All</option>';
-  [...new Set((props || []).map(p => p.stat).filter(Boolean))].sort().forEach(stat => {
+  stats.forEach(stat => {
     const option = document.createElement('option');
     option.value = stat;
     option.textContent = stat;
     select.appendChild(option);
   });
+  const nextValue = stats.includes(selectedValue) ? selectedValue : 'ALL';
+  select.value = nextValue;
 }
 
-function filterProps(props) {
-  const stat = byId('lab-stat-filter')?.value || 'ALL';
-  const q = (byId('lab-search')?.value || '').trim().toLowerCase();
-  return (props || []).filter(p => {
-    const statOk = stat === 'ALL' || p.stat === stat;
-    const searchOk = !q || String(p.player || '').toLowerCase().includes(q);
-    return statOk && searchOk;
-  });
+function filterBoardItems(items, filters) {
+  return filterProps(items || [], filters);
 }
 
 function explorerRow(prop) {
   return `
     <tr>
-      <td><strong>${escapeHtml(prop.player || '')}</strong><br /><span class="muted">${escapeHtml(prop.team || '')} • ${escapeHtml(prop.location || '')}</span></td>
+      <td>${playerBadgeHtml(prop.player || '', prop)}<br /><span class="muted">${escapeHtml(prop.team || '')} • ${escapeHtml(prop.location || '')}</span></td>
       <td>${escapeHtml(prop.matchup || `${prop.team || ''} vs ${prop.opp || ''}`)}</td>
       <td>${escapeHtml(prop.stat || '')}</td>
       <td>${escapeHtml(fmt(prop.line, 1))}</td>
@@ -157,10 +317,10 @@ function explorerRow(prop) {
   `;
 }
 
-function renderExplorer(props) {
+function renderExplorer(props, filters) {
   const body = byId('lab-explorer-body');
   if (!body) return;
-  const filtered = filterProps(props);
+  const filtered = filterProps(props, filters);
   if (!filtered.length) {
     body.innerHTML = '<tr><td colspan="12">No props match the current filters.</td></tr>';
     return;
@@ -171,36 +331,48 @@ function renderExplorer(props) {
 function applyDate(lab, date) {
   const day = lab?.byDate?.[date];
   if (!day) return;
+
+  const currentFilters = getFilters();
+  populateStatOptions(byId('lab-stat-filter'), day.allProps || [], currentFilters.stat);
+  const filters = getFilters();
+  const filteredAll = filterProps(day.allProps || [], filters);
+
   setText('lab-date-hero', date);
-  setText('lab-prop-count', String(day.meta?.propCount || 0));
-  setText('lab-consensus-count', String(day.meta?.consensusCount || 0));
-  setText('lab-floor-count', String(day.meta?.floorCount || 0));
-  setText('lab-ceiling-count', String(day.meta?.ceilingCount || 0));
-  populateStatOptions(byId('lab-stat-filter'), day.allProps || []);
-  renderGrid('lab-consensus-grid', day.sections?.consensus || [], false, 9);
-  renderGrid('lab-floor-grid', day.sections?.floor || [], false, 8);
-  renderGrid('lab-consistency-grid', day.sections?.consistency || [], false, 8);
-  renderGrid('lab-ceiling-grid', day.sections?.ceiling || [], false, 9);
-  renderGrid('lab-role-up-grid', day.sections?.roleUp || [], true, 8);
-  renderGrid('lab-role-down-grid', day.sections?.roleDown || [], true, 8);
-  renderExplorer(day.allProps || []);
+  setText('lab-prop-count', `${filteredAll.length}/${String(day.meta?.propCount || 0)}`);
+  setText('lab-consensus-count', String(filterBoardItems(day.sections?.consensus || [], filters).length));
+  setText('lab-floor-count', String(filterBoardItems(day.sections?.floor || [], filters).length));
+  setText('lab-ceiling-count', String(filterBoardItems(day.sections?.ceiling || [], filters).length));
+
+  renderGrid('lab-consensus-grid', filterBoardItems(day.sections?.consensus || [], filters), false, 9);
+  renderGrid('lab-floor-grid', filterBoardItems(day.sections?.floor || [], filters), false, 8);
+  renderGrid('lab-consistency-grid', filterBoardItems(day.sections?.consistency || [], filters), false, 8);
+  renderGrid('lab-ceiling-grid', filterBoardItems(day.sections?.ceiling || [], filters), false, 9);
+  renderGrid('lab-role-up-grid', filterBoardItems(day.sections?.roleUp || [], filters), true, 8);
+  renderGrid('lab-role-down-grid', filterBoardItems(day.sections?.roleDown || [], filters), true, 8);
+  renderExplorer(day.allProps || [], filters);
 }
 
 (async function init() {
   try {
-    const [site, lab] = await Promise.all([
+    const [site, rawLab, injuries] = await Promise.all([
       loadJson('data/site.json', {}),
-      loadJson('data/nba_props_lab.json')
+      loadJson('data/nba_props_lab.json'),
+      loadJson('data/nba_injuries.json', {})
     ]);
+    const injuryLookup = buildInjuryLookup(injuries);
+    const lab = applyInjuryContextToLab(rawLab, injuryLookup);
     const dateSelect = byId('lab-date-filter');
     const statSelect = byId('lab-stat-filter');
     const searchInput = byId('lab-search');
     const targetDate = site?.targetDate || lab.targetDate || lab.dates?.[0];
+
     populateDateOptions(dateSelect, lab.dates || [], targetDate);
+
     const rerender = () => applyDate(lab, dateSelect.value);
     dateSelect.addEventListener('change', rerender);
-    statSelect.addEventListener('change', () => applyDate(lab, dateSelect.value));
-    searchInput.addEventListener('input', () => applyDate(lab, dateSelect.value));
+    statSelect.addEventListener('change', rerender);
+    searchInput.addEventListener('input', rerender);
+
     applyDate(lab, targetDate);
   } catch (err) {
     const root = byId('lab-consensus-grid');

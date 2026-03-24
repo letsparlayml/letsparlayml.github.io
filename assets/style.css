@@ -425,3 +425,38 @@ th { color: var(--muted); font-size: .85rem; }
 @media (max-width: 560px) {
   .hero-grid, .snapshot-grid, .kpi-row, .sport-summary-metrics, .hero-grid-five, .control-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Injury context */
+.player-with-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+}
+.player-name-only {
+  font-weight: 700;
+}
+.injury-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .22rem .45rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.injury-probable {
+  color: #cfe3ff;
+  background: rgba(59,130,246,.12);
+  border-color: rgba(59,130,246,.35);
+}
+.injury-questionable {
+  color: #fde68a;
+  background: rgba(245,158,11,.12);
+  border-color: rgba(245,158,11,.38);
+}

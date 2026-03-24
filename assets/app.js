@@ -22,6 +22,130 @@ function setText(id, value) {
   if (el) el.textContent = value ?? '';
 }
 
+
+function normalizeLookupToken(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function normalizeTeamToken(value) {
+  return String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .trim();
+}
+
+function canonicalInjuryStatus(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return '';
+  const map = {
+    p: 'probable',
+    probable: 'probable',
+    q: 'questionable',
+    questionable: 'questionable',
+    gtd: 'questionable',
+    out: 'out',
+    o: 'out',
+    doubtful: 'doubtful',
+    d: 'doubtful'
+  };
+  return map[raw] || raw;
+}
+
+function titleCaseWord(value) {
+  if (!value) return '';
+  return String(value).charAt(0).toUpperCase() + String(value).slice(1).toLowerCase();
+}
+
+function buildInjuryLookup(injuryData) {
+  const lookup = new Map();
+  const players = injuryData?.players || injuryData?.entries || [];
+  (players || []).forEach(entry => {
+    const playerKey = normalizeLookupToken(entry.player || entry.player_name);
+    if (!playerKey) return;
+
+    const teamKey = normalizeTeamToken(entry.team || entry.team_abbr);
+    const normalized = {
+      status: titleCaseWord(canonicalInjuryStatus(entry.status)),
+      note: entry.note || entry.injury_note || '',
+      team: entry.team || entry.team_abbr || '',
+      lastUpdated: entry.lastUpdated || entry.last_updated || entry.updated_at || '',
+      gameDate: entry.gameDate || entry.game_date || ''
+    };
+
+    if (teamKey) {
+      lookup.set(`${playerKey}|${teamKey}`, normalized);
+    }
+
+    // Always create a player-only fallback too
+    if (!lookup.has(`${playerKey}|`)) {
+      lookup.set(`${playerKey}|`, normalized);
+    }
+  });
+  return lookup;
+}
+
+function getPropInjuryContext(prop, injuryLookup) {
+  if (!injuryLookup || !injuryLookup.size) return null;
+  const playerKey = normalizeLookupToken(prop?.player);
+  if (!playerKey) return null;
+  const teamKey = normalizeTeamToken(prop?.team);
+  return injuryLookup.get(`${playerKey}|${teamKey}`) || injuryLookup.get(`${playerKey}|`) || null;
+}
+
+function decoratePropInjury(prop, injuryLookup) {
+  const context = getPropInjuryContext(prop, injuryLookup);
+  if (!context) return { ...prop };
+  return {
+    ...prop,
+    injuryStatus: context.status || '',
+    injuryNote: context.note || '',
+    injuryUpdated: context.lastUpdated || ''
+  };
+}
+
+function shouldHideProp(prop) {
+  const status = canonicalInjuryStatus(prop?.injuryStatus || prop?.playerStatus || prop?.status);
+  return status === 'out' || status === 'doubtful';
+}
+
+function applyInjuryContextToList(items, injuryLookup) {
+  return (items || [])
+    .map(item => decoratePropInjury(item, injuryLookup))
+    .filter(item => !shouldHideProp(item));
+}
+
+function applyInjuryContextToHomeInsights(homeInsights, injuryLookup) {
+  if (!homeInsights || !homeInsights.byDate) return homeInsights || {};
+  const next = JSON.parse(JSON.stringify(homeInsights));
+  Object.keys(next.byDate).forEach(date => {
+    const day = next.byDate[date];
+    Object.keys(day || {}).forEach(key => {
+      if (Array.isArray(day[key])) {
+        day[key] = applyInjuryContextToList(day[key], injuryLookup);
+      }
+    });
+  });
+  return next;
+}
+
+function injuryBadgeHtml(prop) {
+  const status = canonicalInjuryStatus(prop?.injuryStatus || prop?.playerStatus || '');
+  if (status !== 'probable' && status !== 'questionable') return '';
+  return `<span class="injury-badge injury-${status}">${escapeHtml(titleCaseWord(status))}</span>`;
+}
+
+function playerBadgeHtml(name, prop) {
+  return `<span class="player-with-badge"><span class="player-name-only">${escapeHtml(name || '')}</span>${injuryBadgeHtml(prop)}</span>`;
+}
+
+
 function fmt(num, digits = 1) {
   const n = Number(num);
   return Number.isFinite(n) ? n.toFixed(digits) : 'N/A';
@@ -130,10 +254,11 @@ function propMatchupText(p) {
 function renderProps(props) {
   const body = byId('props-body');
   if (!body) return;
-  body.innerHTML = (props || []).map(p => `
+  const visibleProps = props || [];
+  body.innerHTML = visibleProps.map(p => `
     <tr>
       <td>${escapeHtml(p.league || '')}</td>
-      <td>${escapeHtml(p.player || '')}</td>
+      <td>${playerBadgeHtml(p.player || '', p)}</td>
       <td>${escapeHtml(p.stat || '')}</td>
       <td>${escapeHtml(p.line ?? '')}</td>
       <td>${escapeHtml(p.modelPrediction ?? p.model ?? '')}</td>
@@ -242,7 +367,7 @@ function propInsightCard(prop) {
         <span class="tag">${escapeHtml(prop.stat || '')}</span>
         <span class="muted">${escapeHtml(prop.location || '')}</span>
       </div>
-      <h4>${escapeHtml(prop.player || '')}</h4>
+      <h4>${playerBadgeHtml(prop.player || '', prop)}</h4>
       <p class="muted">${escapeHtml(prop.team || '')} vs ${escapeHtml(prop.opp || '')}</p>
       <div class="mini-chip-row">
         <span class="mini-chip">Line ${escapeHtml(fmt(prop.line, 1))}</span>
@@ -262,7 +387,7 @@ function roleCard(prop) {
         <span class="tag">${escapeHtml(prop.stat || '')}</span>
         <span class="muted">${Number.isFinite(gap) ? fmtSigned(gap, 1) : 'N/A'} vs avg</span>
       </div>
-      <h4>${escapeHtml(prop.player || '')}</h4>
+      <h4>${playerBadgeHtml(prop.player || '', prop)}</h4>
       <p class="muted">${escapeHtml(prop.team || '')} vs ${escapeHtml(prop.opp || '')}</p>
       <div class="mini-chip-row">
         <span class="mini-chip">Line ${escapeHtml(fmt(prop.line, 1))}</span>
@@ -276,11 +401,12 @@ function roleCard(prop) {
 function renderInsightGrid(rootId, items, role = false) {
   const root = byId(rootId);
   if (!root) return;
-  if (!items || !items.length) {
+  const visibleItems = applyInjuryContextToList(items || [], new Map());
+  if (!visibleItems.length) {
     root.innerHTML = '<div class="empty-state">No props available.</div>';
     return;
   }
-  root.innerHTML = items.map(item => role ? roleCard(item) : propInsightCard(item)).join('');
+  root.innerHTML = visibleItems.map(item => role ? roleCard(item) : propInsightCard(item)).join('');
 }
 
 function edgeBoardCard(title, items, kind) {
@@ -357,14 +483,18 @@ function setupLeagueFilter(allGames, meta) {
 (async function init() {
   const root = byId('today-games-grid') || byId('games-grid');
   try {
-    const [meta, games, props, results, resultsSummary, homeInsights] = await Promise.all([
+    const [meta, games, rawProps, results, resultsSummary, rawHomeInsights, injuries] = await Promise.all([
       loadJson('data/site.json'),
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/results.json', []),
       loadJson('data/results_summary.json', {}),
-      loadJson('data/nba_home_insights.json', {})
+      loadJson('data/nba_home_insights.json', {}),
+      loadJson('data/nba_injuries.json', {})
     ]);
+    const injuryLookup = buildInjuryLookup(injuries);
+    const props = applyInjuryContextToList(rawProps, injuryLookup);
+    const homeInsights = applyInjuryContextToHomeInsights(rawHomeInsights, injuryLookup);
     const todayGames = (games || []).filter(g => g.gameDate === meta.targetDate);
     const tomorrowGames = (games || []).filter(g => g.gameDate === meta.nextDate);
     fillHeader(meta, todayGames, tomorrowGames, props);
