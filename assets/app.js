@@ -304,30 +304,95 @@ function parseResultScoreValues(text) {
   return matches.slice(-2).map(Number).filter(Number.isFinite);
 }
 
+function parseMatchupTeams(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return { away: '', home: '' };
+  if (raw.includes('@')) {
+    const [away, home] = raw.split('@').map(part => String(part || '').trim());
+    return { away, home };
+  }
+  if (/vs/i.test(raw)) {
+    const [home, away] = raw.split(/vs/i).map(part => String(part || '').trim());
+    return { away, home };
+  }
+  return { away: '', home: '' };
+}
+
+function inferredSpreadLabel(row) {
+  const marketSpread = Number(row?.marketSpread);
+  if (!Number.isFinite(marketSpread)) return '';
+
+  const outcome = resultOutcome(row?.spreadResult || '');
+  const predictedVals = parseResultScoreValues(row?.predicted || '');
+  const actualVals = parseResultScoreValues(row?.actual || '');
+  const teams = parseMatchupTeams(row?.matchup || '');
+
+  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN;
+  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;
+
+  let pickTeam = '';
+  let pickLine = marketSpread;
+  if (Number.isFinite(predMargin)) {
+    if (predMargin > marketSpread) {
+      pickTeam = teams.home || 'Home';
+      pickLine = marketSpread;
+    } else if (predMargin < marketSpread) {
+      pickTeam = teams.away || 'Away';
+      pickLine = -marketSpread;
+    } else {
+      pickTeam = teams.home || teams.away || '';
+      pickLine = marketSpread;
+    }
+  }
+
+  let resolvedOutcome = outcome;
+  if (!resolvedOutcome && Number.isFinite(actualMargin) && Number.isFinite(predMargin)) {
+    const covered = predMargin > marketSpread ? actualMargin > marketSpread : predMargin < marketSpread ? actualMargin < marketSpread : actualMargin === marketSpread;
+    resolvedOutcome = actualMargin === marketSpread ? 'push' : covered ? 'win' : 'loss';
+  }
+
+  if (!pickTeam && Number.isFinite(marketSpread)) {
+    pickTeam = marketSpread <= 0 ? (teams.home || 'Home') : (teams.away || 'Away');
+    pickLine = marketSpread <= 0 ? marketSpread : -marketSpread;
+  }
+
+  if (!pickTeam && !resolvedOutcome) return Number.isFinite(marketSpread) ? fmtSigned(marketSpread) : '';
+  return `${pickTeam ? `${pickTeam} ` : ''}${fmtSigned(pickLine)}${resolvedOutcome ? ` ${resolvedOutcome[0].toUpperCase()}${resolvedOutcome.slice(1)}` : ''}`.trim();
+}
+
+function inferredTotalLabel(row) {
+  const marketTotal = Number(row?.marketTotal);
+  if (!Number.isFinite(marketTotal)) return '';
+
+  const existingOutcome = resultOutcome(row?.totalResult || '');
+  const predictedVals = parseResultScoreValues(row?.predicted || '');
+  const actualVals = parseResultScoreValues(row?.actual || '');
+  const predTotal = predictedVals.length === 2 ? predictedVals[0] + predictedVals[1] : NaN;
+  const actualTotal = actualVals.length === 2 ? actualVals[0] + actualVals[1] : NaN;
+
+  const side = Number.isFinite(predTotal)
+    ? (predTotal > marketTotal ? 'O' : predTotal < marketTotal ? 'U' : '')
+    : '';
+
+  let outcome = existingOutcome;
+  if (!outcome && Number.isFinite(actualTotal) && side) {
+    outcome = actualTotal === marketTotal ? 'push' : (side === 'O' ? actualTotal > marketTotal : actualTotal < marketTotal) ? 'win' : 'loss';
+  } else if (!outcome && Number.isFinite(actualTotal) && actualTotal === marketTotal) {
+    outcome = 'push';
+  }
+
+  return `${side ? `${side} ` : ''}${fmt(marketTotal)}${outcome ? ` ${outcome[0].toUpperCase()}${outcome.slice(1)}` : ''}`.trim();
+}
+
 function formatSpreadResultCell(row) {
-  const label = String(row?.spreadResult || '').trim() || 'N/A';
+  const existing = String(row?.spreadResult || '').trim();
+  const label = /\d/.test(existing) ? existing : inferredSpreadLabel(row) || existing || 'N/A';
   return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
 }
 
 function formatTotalResultCell(row) {
   const existing = String(row?.totalResult || '').trim();
-  const marketTotal = Number(row?.marketTotal);
-  if (/\d/.test(existing)) {
-    return `<span class="result-badge ${resultBadgeClass(existing)}">${escapeHtml(existing)}</span>`;
-  }
-
-  let label = existing || 'N/A';
-  if (Number.isFinite(marketTotal) && /^(win|loss|push)$/i.test(existing)) {
-    const predictedVals = parseResultScoreValues(row?.predicted || '');
-    const predTotal = predictedVals.length === 2 ? predictedVals[0] + predictedVals[1] : NaN;
-    const side = Number.isFinite(predTotal)
-      ? (predTotal > marketTotal ? 'O' : predTotal < marketTotal ? 'U' : '')
-      : '';
-    label = `${side ? `${side} ` : ''}${fmt(marketTotal)} ${existing}`.trim();
-  } else if (Number.isFinite(marketTotal) && !existing) {
-    label = fmt(marketTotal);
-  }
-
+  const label = /\d/.test(existing) ? existing : inferredTotalLabel(row) || existing || 'N/A';
   return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
 }
 

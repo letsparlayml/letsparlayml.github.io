@@ -353,8 +353,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
   const state = { data: null, selection: null, view: 'overall' };
 
   async function load() {
-    const data = await loadJson('data/nba_props_analyzer.json', { dates: [], entries: [], series: {} });
-    state.data = data || { dates: [], entries: [], series: {} };
+    const data = await loadJson('data/nba_props_analyzer.json', { dates: [], entries: [], seriesIndex: {} });
+    state.data = data || { dates: [], entries: [], seriesIndex: {} };
     state.selection = findInitialState(state.data);
     bind();
     render();
@@ -371,9 +371,27 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     return exact || candidates.sort((a, b) => Number(a.line) - Number(b.line))[0];
   }
 
-  function selectedSeries() {
-    const entry = selectedEntry();
-    return entry ? state.data.series?.[entry.seriesKey] || null : null;
+  const seriesCache = new Map();
+  let renderToken = 0;
+
+  async function selectedSeries(entry) {
+    if (!entry?.seriesKey) return null;
+    if (seriesCache.has(entry.seriesKey)) return seriesCache.get(entry.seriesKey);
+    const relPath = state.data?.seriesIndex?.[entry.seriesKey];
+    const fallbackPath = entry?.gameDate && entry?.playerId && entry?.stat
+      ? `data/nba_props_analyzer/${entry.gameDate}/${entry.playerId}_${String(entry.stat).toLowerCase()}.json`
+      : '';
+    const candidates = [relPath, relPath ? `./${relPath}` : '', fallbackPath].filter(Boolean);
+    const promise = (async () => {
+      for (const path of candidates) {
+        const payload = await loadJson(path, null);
+        if (payload) return payload;
+      }
+      return null;
+    })();
+    seriesCache.set(entry.seriesKey, promise);
+    const payload = await promise;
+    return payload;
   }
 
   function renderStatus(entry, series) {
@@ -381,8 +399,12 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       setStatus('<div class="status-banner warning">Analyzer data is not built yet. Run <code>tools/build_nba_props_analyzer_json.py</code> and refresh the page.</div>');
       return;
     }
-    if (!entry || !series) {
+    if (!entry) {
       setStatus('<div class="status-banner warning">No matching analyzer entry was found for the current selection.</div>');
+      return;
+    }
+    if (!series) {
+      setStatus('<div class="status-banner warning">Analyzer details could not be loaded for this selection. The index loaded, but the detail file was missing or could not be fetched.</div>');
       return;
     }
     const notes = [];
@@ -428,13 +450,52 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     if (searchInput) searchInput.value = state.selection.query || '';
   }
 
-  function render() {
+  async function render() {
+    const token = ++renderToken;
     renderControls();
     syncViewButtons(state.view);
     const entry = selectedEntry();
-    const series = selectedSeries();
+    updateHero(entry, null);
+    if (!entry) {
+      renderStatus(null, null);
+      renderKpis(null, null, state.view);
+      renderChart(null, null, state.view);
+      renderSummary(null, null, state.view);
+      renderTableRows('analyzer-games-body', [], null);
+      renderTableRows('analyzer-similar-body', [], null);
+      return;
+    }
+
+    setStatus('<div class="status-banner info">Loading analyzer details…</div>');
+    renderKpis(entry, null, state.view);
+    renderChart(null, null, state.view);
+    renderSummary(null, null, state.view);
+    renderTableRows('analyzer-games-body', [], entry?.line);
+    renderTableRows('analyzer-similar-body', [], entry?.line);
+
+    const series = await selectedSeries(entry);
+    if (token !== renderToken) return;
+
     updateHero(entry, series);
     renderStatus(entry, series);
+    if (!series) {
+      renderKpis(entry, {
+        games: [],
+        similarGames: [],
+        matchup: entry.matchup || `${entry.team || ''} vs ${entry.opp || ''}`,
+        modelPred: entry.pred_anchor ?? entry.mu_cons ?? null,
+        expMin: entry.expMin ?? null,
+        opp: entry.opp || '',
+        error: 'Analyzer detail file could not be loaded.'
+      }, state.view);
+      renderChart(null, null, state.view);
+      renderSummary(null, null, state.view);
+      renderTableRows('analyzer-games-body', [], entry?.line);
+      renderTableRows('analyzer-similar-body', [], entry?.line);
+      updateUrl(entry);
+      return;
+    }
+
     renderKpis(entry, series, state.view);
     renderChart(entry, series, state.view);
     renderSummary(entry, series, state.view);
