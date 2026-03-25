@@ -71,21 +71,105 @@ function normalizeTeamToken(value) {
     .trim();
 }
 
+const NBA_TEAM_TOKEN_MAP = {
+  ATL: 'ATL',
+  ATLANTAHAWKS: 'ATL',
+  BOS: 'BOS',
+  BOSTONCELTICS: 'BOS',
+  BKN: 'BKN',
+  BRK: 'BKN',
+  BROOKLYNNETS: 'BKN',
+  CHA: 'CHA',
+  CHARLOTTEHORNETS: 'CHA',
+  CHI: 'CHI',
+  CHICAGOBULLS: 'CHI',
+  CLE: 'CLE',
+  CLEVELANDCAVALIERS: 'CLE',
+  DAL: 'DAL',
+  DALLASMAVERICKS: 'DAL',
+  DEN: 'DEN',
+  DENVERNUGGETS: 'DEN',
+  DET: 'DET',
+  DETROITPISTONS: 'DET',
+  GSW: 'GSW',
+  GOLDENSTATEWARRIORS: 'GSW',
+  HOU: 'HOU',
+  HOUSTONROCKETS: 'HOU',
+  IND: 'IND',
+  INDIANAPACERS: 'IND',
+  LAC: 'LAC',
+  LOSANGELESCLIPPERS: 'LAC',
+  CLIPPERS: 'LAC',
+  LAL: 'LAL',
+  LOSANGELESLAKERS: 'LAL',
+  MEM: 'MEM',
+  MEMPHISGRIZZLIES: 'MEM',
+  MIA: 'MIA',
+  MIAMIHEAT: 'MIA',
+  MIL: 'MIL',
+  MILWAUKEEBUCKS: 'MIL',
+  MIN: 'MIN',
+  MINNESOTATIMBERWOLVES: 'MIN',
+  NOP: 'NOP',
+  NO: 'NOP',
+  NEWORLEANSPELICANS: 'NOP',
+  NYK: 'NYK',
+  NEWYORKKNICKS: 'NYK',
+  OKC: 'OKC',
+  OKLAHOMACITYTHUNDER: 'OKC',
+  ORL: 'ORL',
+  ORLANDOMAGIC: 'ORL',
+  PHI: 'PHI',
+  PHILADELPHIA76ERS: 'PHI',
+  PHILADELPHIAERS: 'PHI',
+  PHX: 'PHX',
+  PHOENIXSUNS: 'PHX',
+  POR: 'POR',
+  PORTLANDTRAILBLAZERS: 'POR',
+  SAC: 'SAC',
+  SACRAMENTOKINGS: 'SAC',
+  SAS: 'SAS',
+  SA: 'SAS',
+  SANANTONIOSPURS: 'SAS',
+  TOR: 'TOR',
+  TORONTORAPTORS: 'TOR',
+  UTA: 'UTA',
+  UTAHJAZZ: 'UTA',
+  WAS: 'WAS',
+  WASHINGTONWIZARDS: 'WAS'
+};
+
+function canonicalTeamToken(value) {
+  const token = normalizeTeamToken(value);
+  return NBA_TEAM_TOKEN_MAP[token] || token;
+}
+
 function canonicalInjuryStatus(value) {
   const raw = String(value ?? '').trim().toLowerCase();
   if (!raw) return '';
+
+  if (raw === 'p' || raw.includes('probable') || raw.startsWith('prob ')) return 'probable';
+  if (raw === 'q' || raw.includes('questionable') || raw.includes('gtd') || raw.includes('game time decision')) return 'questionable';
+  if (raw === 'd' || raw.includes('doubtful')) return 'doubtful';
+  if (
+    raw === 'o' ||
+    raw === 'out' ||
+    raw.includes('out ') ||
+    raw.endsWith(' out') ||
+    raw.includes('ruled out') ||
+    raw.includes('inactive')
+  ) {
+    return 'out';
+  }
+
   const map = {
-    p: 'probable',
     probable: 'probable',
-    q: 'questionable',
     questionable: 'questionable',
-    gtd: 'questionable',
-    out: 'out',
-    o: 'out',
     doubtful: 'doubtful',
-    d: 'doubtful'
+    out: 'out'
   };
-  return map[raw] || raw;
+
+  return map[raw] || '';
 }
 
 function titleCaseWord(value) {
@@ -96,13 +180,16 @@ function titleCaseWord(value) {
 function buildInjuryLookup(injuryData) {
   const lookup = new Map();
   const players = injuryData?.players || injuryData?.entries || [];
+
   (players || []).forEach(entry => {
     const playerKey = normalizeLookupToken(entry.player || entry.player_name);
     if (!playerKey) return;
 
-    const teamKey = normalizeTeamToken(entry.team || entry.team_abbr);
+    const teamKey = canonicalTeamToken(entry.team || entry.team_abbr);
+    const normalizedStatus = canonicalInjuryStatus(entry.status);
+
     const normalized = {
-      status: titleCaseWord(canonicalInjuryStatus(entry.status)),
+      status: titleCaseWord(normalizedStatus),
       note: entry.note || entry.injury_note || '',
       team: entry.team || entry.team_abbr || '',
       lastUpdated: entry.lastUpdated || entry.last_updated || entry.updated_at || '',
@@ -116,25 +203,36 @@ function buildInjuryLookup(injuryData) {
       lookup.set(`${playerKey}|`, normalized);
     }
   });
+
   return lookup;
 }
 
 function getPropInjuryContext(prop, injuryLookup) {
   if (!injuryLookup || !injuryLookup.size) return null;
-  const playerKey = normalizeLookupToken(prop?.player);
+
+  const playerKey = normalizeLookupToken(prop?.player || prop?.PLAYER_NAME || '');
   if (!playerKey) return null;
-  const teamKey = normalizeTeamToken(prop?.team);
+
+  const teamKey = canonicalTeamToken(prop?.team || prop?.team_abbr || prop?.TEAM || '');
   return injuryLookup.get(`${playerKey}|${teamKey}`) || injuryLookup.get(`${playerKey}|`) || null;
 }
 
 function decoratePropInjury(prop, injuryLookup) {
   const context = getPropInjuryContext(prop, injuryLookup);
-  if (!context) return { ...prop };
+  if (!context) {
+    return {
+      ...prop,
+      injuryStatus: prop?.injuryStatus || prop?.playerStatus || '',
+      injuryNote: prop?.injuryNote || '',
+      injuryUpdated: prop?.injuryUpdated || ''
+    };
+  }
+
   return {
     ...prop,
-    injuryStatus: context.status || '',
-    injuryNote: context.note || '',
-    injuryUpdated: context.lastUpdated || ''
+    injuryStatus: context.status || prop?.injuryStatus || prop?.playerStatus || '',
+    injuryNote: context.note || prop?.injuryNote || '',
+    injuryUpdated: context.lastUpdated || prop?.injuryUpdated || ''
   };
 }
 
@@ -177,14 +275,17 @@ function applyInjuryContextToList(items, injuryLookup) {
 function applyInjuryContextToLab(lab, injuryLookup) {
   if (!lab || !lab.byDate) return lab || {};
   const next = JSON.parse(JSON.stringify(lab));
+
   Object.keys(next.byDate).forEach(date => {
     const day = next.byDate[date];
     day.allProps = applyInjuryContextToList(day.allProps || [], injuryLookup);
     if (day.meta) day.meta.propCount = day.allProps.length;
+
     Object.keys(day.sections || {}).forEach(key => {
       day.sections[key] = applyInjuryContextToList(day.sections[key] || [], injuryLookup);
     });
   });
+
   return next;
 }
 
@@ -207,7 +308,7 @@ function propOppValue(prop) {
 }
 
 function normalizeGameId(a, b) {
-  const parts = [normalizeTeamToken(a), normalizeTeamToken(b)].filter(Boolean).sort();
+  const parts = [canonicalTeamToken(a), canonicalTeamToken(b)].filter(Boolean).sort();
   return parts.join('|');
 }
 
@@ -223,20 +324,6 @@ function propGameLabel(prop) {
     return `${teams[0]} vs ${teams[1]}`;
   }
   return '';
-}
-
-function propAnalyzerHref(prop) {
-  const params = new URLSearchParams();
-  const date = prop?.date || prop?.gameDate || prop?.targetDate || '';
-  if (date) params.set('date', String(date));
-  if (prop?.playerId || prop?.PLAYER_ID) {
-    params.set('playerId', String(prop.playerId || prop.PLAYER_ID));
-  } else if (prop?.player) {
-    params.set('player', String(prop.player));
-  }
-  if (prop?.stat || prop?.stat_display) params.set('stat', String(prop.stat || prop.stat_display).toUpperCase());
-  if (prop?.line !== undefined && prop?.line !== null && prop?.line !== '') params.set('line', String(prop.line));
-  return `props_analyzer.html?${params.toString()}`;
 }
 
 function getFilters() {
@@ -300,9 +387,6 @@ function propCard(prop) {
         <span class="mini-chip">Min ${escapeHtml(fmt(prop.expMin, 1))}</span>
       </div>
       <p class="insight-copy">${escapeHtml(prop.boardDriver || prop.summary || '')}</p>
-      <div class="insight-card-actions">
-        <a class="insight-link" href="${propAnalyzerHref(prop)}">Open analyzer</a>
-      </div>
     </article>
   `;
 }
@@ -323,9 +407,6 @@ function roleCard(prop) {
         <span class="mini-chip">Avg ${escapeHtml(fmt(prop.avg_anchor, 1))}</span>
       </div>
       <p class="insight-copy">${escapeHtml(prop.summary || '')}</p>
-      <div class="insight-card-actions">
-        <a class="insight-link" href="${propAnalyzerHref(prop)}">Open analyzer</a>
-      </div>
     </article>
   `;
 }
@@ -370,6 +451,7 @@ function populateStatOptions(select, props, selectedValue = 'ALL') {
 function populateGameOptions(select, props, selectedValue = 'ALL') {
   if (!select) return;
   const seen = new Map();
+
   (props || []).forEach(prop => {
     const id = propGameId(prop);
     const label = propGameLabel(prop);
@@ -399,7 +481,7 @@ function filterBoardItems(items, filters) {
 function explorerRow(prop) {
   return `
     <tr>
-      <td><a class="table-link" href="${propAnalyzerHref(prop)}">${playerBadgeHtml(prop.player || '', prop)}</a><br /><span class="muted">${escapeHtml(prop.team || '')} • ${escapeHtml(prop.location || '')}</span></td>
+      <td>${playerBadgeHtml(prop.player || '', prop)}<br /><span class="muted">${escapeHtml(prop.team || '')} • ${escapeHtml(prop.location || '')}</span></td>
       <td>${escapeHtml(prop.matchup || `${prop.team || ''} vs ${prop.opp || ''}`)}</td>
       <td>${escapeHtml(prop.stat || '')}</td>
       <td>${escapeHtml(fmt(prop.line, 1))}</td>
@@ -459,8 +541,10 @@ function applyDate(lab, date) {
       loadJson('data/nba_props_lab.json'),
       loadJson('data/nba_injuries.json', {})
     ]);
+
     const injuryLookup = buildInjuryLookup(injuries);
     const lab = applyInjuryContextToLab(rawLab, injuryLookup);
+
     const dateSelect = byId('lab-date-filter');
     const statSelect = byId('lab-stat-filter');
     const gameSelect = byId('game-filter');
@@ -486,6 +570,8 @@ function applyDate(lab, date) {
     applyDate(lab, targetDate);
   } catch (err) {
     const root = byId('lab-consensus-grid');
-    if (root) root.innerHTML = `<div class="empty-state">Failed to load props lab data: ${escapeHtml(err.message || err)}</div>`;
+    if (root) {
+      root.innerHTML = `<div class="empty-state">Failed to load props lab data: ${escapeHtml(err.message || err)}</div>`;
+    }
   }
 })();

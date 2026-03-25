@@ -33,6 +33,67 @@ function setText(id, value) {
   if (el) el.textContent = value ?? '';
 }
 
+function isNbaGame(game) {
+  return String(game?.league || '').toUpperCase() === 'NBA';
+}
+
+function modelSpreadForDisplay(game) {
+  if (isNbaGame(game)) {
+    const away = Number(game?.modelAwayScore);
+    const home = Number(game?.modelHomeScore);
+    if (Number.isFinite(away) && Number.isFinite(home)) {
+      // NBA cards should display spread from AWAY-team perspective
+      return home - away;
+    }
+
+    const fallback = Number(game?.modelHomeSpread);
+    return Number.isFinite(fallback) ? -fallback : NaN;
+  }
+
+  // CBB/NHL: keep existing stored convention
+  const stored = Number(game?.modelHomeSpread);
+  return Number.isFinite(stored) ? stored : NaN;
+}
+
+function marketSpreadForDisplay(game) {
+  const spread = Number(game?.marketSpread);
+  if (!Number.isFinite(spread)) return NaN;
+
+  // NBA only: convert stored home spread to away-team display
+  if (isNbaGame(game)) return -spread;
+
+  // CBB/NHL: keep existing stored convention
+  return spread;
+}
+
+function spreadEdgeForDisplay(game) {
+  const model = modelSpreadForDisplay(game);
+  const market = marketSpreadForDisplay(game);
+  return Number.isFinite(model) && Number.isFinite(market)
+    ? model - market
+    : NaN;
+}
+
+function marketSpreadText(game) {
+  const spread = marketSpreadForDisplay(game);
+  return Number.isFinite(spread) ? fmtSigned(spread) : 'N/A';
+}
+
+function cardSummaryText(game) {
+  const raw = String(game?.summary || 'Model snapshot');
+  const spread = marketSpreadForDisplay(game);
+  const total = Number(game?.marketTotal);
+
+  return raw
+    .replace(
+      /Spread line pending/g,
+      Number.isFinite(spread) ? `Spread line ${fmtSigned(spread)}` : 'Spread line pending'
+    )
+    .replace(
+      /Total line pending/g,
+      Number.isFinite(total) ? `Total line ${fmt(total)}` : 'Total line pending'
+    );
+}
 
 function normalizeLookupToken(value) {
   return String(value ?? '')
@@ -186,8 +247,31 @@ function uniqueLeagues(games) {
   return [...new Set((games || []).map(g => g.league).filter(Boolean))].sort();
 }
 
+function modelAwaySpread(game) {
+  const away = Number(game?.modelAwayScore);
+  const home = Number(game?.modelHomeScore);
+  if (Number.isFinite(away) && Number.isFinite(home)) {
+    // Away-team spread perspective for "AWAY @ HOME"
+    // positive = away underdog, negative = away favorite
+    return home - away;
+  }
+
+  const fallback = Number(game?.modelHomeSpread);
+  return Number.isFinite(fallback) ? -fallback : NaN;
+}
+
+function marketAwaySpread(game) {
+  const spread = Number(game?.marketSpread);
+  if (!Number.isFinite(spread)) return NaN;
+
+  // Stored marketSpread is home-team spread.
+  // Convert to away-team spread for display.
+  return -spread;
+}
+
 function marketSpreadText(game) {
-  return hasNumericValue(game.marketSpread) ? fmtSigned(game.marketSpread) : 'N/A';
+  const spread = marketAwaySpread(game);
+  return Number.isFinite(spread) ? fmtSigned(spread) : 'N/A';
 }
 
 function marketTotalText(game) {
@@ -195,8 +279,11 @@ function marketTotalText(game) {
 }
 
 function gameCard(game) {
-  const edgeSpread = hasNumericValue(game.marketSpread) ? Number(game.modelHomeSpread) - Number(game.marketSpread) : NaN;
+  const modelSpread = modelSpreadForDisplay(game);
+  const marketSpread = marketSpreadForDisplay(game);
+  const edgeSpread = spreadEdgeForDisplay(game);
   const edgeTotal = hasNumericValue(game.marketTotal) ? Number(game.modelTotal) - Number(game.marketTotal) : NaN;
+
   return `
       <article class="game-card">
         <div class="meta-row">
@@ -205,14 +292,14 @@ function gameCard(game) {
         </div>
         <div>
           <h3>${escapeHtml(game.awayTeam)} @ ${escapeHtml(game.homeTeam)}</h3>
-          <p class="muted">${escapeHtml(game.summary || '')}</p>
+          <p class="muted">${escapeHtml(cardSummaryText(game))}</p>
         </div>
         <div class="score-box">
           <div class="score-row"><span>${escapeHtml(game.awayTeam)}</span><strong>${fmt(game.modelAwayScore)}</strong></div>
           <div class="score-row"><span>${escapeHtml(game.homeTeam)}</span><strong>${fmt(game.modelHomeScore)}</strong></div>
         </div>
         <div class="kpi-row">
-          <div class="kpi"><span>Model spread</span><strong>${fmtSigned(game.modelHomeSpread)}</strong></div>
+          <div class="kpi"><span>Model spread</span><strong>${Number.isFinite(modelSpread) ? fmtSigned(modelSpread) : 'N/A'}</strong></div>
           <div class="kpi"><span>Market spread</span><strong>${marketSpreadText(game)}</strong></div>
           <div class="kpi"><span>Spread edge</span><strong>${Number.isFinite(edgeSpread) ? fmtSigned(edgeSpread) : 'N/A'}</strong></div>
         </div>
@@ -529,32 +616,60 @@ function renderInsightGrid(rootId, items, role = false) {
 }
 
 function edgeBoardCard(title, items, kind) {
-  if (!items.length) return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No lined NBA games yet.</div></article>`;
+  if (!items.length) {
+    return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No lined NBA games yet.</div></article>`;
+  }
+
   const rows = items.map(item => {
     const edge = kind === 'spread' ? item.spreadEdge : item.totalEdge;
-    const market = kind === 'spread' ? item.marketSpread : item.marketTotal;
-    const model = kind === 'spread' ? item.modelHomeSpread : item.modelTotal;
+    const market = kind === 'spread' ? marketSpreadForDisplay(item) : Number(item.marketTotal);
+    const model = kind === 'spread' ? modelSpreadForDisplay(item) : Number(item.modelTotal);
+
     return `
       <div class="edge-row">
         <div>
           <strong>${escapeHtml(`${item.awayTeam} @ ${item.homeTeam}`)}</strong>
-          <span>${kind === 'spread' ? `Model ${escapeHtml(fmtSigned(model))} vs market ${escapeHtml(fmtSigned(market))}` : `Model ${escapeHtml(fmt(model))} vs market ${escapeHtml(fmt(market))}`}</span>
+          <span>${
+            kind === 'spread'
+              ? `Model ${escapeHtml(Number.isFinite(model) ? fmtSigned(model) : 'N/A')} vs market ${escapeHtml(Number.isFinite(market) ? fmtSigned(market) : 'N/A')}`
+              : `Model ${escapeHtml(fmt(model))} vs market ${escapeHtml(fmt(market))}`
+          }</span>
         </div>
-        <strong>${escapeHtml(fmtSigned(edge))}</strong>
+        <strong>${escapeHtml(Number.isFinite(edge) ? fmtSigned(edge) : 'N/A')}</strong>
       </div>
     `;
   }).join('');
+
   return `<article class="insight-board"><h4>${escapeHtml(title)}</h4>${rows}</article>`;
 }
 
 function renderNbaGameEdges(games, meta) {
   const root = byId('nba-game-edges-grid');
   if (!root) return;
+
   const nba = (games || []).filter(g => g.league === 'NBA' && g.gameDate === meta.targetDate);
-  const lined = nba.map(g => ({ ...g, spreadEdge: hasNumericValue(g.marketSpread) ? Number(g.modelHomeSpread) - Number(g.marketSpread) : NaN, totalEdge: hasNumericValue(g.marketTotal) ? Number(g.modelTotal) - Number(g.marketTotal) : NaN }));
-  const spreadTop = lined.filter(g => Number.isFinite(g.spreadEdge)).sort((a, b) => Math.abs(b.spreadEdge) - Math.abs(a.spreadEdge)).slice(0, 4);
-  const totalTop = lined.filter(g => Number.isFinite(g.totalEdge)).sort((a, b) => Math.abs(b.totalEdge) - Math.abs(a.totalEdge)).slice(0, 4);
-  root.innerHTML = [edgeBoardCard('Biggest spread gaps', spreadTop, 'spread'), edgeBoardCard('Biggest total gaps', totalTop, 'total')].join('');
+  const lined = nba.map(g => ({
+    ...g,
+    spreadEdge: spreadEdgeForDisplay(g),
+    totalEdge: hasNumericValue(g.marketTotal)
+      ? Number(g.modelTotal) - Number(g.marketTotal)
+      : NaN
+  }));
+
+  const spreadTop = lined
+    .filter(g => Number.isFinite(g.spreadEdge))
+    .sort((a, b) => Math.abs(b.spreadEdge) - Math.abs(a.spreadEdge))
+    .slice(0, 4);
+
+  const totalTop = lined
+    .filter(g => Number.isFinite(g.totalEdge))
+    .sort((a, b) => Math.abs(b.totalEdge) - Math.abs(a.totalEdge))
+    .slice(0, 4);
+
+  root.innerHTML = [
+    edgeBoardCard('Biggest spread gaps', spreadTop, 'spread'),
+    edgeBoardCard('Biggest total gaps', totalTop, 'total')
+  ].join('');
 }
 
 function renderHomeInsights(homeInsights, meta) {
