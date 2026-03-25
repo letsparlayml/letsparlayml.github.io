@@ -10,6 +10,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from shutil import rmtree
 
 import numpy as np
 import pandas as pd
@@ -509,6 +510,16 @@ def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, u
     today_iso = datetime.now().date().isoformat()
     target_date = today_iso if today_iso in dates else (dates[0] if dates else "")
 
+    series_index = {}
+    for series_key, payload in series_payloads.items():
+        game_date = clean_str(payload.get("gameDate") or target_date or "undated")
+        safe_date = re.sub(r"[^0-9-]+", "_", game_date or "undated") or "undated"
+        player_id = clean_str(payload.get("playerId") or "unknown")
+        stat = clean_str(payload.get("stat") or "STAT").lower()
+        safe_stat = re.sub(r"[^a-z0-9_]+", "_", stat) or "stat"
+        rel_path = f"data/nba_props_analyzer/{safe_date}/{player_id}_{safe_stat}.json"
+        series_index[series_key] = rel_path
+
     return {
         "targetDate": target_date,
         "dates": dates,
@@ -519,6 +530,7 @@ def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, u
         "entryCount": len(entries),
         "seriesCount": len(series_payloads),
         "entries": entries,
+        "seriesIndex": series_index,
         "series": series_payloads,
     }
 
@@ -557,9 +569,23 @@ def main() -> None:
         injuries_path=Path(injuries_path) if injuries_path and Path(injuries_path).exists() else None,
     )
 
+    details_dir = data_dir / "nba_props_analyzer"
+    if details_dir.exists():
+        rmtree(details_dir)
+    details_dir.mkdir(parents=True, exist_ok=True)
+
+    series_payloads = payload.pop("series", {})
+    series_index = payload.get("seriesIndex", {})
+    for series_key, rel_path in series_index.items():
+        detail_path = website_repo / rel_path
+        detail_path.parent.mkdir(parents=True, exist_ok=True)
+        detail_payload = series_payloads.get(series_key, {})
+        detail_path.write_text(json.dumps(detail_payload, separators=(",", ":")), encoding="utf-8")
+
     out_path = data_dir / "nba_props_analyzer.json"
-    out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-    print(f"Wrote analyzer JSON -> {out_path}")
+    out_path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    print(f"Wrote analyzer index -> {out_path}")
+    print(f"Wrote analyzer detail files -> {details_dir}")
     print(f"Entries: {payload['entryCount']}")
     print(f"Series: {payload['seriesCount']}")
     print(f"Target date: {payload['targetDate']}")
