@@ -101,6 +101,75 @@ function canonicalTeamToken(value) {
   return NBA_TEAM_TOKEN_MAP[token] || token;
 }
 
+function canonicalInjuryStatus(value) {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return '';
+  const map = {
+    p: 'probable',
+    probable: 'probable',
+    q: 'questionable',
+    questionable: 'questionable',
+    gtd: 'questionable',
+    out: 'out',
+    o: 'out',
+    doubtful: 'doubtful',
+    d: 'doubtful'
+  };
+  return map[raw] || raw;
+}
+
+function titleCaseWord(value) {
+  if (!value) return '';
+  return String(value).charAt(0).toUpperCase() + String(value).slice(1).toLowerCase();
+}
+
+function buildInjuryLookup(injuryData) {
+  const lookup = new Map();
+  const players = injuryData?.players || injuryData?.entries || [];
+
+  (players || []).forEach(entry => {
+    const playerKey = normalizeLookupToken(entry.player || entry.player_name);
+    if (!playerKey) return;
+
+    const teamKey = canonicalTeamToken(entry.team || entry.team_abbr);
+    const normalized = {
+      status: titleCaseWord(canonicalInjuryStatus(entry.status)),
+      note: entry.note || entry.injury_note || '',
+      team: entry.team || entry.team_abbr || '',
+      lastUpdated: entry.lastUpdated || entry.last_updated || entry.updated_at || '',
+      gameDate: entry.gameDate || entry.game_date || ''
+    };
+
+    if (teamKey) lookup.set(`${playerKey}|${teamKey}`, normalized);
+    if (!lookup.has(`${playerKey}|`)) lookup.set(`${playerKey}|`, normalized);
+  });
+
+  return lookup;
+}
+
+function getPropInjuryContext(prop, injuryLookup) {
+  if (!injuryLookup || !injuryLookup.size) return null;
+  const playerKey = normalizeLookupToken(prop?.player || prop?.PLAYER_NAME || '');
+  if (!playerKey) return null;
+  const teamKey = canonicalTeamToken(propTeamValue(prop));
+  return injuryLookup.get(`${playerKey}|${teamKey}`) || injuryLookup.get(`${playerKey}|`) || null;
+}
+
+function decoratePropInjury(prop, injuryLookup) {
+  const context = getPropInjuryContext(prop, injuryLookup);
+  if (!context) return { ...prop };
+  return {
+    ...prop,
+    injuryStatus: context.status || prop?.injuryStatus || '',
+    injuryNote: context.note || prop?.injuryNote || '',
+    injuryUpdated: context.lastUpdated || prop?.injuryUpdated || ''
+  };
+}
+
+function hasListedInjury(prop) {
+  return Boolean(canonicalInjuryStatus(prop?.injuryStatus || prop?.playerStatus || prop?.status));
+}
+
 function normalizeGameId(a, b) {
   const parts = [canonicalTeamToken(a), canonicalTeamToken(b)].filter(Boolean).sort();
   return parts.join('|');
@@ -397,12 +466,21 @@ function gameIdFromGame(game) {
   return normalizeGameId(game?.awayTeam, game?.homeTeam);
 }
 
-function renderGameProps(game, propsData) {
+function propAnalyzerHref(prop) {
+  const params = new URLSearchParams();
+  if (propDateValue(prop)) params.set('date', propDateValue(prop));
+  if (prop?.playerId || prop?.PLAYER_ID) params.set('playerId', String(prop.playerId || prop.PLAYER_ID));
+  if (prop?.stat || prop?.stat_display) params.set('stat', String(prop.stat || prop.stat_display).toUpperCase());
+  if (prop?.line !== undefined && prop?.line !== null && prop?.line !== '') params.set('line', String(prop.line));
+  return `props_analyzer.html?${params.toString()}`;
+}
+
+function renderGameProps(game, propsData, injuryLookup = new Map()) {
   const body = byId('game-props-body');
   const empty = byId('game-props-empty');
   if (!body) return;
 
-  const allRows = flattenPropsData(propsData);
+  const allRows = flattenPropsData(propsData).map(prop => decoratePropInjury(prop, injuryLookup));
   const gameIdNum = gameNumericId(game);
   const gameDate = game?.gameDate || '';
   const gameTeamMatch = gameIdFromGame(game);
@@ -422,6 +500,7 @@ function renderGameProps(game, propsData) {
       .filter(p => normalizeGameId(propTeamValue(p), propOppValue(p)) === gameTeamMatch);
   }
 
+  rows = rows.filter(p => !hasListedInjury(p));
   rows = selectGameProps(rows, 6);
 
   if (!rows.length) {
@@ -434,7 +513,7 @@ function renderGameProps(game, propsData) {
 
   body.innerHTML = rows.map(p => `
     <tr>
-      <td>${escapeHtml(p.player || p.PLAYER_NAME || '')}</td>
+      <td><a class="table-link" href="${propAnalyzerHref(p)}">${escapeHtml(p.player || p.PLAYER_NAME || '')}</a></td>
       <td>${escapeHtml(propTeamValue(p) || '')}</td>
       <td>${escapeHtml(p.stat || p.stat_display || '')}</td>
       <td>${escapeHtml(p.line ?? '')}</td>
@@ -448,10 +527,12 @@ function renderGameProps(game, propsData) {
 (async function init() {
   try {
     const id = qs('id');
-    const [games, propsData] = await Promise.all([
+    const [games, propsData, injuries] = await Promise.all([
       loadJson('data/games.json', []),
-      loadJson('data/nba_props_lab.json', null).then(data => data ?? loadJson('data/props.json', []))
+      loadJson('data/nba_props_lab.json', null).then(data => data ?? loadJson('data/props.json', [])),
+      loadJson('data/nba_injuries.json', {})
     ]);
+    const injuryLookup = buildInjuryLookup(injuries);
 
     const game = (games || []).find(g => g.id === id) || (games || [])[0];
     if (!game) throw new Error('No game records found.');
@@ -467,7 +548,7 @@ function renderGameProps(game, propsData) {
 
     renderChart(game.movement || []);
     renderMovementTable(game.movement || []);
-    renderGameProps(game, propsData);
+    renderGameProps(game, propsData, injuryLookup);
   } catch (err) {
     byId('game-title').textContent = 'Unable to load game';
     byId('game-summary').textContent = err.message || String(err);

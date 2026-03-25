@@ -225,6 +225,20 @@ function propGameLabel(prop) {
   return '';
 }
 
+function propAnalyzerHref(prop) {
+  const params = new URLSearchParams();
+  const date = prop?.date || prop?.gameDate || prop?.targetDate || '';
+  if (date) params.set('date', String(date));
+  if (prop?.playerId || prop?.PLAYER_ID) {
+    params.set('playerId', String(prop.playerId || prop.PLAYER_ID));
+  } else if (prop?.player) {
+    params.set('player', String(prop.player));
+  }
+  if (prop?.stat || prop?.stat_display) params.set('stat', String(prop.stat || prop.stat_display).toUpperCase());
+  if (prop?.line !== undefined && prop?.line !== null && prop?.line !== '') params.set('line', String(prop.line));
+  return `props_analyzer.html?${params.toString()}`;
+}
+
 function getFilters() {
   return {
     stat: byId('lab-stat-filter')?.value || 'ALL',
@@ -286,6 +300,9 @@ function propCard(prop) {
         <span class="mini-chip">Min ${escapeHtml(fmt(prop.expMin, 1))}</span>
       </div>
       <p class="insight-copy">${escapeHtml(prop.boardDriver || prop.summary || '')}</p>
+      <div class="insight-card-actions">
+        <a class="insight-link" href="${propAnalyzerHref(prop)}">Open analyzer</a>
+      </div>
     </article>
   `;
 }
@@ -306,6 +323,9 @@ function roleCard(prop) {
         <span class="mini-chip">Avg ${escapeHtml(fmt(prop.avg_anchor, 1))}</span>
       </div>
       <p class="insight-copy">${escapeHtml(prop.summary || '')}</p>
+      <div class="insight-card-actions">
+        <a class="insight-link" href="${propAnalyzerHref(prop)}">Open analyzer</a>
+      </div>
     </article>
   `;
 }
@@ -379,7 +399,7 @@ function filterBoardItems(items, filters) {
 function explorerRow(prop) {
   return `
     <tr>
-      <td>${playerBadgeHtml(prop.player || '', prop)}<br /><span class="muted">${escapeHtml(prop.team || '')} • ${escapeHtml(prop.location || '')}</span></td>
+      <td><a class="table-link" href="${propAnalyzerHref(prop)}">${playerBadgeHtml(prop.player || '', prop)}</a><br /><span class="muted">${escapeHtml(prop.team || '')} • ${escapeHtml(prop.location || '')}</span></td>
       <td>${escapeHtml(prop.matchup || `${prop.team || ''} vs ${prop.opp || ''}`)}</td>
       <td>${escapeHtml(prop.stat || '')}</td>
       <td>${escapeHtml(fmt(prop.line, 1))}</td>

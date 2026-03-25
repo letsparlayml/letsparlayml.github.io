@@ -1,0 +1,476 @@
+async function loadJson(path, fallback = null) {
+  try {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`Unable to load ${path}:`, err);
+    return fallback;
+  }
+}
+
+function byId(id) {
+  return document.getElementById(id);
+}
+
+function qs(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+function hasNumericValue(v) {
+  return typeof v === 'number' && Number.isFinite(v);
+}
+
+function fmt(num, digits = 1) {
+  return hasNumericValue(num) ? Number(num).toFixed(digits) : '—';
+}
+
+function fmtPct(num, digits = 1) {
+  return hasNumericValue(num) ? `${(Number(num) * 100).toFixed(digits)}%` : '—';
+}
+
+function fmtSigned(num, digits = 1) {
+  if (!hasNumericValue(num)) return '—';
+  return `${num >= 0 ? '+' : ''}${Number(num).toFixed(digits)}`;
+}
+
+function fmtAmerican(num) {
+  if (!hasNumericValue(num)) return '—';
+  const rounded = Math.round(num);
+  return rounded > 0 ? `+${rounded}` : String(rounded);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeLookupToken(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function median(values) {
+  const nums = (values || []).filter(hasNumericValue).slice().sort((a, b) => a - b);
+  if (!nums.length) return null;
+  const mid = Math.floor(nums.length / 2);
+  return nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function std(values) {
+  const nums = (values || []).filter(hasNumericValue);
+  if (!nums.length) return null;
+  const mean = nums.reduce((sum, value) => sum + value, 0) / nums.length;
+  const variance = nums.reduce((sum, value) => sum + (value - mean) ** 2, 0) / nums.length;
+  return Math.sqrt(variance);
+}
+
+function calcStats(games, line) {
+  const values = (games || []).map(g => Number(g.value)).filter(Number.isFinite);
+  if (!values.length) {
+    return { n: 0, avg: null, median: null, std: null, max: null, hitRate: null };
+  }
+  const hits = values.filter(v => v >= line).length;
+  return {
+    n: values.length,
+    avg: values.reduce((sum, value) => sum + value, 0) / values.length,
+    median: median(values),
+    std: std(values),
+    max: Math.max(...values),
+    hitRate: hits / values.length,
+  };
+}
+
+function simColor(bin) {
+  switch (String(bin || '').toLowerCase()) {
+    case 'closest 25%': return '#7bf1c8';
+    case 'close 25%': return '#59b4ff';
+    case 'mid 25%': return '#f8d66d';
+    case 'far 25%': return '#ff7e79';
+    default: return '#9db0d0';
+  }
+}
+
+function updateHero(entry, series) {
+  byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
+  byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
+  byId('analyzer-hero-line').textContent = entry ? `${entry.stat_display || entry.stat} ${fmt(entry.line, 1)}` : '—';
+  byId('analyzer-hero-model').textContent = entry ? `${fmt(entry.pred_anchor ?? entry.mu_cons ?? series?.modelPred, 1)} (${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series?.modelPred ?? 0) - (entry.line ?? 0), 1)})` : '—';
+  byId('analyzer-hero-prob').textContent = entry ? fmtPct(entry.prob_cons) : '—';
+}
+
+function setStatus(html) {
+  const node = byId('analyzer-status');
+  if (node) node.innerHTML = html || '';
+}
+
+function filterByView(games, view) {
+  if (view === 'home') return (games || []).filter(g => Number(g.isHome) === 1);
+  if (view === 'away') return (games || []).filter(g => Number(g.isHome) === 0);
+  return games || [];
+}
+
+function recentWindowGames(series, view) {
+  const list = filterByView(series?.games || [], view);
+  const size = Number(series?.recentWindow) || 25;
+  return list.slice(-size);
+}
+
+function renderKpis(entry, series, view) {
+  const root = byId('analyzer-kpis');
+  if (!root) return;
+  if (!entry || !series) {
+    root.innerHTML = '<div class="empty-state">No analyzer entry selected.</div>';
+    return;
+  }
+
+  const currentGames = recentWindowGames(series, view);
+  const overallGames = filterByView(series.games || [], view);
+  const similarGames = series.similarGames || [];
+  const sameOppGames = similarGames.filter(g => (g.opp || '') === (series.opp || ''));
+
+  const recentStats = calcStats(currentGames, entry.line);
+  const overallStats = calcStats(overallGames, entry.line);
+  const similarStats = calcStats(similarGames, entry.line);
+  const sameOppStats = calcStats(sameOppGames, entry.line);
+
+  root.innerHTML = `
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Matchup</span>
+      <strong>${escapeHtml(series.matchup || `${entry.team || ''} vs ${entry.opp || ''}`)}</strong>
+      <p class="muted">${escapeHtml(view === 'overall' ? 'All locations' : view === 'home' ? 'Home sample' : 'Away sample')}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Model edge</span>
+      <strong>${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series.modelPred ?? 0) - (entry.line ?? 0), 1)}</strong>
+      <p class="muted">Model ${fmt(entry.pred_anchor ?? entry.mu_cons ?? series.modelPred, 1)} • line ${fmt(entry.line, 1)}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Recent hit rate</span>
+      <strong>${fmtPct(recentStats.hitRate)}</strong>
+      <p class="muted">${recentStats.n} games • avg ${fmt(recentStats.avg, 1)}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Full-sample hit rate</span>
+      <strong>${fmtPct(overallStats.hitRate)}</strong>
+      <p class="muted">${overallStats.n} games • avg ${fmt(overallStats.avg, 1)}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Closest-match average</span>
+      <strong>${fmt(similarStats.avg, 1)}</strong>
+      <p class="muted">${similarStats.n} most similar games • hit ${fmtPct(similarStats.hitRate)}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Same-opp sample</span>
+      <strong>${fmt(sameOppStats.avg, 1)}</strong>
+      <p class="muted">${sameOppStats.n} games • hit ${fmtPct(sameOppStats.hitRate)}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Expected minutes</span>
+      <strong>${fmt(entry.expMin ?? series.expMin, 1)}</strong>
+      <p class="muted">Fair odds ${fmtAmerican(entry.fair_american)}</p>
+    </article>
+    <article class="hero-card kpi-card">
+      <span class="stat-label">Board context</span>
+      <strong>${fmtPct(entry.prob_cons)}</strong>
+      <p class="muted">${escapeHtml(entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text')}</p>
+    </article>
+  `;
+}
+
+function renderSummary(entry, series, view) {
+  const body = byId('analyzer-summary-body');
+  if (!body) return;
+  if (!entry || !series) {
+    body.innerHTML = '<tr><td colspan="6">No analyzer entry selected.</td></tr>';
+    return;
+  }
+  const recentStats = calcStats(recentWindowGames(series, view), entry.line);
+  const overallStats = calcStats(filterByView(series.games || [], view), entry.line);
+  const similarStats = calcStats(series.similarGames || [], entry.line);
+  const sameOppStats = calcStats((series.similarGames || []).filter(g => (g.opp || '') === (series.opp || '')), entry.line);
+  const rows = [
+    ['Recent sample', recentStats],
+    ['Full sample', overallStats],
+    ['Closest-match sample', similarStats],
+    ['Same opponent inside closest sample', sameOppStats],
+  ];
+  body.innerHTML = rows.map(([label, stats]) => `
+    <tr>
+      <td>${escapeHtml(label)}</td>
+      <td>${stats.n ?? '—'}</td>
+      <td>${fmt(stats.avg, 1)}</td>
+      <td>${fmt(stats.median, 1)}</td>
+      <td>${fmt(stats.std, 1)}</td>
+      <td>${fmtPct(stats.hitRate)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderTableRows(rootId, games, line) {
+  const body = byId(rootId);
+  if (!body) return;
+  if (!(games || []).length) {
+    body.innerHTML = '<tr><td colspan="7">No games available for this view.</td></tr>';
+    return;
+  }
+  const rows = games.slice().sort((a, b) => (b.gameDate || '').localeCompare(a.gameDate || '')).slice(0, 12);
+  body.innerHTML = rows.map(g => `
+    <tr>
+      <td>${escapeHtml(g.gameDate || '')}</td>
+      <td>${escapeHtml(g.opp || '')}</td>
+      <td>${escapeHtml(g.location || '')}</td>
+      <td>${fmt(g.value, 1)}</td>
+      <td>${fmt(g.minutes, 1)}</td>
+      <td>${hasNumericValue(g.value) ? (g.value >= line ? 'Hit' : 'Miss') : '—'}</td>
+      <td><span class="sim-pill" style="--sim-color:${simColor(g.simBin)}">${escapeHtml(g.simBin || 'all')}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderChart(entry, series, view) {
+  const root = byId('analyzer-chart');
+  if (!root) return;
+  if (!entry || !series) {
+    root.innerHTML = '<div class="empty-state">No analyzer entry selected.</div>';
+    return;
+  }
+  const games = recentWindowGames(series, view);
+  if (!games.length) {
+    root.innerHTML = '<div class="empty-state">No recent games for this view.</div>';
+    return;
+  }
+
+  const width = 860;
+  const height = 320;
+  const margin = { top: 18, right: 18, bottom: 48, left: 48 };
+  const values = games.map(g => Number(g.value)).filter(Number.isFinite);
+  const line = Number(entry.line);
+  const minY = Math.min(...values, line);
+  const maxY = Math.max(...values, line);
+  const pad = Math.max(1, (maxY - minY) * 0.15 || 2);
+  const y0 = minY - pad;
+  const y1 = maxY + pad;
+  const plotW = width - margin.left - margin.right;
+  const plotH = height - margin.top - margin.bottom;
+  const x = i => margin.left + (games.length === 1 ? plotW / 2 : (i / (games.length - 1)) * plotW);
+  const y = value => margin.top + plotH - ((value - y0) / (y1 - y0 || 1)) * plotH;
+
+  const grid = [0, 0.25, 0.5, 0.75, 1].map(frac => {
+    const value = y0 + (y1 - y0) * frac;
+    const py = y(value);
+    return `<g><line x1="${margin.left}" x2="${width - margin.right}" y1="${py}" y2="${py}" stroke="rgba(255,255,255,.08)" /><text x="${margin.left - 10}" y="${py + 4}" fill="#9db0d0" font-size="11" text-anchor="end">${Number(value).toFixed(1)}</text></g>`;
+  }).join('');
+
+  const poly = games.map((g, i) => `${x(i)},${y(Number(g.value))}`).join(' ');
+  const dots = games.map((g, i) => {
+    const cx = x(i);
+    const cy = y(Number(g.value));
+    return `<g>
+      <circle cx="${cx}" cy="${cy}" r="5" fill="${simColor(g.simBin)}" stroke="#0b1220" stroke-width="1.5">
+        <title>${escapeHtml(`${g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)} in ${fmt(g.minutes, 1)} min (${g.simBin || 'all'})`)}</title>
+      </circle>
+      <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml((g.gameDate || '').slice(5))}</text>
+    </g>`;
+  }).join('');
+
+  const lineY = y(line);
+  root.innerHTML = `
+    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Recent prop trend chart">
+      ${grid}
+      <line x1="${margin.left}" x2="${width - margin.right}" y1="${lineY}" y2="${lineY}" stroke="#ff7e79" stroke-width="2" stroke-dasharray="7 6"></line>
+      <polyline fill="none" stroke="#59b4ff" stroke-width="3" points="${poly}"></polyline>
+      ${dots}
+    </svg>
+  `;
+}
+
+function syncViewButtons(view) {
+  document.querySelectorAll('#analyzer-view-toggle button').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.view === view);
+  });
+}
+
+function updateUrl(entry) {
+  if (!entry) return;
+  const params = new URLSearchParams();
+  if (entry.gameDate) params.set('date', entry.gameDate);
+  if (entry.playerId) params.set('playerId', String(entry.playerId));
+  if (entry.stat) params.set('stat', String(entry.stat).toUpperCase());
+  if (entry.line !== undefined && entry.line !== null) params.set('line', String(entry.line));
+  const next = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', next);
+}
+
+function findInitialState(data) {
+  const date = qs('date') || data.targetDate || data.dates?.[0] || '';
+  const entries = (data.entries || []).filter(e => !date || e.gameDate === date);
+  const playerId = qs('playerId') || (entries[0]?.playerId ? String(entries[0].playerId) : '');
+  const stat = (qs('stat') || entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
+  const line = qs('line') || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
+  return { date, playerId, stat, line, query: '' };
+}
+
+function uniquePlayers(entries, query = '') {
+  const seen = new Set();
+  const q = normalizeLookupToken(query);
+  return (entries || []).filter(entry => {
+    if (q && !normalizeLookupToken(entry.player).includes(q)) return false;
+    const key = `${entry.playerId}|${entry.player}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a, b) => String(a.player).localeCompare(String(b.player)));
+}
+
+function populateSelect(select, items, getValue, getLabel, selectedValue) {
+  if (!select) return;
+  select.innerHTML = '';
+  items.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = getValue(item);
+    opt.textContent = getLabel(item);
+    if (String(opt.value) === String(selectedValue)) opt.selected = true;
+    select.appendChild(opt);
+  });
+  if (!items.length) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'No options';
+    select.appendChild(opt);
+  }
+}
+
+(function init() {
+  const state = { data: null, selection: null, view: 'overall' };
+
+  async function load() {
+    const data = await loadJson('data/nba_props_analyzer.json', { dates: [], entries: [], series: {} });
+    state.data = data || { dates: [], entries: [], series: {} };
+    state.selection = findInitialState(state.data);
+    bind();
+    render();
+  }
+
+  function currentEntries() {
+    return (state.data?.entries || []).filter(e => !state.selection.date || e.gameDate === state.selection.date);
+  }
+
+  function selectedEntry() {
+    const candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase());
+    if (!candidates.length) return null;
+    const exact = candidates.find(e => String(e.line) === String(state.selection.line));
+    return exact || candidates.sort((a, b) => Number(a.line) - Number(b.line))[0];
+  }
+
+  function selectedSeries() {
+    const entry = selectedEntry();
+    return entry ? state.data.series?.[entry.seriesKey] || null : null;
+  }
+
+  function renderStatus(entry, series) {
+    if (!state.data?.entries?.length) {
+      setStatus('<div class="status-banner warning">Analyzer data is not built yet. Run <code>tools/build_nba_props_analyzer_json.py</code> and refresh the page.</div>');
+      return;
+    }
+    if (!entry || !series) {
+      setStatus('<div class="status-banner warning">No matching analyzer entry was found for the current selection.</div>');
+      return;
+    }
+    const notes = [];
+    if (entry.injuryStatus || series.injuryStatus) {
+      notes.push(`<div class="status-banner danger">Listed on injury report: <strong>${escapeHtml(entry.injuryStatus || series.injuryStatus)}</strong>${series.injuryNote ? ` — ${escapeHtml(series.injuryNote)}` : ''}</div>`);
+    }
+    if (series.error) {
+      notes.push(`<div class="status-banner warning">Historical build note: ${escapeHtml(series.error)}</div>`);
+    }
+    notes.push(`<div class="status-banner info">${escapeHtml(entry.summary || entry.driver_summary || 'Use the chart and splits below to compare the current line against the recent and closest-match samples.')}</div>`);
+    setStatus(notes.join(''));
+  }
+
+  function renderControls() {
+    const dateSelect = byId('analyzer-date');
+    const playerSelect = byId('analyzer-player');
+    const statSelect = byId('analyzer-stat');
+    const lineSelect = byId('analyzer-line');
+    const searchInput = byId('analyzer-search');
+
+    populateSelect(dateSelect, state.data?.dates || [], item => item, item => item, state.selection.date);
+
+    const players = uniquePlayers(currentEntries(), state.selection.query);
+    if (!players.some(p => String(p.playerId) === String(state.selection.playerId))) {
+      state.selection.playerId = players[0]?.playerId ? String(players[0].playerId) : '';
+    }
+    populateSelect(playerSelect, players, item => String(item.playerId), item => item.player, state.selection.playerId);
+
+    const stats = [...new Set(currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId)).map(e => String(e.stat).toUpperCase()))].sort();
+    if (!stats.includes(String(state.selection.stat).toUpperCase())) {
+      state.selection.stat = stats[0] || '';
+    }
+    populateSelect(statSelect, stats, item => item, item => item, state.selection.stat);
+
+    const lineEntries = currentEntries()
+      .filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase())
+      .sort((a, b) => Number(a.line) - Number(b.line));
+    if (!lineEntries.some(e => String(e.line) === String(state.selection.line))) {
+      state.selection.line = lineEntries[0] ? String(lineEntries[0].line) : '';
+    }
+    populateSelect(lineSelect, lineEntries, item => String(item.line), item => `${item.stat_display || item.stat} ${fmt(item.line, 1)} • ${fmtPct(item.prob_cons)}`, state.selection.line);
+
+    if (searchInput) searchInput.value = state.selection.query || '';
+  }
+
+  function render() {
+    renderControls();
+    syncViewButtons(state.view);
+    const entry = selectedEntry();
+    const series = selectedSeries();
+    updateHero(entry, series);
+    renderStatus(entry, series);
+    renderKpis(entry, series, state.view);
+    renderChart(entry, series, state.view);
+    renderSummary(entry, series, state.view);
+    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line);
+    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line);
+    updateUrl(entry);
+  }
+
+  function bind() {
+    byId('analyzer-date')?.addEventListener('change', e => {
+      state.selection.date = e.target.value;
+      render();
+    });
+    byId('analyzer-search')?.addEventListener('input', e => {
+      state.selection.query = e.target.value || '';
+      renderControls();
+    });
+    byId('analyzer-player')?.addEventListener('change', e => {
+      state.selection.playerId = e.target.value;
+      render();
+    });
+    byId('analyzer-stat')?.addEventListener('change', e => {
+      state.selection.stat = e.target.value;
+      render();
+    });
+    byId('analyzer-line')?.addEventListener('change', e => {
+      state.selection.line = e.target.value;
+      render();
+    });
+    document.querySelectorAll('#analyzer-view-toggle button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.view = btn.dataset.view || 'overall';
+        render();
+      });
+    });
+  }
+
+  load();
+})();

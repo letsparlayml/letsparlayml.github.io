@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NBA Props Analyzer</title>
+  <link rel="stylesheet" href="assets/style.css?v=7" />
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="wrap">
+      <nav class="top-nav solo-nav">
+        <a href="index.html">← Back to home</a>
+        <a href="props_lab.html">NBA props lab</a>
+      </nav>
+      <p class="eyebrow">NBA props analyzer</p>
+      <h1>Interactive prop matchup view</h1>
+      <p class="subhead">Use the daily analyzer build to inspect a player’s recent game log, home and away splits, closest matchup sample, and the current model context for the selected line.</p>
+
+      <div class="hero-grid hero-grid-five hero-grid-tight">
+        <div class="hero-card"><span class="stat-label">Date</span><strong id="analyzer-hero-date">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Player</span><strong id="analyzer-hero-player">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Stat / line</span><strong id="analyzer-hero-line">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Model</span><strong id="analyzer-hero-model">—</strong></div>
+        <div class="hero-card"><span class="stat-label">Probability</span><strong id="analyzer-hero-prob">—</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap page-grid">
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Selection</p>
+          <h2>Find a prop</h2>
+        </div>
+      </div>
+      <div class="control-grid analyzer-control-grid">
+        <label>
+          Date
+          <select id="analyzer-date"></select>
+        </label>
+        <label>
+          Search player
+          <input id="analyzer-search" type="search" placeholder="Start typing a player name" />
+        </label>
+        <label>
+          Player
+          <select id="analyzer-player"></select>
+        </label>
+        <label>
+          Stat
+          <select id="analyzer-stat"></select>
+        </label>
+        <label>
+          Line
+          <select id="analyzer-line"></select>
+        </label>
+      </div>
+      <div class="segmented-control" id="analyzer-view-toggle">
+        <button type="button" data-view="overall" class="is-active">Overall</button>
+        <button type="button" data-view="home">Home</button>
+        <button type="button" data-view="away">Away</button>
+      </div>
+    </section>
+
+    <section class="panel" id="analyzer-status-panel">
+      <div id="analyzer-status"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Context</p>
+          <h2>At-a-glance view</h2>
+        </div>
+      </div>
+      <div id="analyzer-kpis" class="analyzer-kpi-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Recent games</p>
+          <h2>Trend chart</h2>
+          <p class="muted">Chart uses the most recent sample for the current overall or location view. Dot colors reflect matchup similarity buckets when available.</p>
+        </div>
+      </div>
+      <div id="analyzer-chart" class="chart-box analyzer-chart-box"></div>
+      <div class="chart-legend">
+        <span class="legend-chip"><span class="legend-swatch legend-closest"></span>Closest 25%</span>
+        <span class="legend-chip"><span class="legend-swatch legend-close"></span>Close 25%</span>
+        <span class="legend-chip"><span class="legend-swatch legend-mid"></span>Mid 25%</span>
+        <span class="legend-chip"><span class="legend-swatch legend-far"></span>Far 25%</span>
+        <span class="legend-chip"><span class="legend-swatch legend-line"></span>Prop line</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Splits</p>
+          <h2>Selected-line breakdown</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sample</th>
+              <th>N</th>
+              <th>Avg</th>
+              <th>Median</th>
+              <th>Std</th>
+              <th>Hit rate</th>
+            </tr>
+          </thead>
+          <tbody id="analyzer-summary-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Game log</p>
+          <h2>Most recent results</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Opp</th>
+              <th>Loc</th>
+              <th>Value</th>
+              <th>Min</th>
+              <th>Hit</th>
+              <th>Similarity</th>
+            </tr>
+          </thead>
+          <tbody id="analyzer-games-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Closest matchup sample</p>
+          <h2>Most similar historical games</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Opp</th>
+              <th>Loc</th>
+              <th>Value</th>
+              <th>Min</th>
+              <th>Hit</th>
+              <th>Similarity</th>
+            </tr>
+          </thead>
+          <tbody id="analyzer-similar-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/props_analyzer.js?v=1"></script>
+</body>
+</html>

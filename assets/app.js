@@ -280,12 +280,55 @@ function renderProps(props, bodyId = 'props-body') {
   `).join('');
 }
 
-function resultBadgeClass(result) {
+function resultOutcome(result) {
   const normalized = String(result || '').trim().toLowerCase();
-  if (normalized === 'win') return 'badge-win';
-  if (normalized === 'loss') return 'badge-loss';
-  if (normalized === 'push') return 'badge-push';
+  if (!normalized) return '';
+  if (/\bwin\b/.test(normalized)) return 'win';
+  if (/\bloss\b/.test(normalized)) return 'loss';
+  if (/\bpush\b/.test(normalized)) return 'push';
+  if (normalized === 'n/a') return 'na';
+  return '';
+}
+
+function resultBadgeClass(result) {
+  const outcome = resultOutcome(result);
+  if (outcome === 'win') return 'badge-win';
+  if (outcome === 'loss') return 'badge-loss';
+  if (outcome === 'push') return 'badge-push';
   return 'badge-na';
+}
+
+function parseResultScoreValues(text) {
+  const matches = String(text || '').match(/-?\d+(?:\.\d+)?/g) || [];
+  if (matches.length < 2) return [];
+  return matches.slice(-2).map(Number).filter(Number.isFinite);
+}
+
+function formatSpreadResultCell(row) {
+  const label = String(row?.spreadResult || '').trim() || 'N/A';
+  return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
+}
+
+function formatTotalResultCell(row) {
+  const existing = String(row?.totalResult || '').trim();
+  const marketTotal = Number(row?.marketTotal);
+  if (/\d/.test(existing)) {
+    return `<span class="result-badge ${resultBadgeClass(existing)}">${escapeHtml(existing)}</span>`;
+  }
+
+  let label = existing || 'N/A';
+  if (Number.isFinite(marketTotal) && /^(win|loss|push)$/i.test(existing)) {
+    const predictedVals = parseResultScoreValues(row?.predicted || '');
+    const predTotal = predictedVals.length === 2 ? predictedVals[0] + predictedVals[1] : NaN;
+    const side = Number.isFinite(predTotal)
+      ? (predTotal > marketTotal ? 'O' : predTotal < marketTotal ? 'U' : '')
+      : '';
+    label = `${side ? `${side} ` : ''}${fmt(marketTotal)} ${existing}`.trim();
+  } else if (Number.isFinite(marketTotal) && !existing) {
+    label = fmt(marketTotal);
+  }
+
+  return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
 }
 
 function renderResults(results) {
@@ -299,8 +342,8 @@ function renderResults(results) {
       <td>${escapeHtml(r.predicted || r.pick || '')}</td>
       <td>${escapeHtml(r.actual || '')}</td>
       <td><span class="result-badge ${resultBadgeClass(r.mlResult || r.status)}">${escapeHtml(r.mlResult || r.status || 'N/A')}</span></td>
-      <td><span class="result-badge ${resultBadgeClass(r.spreadResult)}">${escapeHtml(r.spreadResult || 'N/A')}</span></td>
-      <td><span class="result-badge ${resultBadgeClass(r.totalResult)}">${escapeHtml(r.totalResult || 'N/A')}</span></td>
+      <td>${formatSpreadResultCell(r)}</td>
+      <td>${formatTotalResultCell(r)}</td>
     </tr>
   `).join('');
 }
