@@ -352,37 +352,311 @@ function probabilitySourceText(p) {
   return String(p.probabilityText ?? p.probability_note ?? p.matchup ?? p.note ?? '');
 }
 
-function propProbabilityText(p) {
-  const candidates = [p.probability, p.clearProbability, p.clear_probability, p.prob, p.winProbability, p.win_probability];
-  for (const value of candidates) {
-    const n = Number(value);
-    if (Number.isFinite(n)) return `${n.toFixed(1)}%`;
+function coerceProbability(value) {
+  if (value === null || value === undefined || value === '') return NaN;
+
+  if (typeof value === 'string') {
+    const cleaned = value.replace('%', '').trim();
+    const n = Number(cleaned);
+    if (Number.isFinite(n)) return n > 1 ? n / 100 : n;
+    return NaN;
   }
+
+  const n = Number(value);
+  if (!Number.isFinite(n)) return NaN;
+  return n > 1 ? n / 100 : n;
+}
+
+function propProbabilityValue(p) {
+  const candidates = [
+    p?.prob_cons,
+    p?.probability,
+    p?.clearProbability,
+    p?.clear_probability,
+    p?.prob,
+    p?.winProbability,
+    p?.win_probability
+  ];
+
+  let sawZero = false;
+
+  for (const value of candidates) {
+    const n = coerceProbability(value);
+    if (!Number.isFinite(n)) continue;
+    if (n > 0) return n;
+    if (n === 0) sawZero = true;
+  }
+
   const src = probabilitySourceText(p);
   const match = src.match(/(\d+(?:\.\d+)?)%\s*(?:to\s+clear|clear|over|under|hit)?/i);
-  return match ? `${Number(match[1]).toFixed(1)}%` : 'N/A';
+  if (match) {
+    const n = Number(match[1]);
+    if (Number.isFinite(n)) return n / 100;
+  }
+
+  return sawZero ? 0 : NaN;
+}
+
+function propProbabilityText(p) {
+  const n = propProbabilityValue(p);
+  return Number.isFinite(n) ? `${(n * 100).toFixed(1)}%` : 'N/A';
 }
 
 function propMatchupText(p) {
+  if (p?.matchup && String(p.matchup).trim()) return String(p.matchup).trim();
+
+  const team = String(p?.team || '').trim();
+  const opp = String(p?.opp || '').trim();
+  if (team && opp) return `${team} vs ${opp}`;
+
   const src = probabilitySourceText(p);
   if (!src) return 'N/A';
-  const cleaned = src.replace(/\s*[•\-|–—]\s*\d+(?:\.\d+)?%.*$/i, '').replace(/\s+\d+(?:\.\d+)?%.*$/i, '').trim();
+
+  const cleaned = src
+    .replace(/\s*[•\-|–—]\s*\d+(?:\.\d+)?%.*$/i, '')
+    .replace(/\s+\d+(?:\.\d+)?%.*$/i, '')
+    .trim();
+
   return cleaned || 'N/A';
+}
+
+function flattenPropsSource(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.props)) return data.props;
+  if (Array.isArray(data?.rows)) return data.rows;
+
+  if (data?.byDate && typeof data.byDate === 'object') {
+    return Object.entries(data.byDate).flatMap(([date, day]) =>
+      (day?.allProps || []).map(prop => ({
+        ...prop,
+        gameDate: prop?.gameDate || prop?.date || prop?.GAME_DATE || date
+      }))
+    );
+  }
+
+  return [];
+}
+
+function normalizeGameNumericId(value) {
+  const raw = String(value ?? '');
+  const match = raw.match(/(\d{7,})/);
+  return match ? match[1] : '';
+}
+
+function buildGameLookup(games) {
+  const byGameId = new Map();
+  const byGameIdDate = new Map();
+
+  (games || []).forEach(game => {
+    const gid = normalizeGameNumericId(game?.sourceGameId || game?.id || game?.gameId || '');
+    if (!gid) return;
+
+    const date = String(game?.gameDate || '').trim();
+    byGameId.set(gid, game);
+    if (date) byGameIdDate.set(`${gid}|${date}`, game);
+  });
+
+  return { byGameId, byGameIdDate };
+}
+
+function resolveGameForProp(prop, gameLookup) {
+  const gid = normalizeGameNumericId(prop?.gameId || prop?.game_id || prop?.GAME_ID || '');
+  const date = String(propDateValue(prop) || '').trim();
+  if (!gid) return null;
+  return gameLookup.byGameIdDate.get(`${gid}|${date}`) || gameLookup.byGameId.get(gid) || null;
+}
+
+function propModelValue(p) {
+  const candidates = [p?.modelPrediction, p?.model, p?.pred_anchor, p?.mu_cons];
+  for (const value of candidates) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function propAverageValue(p) {
+  const candidates = [p?.avg_anchor, p?.average, p?.avg];
+  for (const value of candidates) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function propLineValue(p) {
+  const n = Number(p?.line);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function propLineRatio(p) {
+  const direct = [p?.line_to_avg, p?.lineToAvg, p?.line_to_pred, p?.lineToPred];
+  for (const value of direct) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+
+  const line = propLineValue(p);
+  const avg = propAverageValue(p);
+  if (Number.isFinite(line) && Number.isFinite(avg) && avg > 0) return line / avg;
+
+  const model = propModelValue(p);
+  if (Number.isFinite(line) && Number.isFinite(model) && model > 0) return line / model;
+
+  return NaN;
+}
+
+function propClosenessScore(p) {
+  const ratio = propLineRatio(p);
+  if (!Number.isFinite(ratio)) return 0.45;
+  const clamped = Math.max(0, Math.min(ratio, 1.25));
+  return Math.max(0, 1 - Math.abs(1 - clamped));
+}
+
+function propDisplayScore(p) {
+  const prob = Number.isFinite(propProbabilityValue(p)) ? propProbabilityValue(p) : 0;
+  const closeness = propClosenessScore(p);
+  const stability = Number.isFinite(Number(p?.stability_score)) ? Number(p.stability_score) : 0;
+  const minutes = Number.isFinite(Number(p?.minutes_score)) ? Number(p.minutes_score) : 0;
+  const agreement = Number.isFinite(Number(p?.agreement_score)) ? Number(p.agreement_score) : 0;
+
+  return prob * 0.50 + closeness * 0.20 + stability * 0.15 + minutes * 0.10 + agreement * 0.05;
+}
+
+function isReasonableHomepageProp(p, { probFloor = 0.56, ratioFloor = 0.68 } = {}) {
+  const prob = propProbabilityValue(p);
+  if (Number.isFinite(prob) && prob < probFloor) return false;
+
+  const ratio = propLineRatio(p);
+  if (Number.isFinite(ratio) && ratio < ratioFloor) return false;
+
+  return true;
+}
+
+function propConfidenceLabel(p) {
+  const prob = propProbabilityValue(p);
+  const score = propDisplayScore(p);
+
+  if ((Number.isFinite(prob) && prob >= 0.70) || score >= 0.78) return 'High';
+  if ((Number.isFinite(prob) && prob >= 0.60) || score >= 0.66) return 'Medium';
+  return 'Lean';
+}
+
+function enrichHomepageProp(prop, gameLookup) {
+  const game = resolveGameForProp(prop, gameLookup);
+  const location = String(prop?.location || '').trim().toLowerCase();
+
+  let team = String(prop?.team || '').trim();
+  let opp = String(prop?.opp || '').trim();
+
+  if (game) {
+    const away = String(game?.awayTeam || '').trim();
+    const home = String(game?.homeTeam || '').trim();
+
+    if (!team) {
+      if (location === 'away') team = away;
+      else if (location === 'home') team = home;
+    }
+
+    if (!opp) {
+      if (location === 'away') opp = home;
+      else if (location === 'home') opp = away;
+    }
+  }
+
+  const matchup =
+    String(prop?.matchup || '').trim() ||
+    (team && opp ? `${team} vs ${opp}` : (game ? `${game.awayTeam} vs ${game.homeTeam}` : ''));
+
+  const model = propModelValue(prop);
+
+  return {
+    ...prop,
+    gameDate: propDateValue(prop),
+    league: prop?.league || game?.league || 'NBA',
+    team,
+    opp,
+    matchup,
+    modelPrediction: Number.isFinite(model) ? model : '',
+    confidence: prop?.confidence || propConfidenceLabel(prop)
+  };
+}
+
+function pickBestHomepageVariant(rows) {
+  return rows
+    .slice()
+    .sort((a, b) => {
+      const scoreDiff = propDisplayScore(b) - propDisplayScore(a);
+      if (scoreDiff) return scoreDiff;
+
+      const probDiff = propProbabilityValue(b) - propProbabilityValue(a);
+      if (Number.isFinite(probDiff) && probDiff) return probDiff;
+
+      const modelDiff = propModelValue(b) - propModelValue(a);
+      if (Number.isFinite(modelDiff) && modelDiff) return modelDiff;
+
+      return 0;
+    })[0] || null;
+}
+
+function selectHomepageTopProps(props, limit = 12) {
+  const groups = new Map();
+
+  (props || []).forEach(prop => {
+    const key = [
+      normalizeLookupToken(prop?.player || ''),
+      String(prop?.stat || prop?.stat_display || '').toUpperCase(),
+      String(prop?.gameDate || ''),
+      normalizeGameNumericId(prop?.gameId || prop?.game_id || prop?.GAME_ID || '')
+    ].join('|');
+
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(prop);
+  });
+
+  const deduped = Array.from(groups.values())
+    .map(group => pickBestHomepageVariant(group))
+    .filter(Boolean);
+
+  const preferred = deduped.filter(p => isReasonableHomepageProp(p, { probFloor: 0.58, ratioFloor: 0.70 }));
+  const usable = preferred.length >= Math.min(limit, 6)
+    ? preferred
+    : deduped.filter(p => isReasonableHomepageProp(p, { probFloor: 0.54, ratioFloor: 0.64 }));
+
+  return (usable.length ? usable : deduped)
+    .slice()
+    .sort((a, b) => {
+      const scoreDiff = propDisplayScore(b) - propDisplayScore(a);
+      if (scoreDiff) return scoreDiff;
+
+      const probDiff = propProbabilityValue(b) - propProbabilityValue(a);
+      if (Number.isFinite(probDiff) && probDiff) return probDiff;
+
+      return propModelValue(b) - propModelValue(a);
+    })
+    .slice(0, limit);
 }
 
 function renderProps(props, bodyId = 'props-body') {
   const body = byId(bodyId);
   if (!body) return;
+
   const visibleProps = props || [];
+  if (!visibleProps.length) {
+    body.innerHTML = '<tr><td colspan="8">No props available.</td></tr>';
+    return;
+  }
+
   body.innerHTML = visibleProps.map(p => `
     <tr>
-      <td>${escapeHtml(p.league || '')}</td>
+      <td>${escapeHtml(p.league || 'NBA')}</td>
       <td>${playerBadgeHtml(p.player || '', p)}</td>
-      <td>${escapeHtml(p.stat || '')}</td>
-      <td>${escapeHtml(p.line ?? '')}</td>
-      <td>${escapeHtml(p.modelPrediction ?? p.model ?? '')}</td>
+      <td>${escapeHtml(p.stat_display || p.stat || '')}</td>
+      <td>${escapeHtml(hasNumericValue(p.line) ? fmt(p.line, 1) : (p.line ?? ''))}</td>
+      <td>${escapeHtml(hasNumericValue(p.modelPrediction) ? fmt(p.modelPrediction, 1) : (p.modelPrediction ?? ''))}</td>
       <td>${escapeHtml(propProbabilityText(p))}</td>
-      <td>${escapeHtml(p.confidence || '')}</td>
+      <td>${escapeHtml(p.confidence || propConfidenceLabel(p))}</td>
       <td>${escapeHtml(propMatchupText(p))}</td>
     </tr>
   `).join('');
@@ -756,19 +1030,37 @@ function setupLeagueFilter(allGames, meta) {
 (async function init() {
   const root = byId('today-games-grid') || byId('games-grid');
   try {
-    const [meta, games, rawProps, results, resultsSummary, rawHomeInsights, injuries] = await Promise.all([
+    const [meta, games, rawProps, rawPropsLab, results, resultsSummary, rawHomeInsights, injuries] = await Promise.all([
       loadJson('data/site.json'),
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
+      loadJson('data/nba_props_lab.json', null),
       loadJson('data/results.json', []),
       loadJson('data/results_summary.json', {}),
       loadJson('data/nba_home_insights.json', {}),
       loadJson('data/nba_injuries.json', {})
-    ]);
+    ]);;
     const injuryLookup = buildInjuryLookup(injuries);
-    const props = applyInjuryContextToList(rawProps, injuryLookup);
-    const todayProps = props.filter(p => propDateValue(p) === meta.targetDate);
-    const nextProps = props.filter(p => propDateValue(p) === meta.nextDate);
+    const gameLookup = buildGameLookup(games);
+
+    const propsSource = flattenPropsSource(rawPropsLab);
+    const baseProps = propsSource.length ? propsSource : rawProps;
+
+    const props = applyInjuryContextToList(baseProps, injuryLookup)
+      .map(prop => enrichHomepageProp(prop, gameLookup));
+
+    const hasDatedProps = props.some(p => propDateValue(p));
+
+    const todayPool = hasDatedProps
+      ? props.filter(p => propDateValue(p) === meta.targetDate)
+      : props;
+
+    const nextPool = hasDatedProps
+      ? props.filter(p => propDateValue(p) === meta.nextDate)
+      : [];
+
+const todayProps = selectHomepageTopProps(todayPool, 12);
+const nextProps = selectHomepageTopProps(nextPool, 10);
     const homeInsights = applyInjuryContextToHomeInsights(rawHomeInsights, injuryLookup);
     const todayGames = (games || []).filter(g => g.gameDate === meta.targetDate);
     const tomorrowGames = (games || []).filter(g => g.gameDate === meta.nextDate);

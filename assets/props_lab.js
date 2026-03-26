@@ -33,9 +33,32 @@ function fmtPct(num, digits = 1) {
   return Number.isFinite(n) ? `${(n * 100).toFixed(digits)}%` : 'N/A';
 }
 
+function americanFromProb(prob) {
+  const raw = Number(prob);
+  const p = Number.isFinite(raw) ? (raw > 1 ? raw / 100 : raw) : NaN;
+  if (!(p > 0 && p < 1)) return NaN;
+
+  return p >= 0.5
+    ? -(100 * p) / (1 - p)
+    : (100 * (1 - p)) / p;
+}
+
+function propFairAmericanValue(prop) {
+  const explicit = prop?.fair_american;
+  if (explicit !== null && explicit !== undefined && explicit !== '') {
+    const n = Number(explicit);
+    if (Number.isFinite(n)) return n;
+  }
+
+  return americanFromProb(prop?.prob_cons);
+}
+
 function fmtAmerican(num) {
+  if (num === null || num === undefined || num === '') return 'N/A';
+
   const n = Number(num);
   if (!Number.isFinite(n)) return 'N/A';
+
   return `${n >= 0 ? '+' : ''}${n.toFixed(0)}`;
 }
 
@@ -490,7 +513,7 @@ function explorerRow(prop) {
       <td>${escapeHtml(fmtPct(prop.hit_r10))}</td>
       <td>${escapeHtml(fmtPct(prop.hit_r25))}</td>
       <td>${escapeHtml(fmtPct(prop.prob_cons))}</td>
-      <td>${escapeHtml(fmtAmerican(prop.fair_american))}</td>
+      <td>${escapeHtml(fmtAmerican(propFairAmericanValue(prop)))}</td>
       <td>${escapeHtml(fmt(prop.expMin, 1))}</td>
       <td>${escapeHtml(prop.summary || '')}</td>
     </tr>
