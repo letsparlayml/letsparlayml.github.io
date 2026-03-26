@@ -430,42 +430,60 @@ function inferredSpreadLabel(row) {
   const marketSpread = Number(row?.marketSpread);
   if (!Number.isFinite(marketSpread)) return '';
 
-  const outcome = resultOutcome(row?.spreadResult || '');
+  const league = String(row?.league || '').toUpperCase().trim();
   const predictedVals = parseResultScoreValues(row?.predicted || '');
   const actualVals = parseResultScoreValues(row?.actual || '');
   const teams = parseMatchupTeams(row?.matchup || '');
 
-  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN;
-  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;
+  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN; // home - away
+  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;       // home - away
+  if (!Number.isFinite(predMargin)) return '';
 
   let pickTeam = '';
   let pickLine = marketSpread;
-  if (Number.isFinite(predMargin)) {
-    if (predMargin > marketSpread) {
-      pickTeam = teams.home || 'Home';
-      pickLine = marketSpread;
-    } else if (predMargin < marketSpread) {
-      pickTeam = teams.away || 'Away';
-      pickLine = -marketSpread;
-    } else {
-      pickTeam = teams.home || teams.away || '';
-      pickLine = marketSpread;
+  let resolvedOutcome = '';
+
+  if (league === 'CBB') {
+    // CBB results rows are carrying the spread from the AWAY-team perspective.
+    // Example: away +7.5  <=> home -7.5
+    const predEdge = marketSpread - predMargin;
+    if (Math.abs(predEdge) < 1e-9) return 'Push';
+
+    const pickAway = predEdge > 0;
+    pickTeam = pickAway ? (teams.away || 'Away') : (teams.home || 'Home');
+    pickLine = pickAway ? marketSpread : -marketSpread;
+
+    if (Number.isFinite(actualMargin)) {
+      const actualEdge = marketSpread - actualMargin;
+      if (Math.abs(actualEdge) < 1e-9) {
+        resolvedOutcome = 'Push';
+      } else {
+        const actualAwayCover = actualEdge > 0;
+        resolvedOutcome = actualAwayCover === pickAway ? 'Win' : 'Loss';
+      }
+    }
+  } else {
+    // NBA/NHL results rows are carrying the spread from the HOME-team perspective.
+    // Example: home -2.5  <=> away +2.5
+    const predEdge = predMargin + marketSpread;
+    if (Math.abs(predEdge) < 1e-9) return 'Push';
+
+    const pickHome = predEdge > 0;
+    pickTeam = pickHome ? (teams.home || 'Home') : (teams.away || 'Away');
+    pickLine = pickHome ? marketSpread : -marketSpread;
+
+    if (Number.isFinite(actualMargin)) {
+      const actualEdge = actualMargin + marketSpread;
+      if (Math.abs(actualEdge) < 1e-9) {
+        resolvedOutcome = 'Push';
+      } else {
+        const actualHomeCover = actualEdge > 0;
+        resolvedOutcome = actualHomeCover === pickHome ? 'Win' : 'Loss';
+      }
     }
   }
 
-  let resolvedOutcome = outcome;
-  if (!resolvedOutcome && Number.isFinite(actualMargin) && Number.isFinite(predMargin)) {
-    const covered = predMargin > marketSpread ? actualMargin > marketSpread : predMargin < marketSpread ? actualMargin < marketSpread : actualMargin === marketSpread;
-    resolvedOutcome = actualMargin === marketSpread ? 'push' : covered ? 'win' : 'loss';
-  }
-
-  if (!pickTeam && Number.isFinite(marketSpread)) {
-    pickTeam = marketSpread <= 0 ? (teams.home || 'Home') : (teams.away || 'Away');
-    pickLine = marketSpread <= 0 ? marketSpread : -marketSpread;
-  }
-
-  if (!pickTeam && !resolvedOutcome) return Number.isFinite(marketSpread) ? fmtSigned(marketSpread) : '';
-  return `${pickTeam ? `${pickTeam} ` : ''}${fmtSigned(pickLine)}${resolvedOutcome ? ` ${resolvedOutcome[0].toUpperCase()}${resolvedOutcome.slice(1)}` : ''}`.trim();
+  return `${pickTeam ? `${pickTeam} ` : ''}${fmtSigned(pickLine)}${resolvedOutcome ? ` ${resolvedOutcome}` : ''}`.trim();
 }
 
 function inferredTotalLabel(row) {
@@ -493,8 +511,8 @@ function inferredTotalLabel(row) {
 }
 
 function formatSpreadResultCell(row) {
-  const existing = String(row?.spreadResult || '').trim();
-  const label = /\d/.test(existing) ? existing : inferredSpreadLabel(row) || existing || 'N/A';
+  const inferred = inferredSpreadLabel(row);
+  const label = inferred || 'N/A';
   return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
 }
 
