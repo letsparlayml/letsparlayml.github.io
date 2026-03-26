@@ -74,9 +74,30 @@ function spreadEdgeForDisplay(game) {
     : NaN;
 }
 
+function spreadTeamLabel(game, awaySpread) {
+  if (!Number.isFinite(awaySpread)) return 'N/A';
+  if (Math.abs(awaySpread) < 0.05) return 'PK';
+  return awaySpread > 0
+    ? `${game?.homeTeam || 'Home'} ${fmtSigned(-awaySpread)}`
+    : `${game?.awayTeam || 'Away'} ${fmtSigned(awaySpread)}`;
+}
+
+function spreadEdgeText(game) {
+  const edge = spreadEdgeForDisplay(game);
+  if (!Number.isFinite(edge)) return 'N/A';
+  if (Math.abs(edge) < 0.05) return 'PK';
+  const leanTeam = edge > 0 ? (game?.homeTeam || 'Home') : (game?.awayTeam || 'Away');
+  return `${leanTeam} ${Math.abs(edge).toFixed(1)} pts`;
+}
+
 function marketSpreadText(game) {
   const spread = marketSpreadForDisplay(game);
-  return Number.isFinite(spread) ? fmtSigned(spread) : 'N/A';
+  return spreadTeamLabel(game, spread);
+}
+
+function modelSpreadText(game) {
+  const spread = modelSpreadForDisplay(game);
+  return spreadTeamLabel(game, spread);
 }
 
 function cardSummaryText(game) {
@@ -87,7 +108,7 @@ function cardSummaryText(game) {
   return raw
     .replace(
       /Spread line pending/g,
-      Number.isFinite(spread) ? `Spread line ${fmtSigned(spread)}` : 'Spread line pending'
+      Number.isFinite(spread) ? `Spread line ${spreadTeamLabel(game, spread)}` : 'Spread line pending'
     )
     .replace(
       /Total line pending/g,
@@ -271,7 +292,7 @@ function marketAwaySpread(game) {
 
 function marketSpreadText(game) {
   const spread = marketAwaySpread(game);
-  return Number.isFinite(spread) ? fmtSigned(spread) : 'N/A';
+  return spreadTeamLabel(game, spread);
 }
 
 function marketTotalText(game) {
@@ -299,9 +320,9 @@ function gameCard(game) {
           <div class="score-row"><span>${escapeHtml(game.homeTeam)}</span><strong>${fmt(game.modelHomeScore)}</strong></div>
         </div>
         <div class="kpi-row">
-          <div class="kpi"><span>Model spread</span><strong>${Number.isFinite(modelSpread) ? fmtSigned(modelSpread) : 'N/A'}</strong></div>
+          <div class="kpi"><span>Model spread</span><strong>${modelSpreadText(game)}</strong></div>
           <div class="kpi"><span>Market spread</span><strong>${marketSpreadText(game)}</strong></div>
-          <div class="kpi"><span>Spread edge</span><strong>${Number.isFinite(edgeSpread) ? fmtSigned(edgeSpread) : 'N/A'}</strong></div>
+          <div class="kpi"><span>Spread edge</span><strong>${spreadEdgeText(game)}</strong></div>
         </div>
         <div class="kpi-row">
           <div class="kpi"><span>Model total</span><strong>${fmt(game.modelTotal)}</strong></div>
@@ -398,8 +419,8 @@ function parseMatchupTeams(text) {
     const [away, home] = raw.split('@').map(part => String(part || '').trim());
     return { away, home };
   }
-  if (/vs/i.test(raw)) {
-    const [home, away] = raw.split(/vs/i).map(part => String(part || '').trim());
+  if (/\bvs\b/i.test(raw)) {
+    const [home, away] = raw.split(/\bvs\b/i).map(part => String(part || '').trim());
     return { away, home };
   }
   return { away: '', home: '' };
@@ -631,11 +652,11 @@ function edgeBoardCard(title, items, kind) {
           <strong>${escapeHtml(`${item.awayTeam} @ ${item.homeTeam}`)}</strong>
           <span>${
             kind === 'spread'
-              ? `Model ${escapeHtml(Number.isFinite(model) ? fmtSigned(model) : 'N/A')} vs market ${escapeHtml(Number.isFinite(market) ? fmtSigned(market) : 'N/A')}`
+              ? `Model ${escapeHtml(spreadTeamLabel(item, model))} vs market ${escapeHtml(spreadTeamLabel(item, market))}`
               : `Model ${escapeHtml(fmt(model))} vs market ${escapeHtml(fmt(market))}`
           }</span>
         </div>
-        <strong>${escapeHtml(Number.isFinite(edge) ? fmtSigned(edge) : 'N/A')}</strong>
+        <strong>${escapeHtml(kind === 'spread' ? spreadEdgeText(item) : (Number.isFinite(edge) ? fmtSigned(edge) : 'N/A'))}</strong>
       </div>
     `;
   }).join('');

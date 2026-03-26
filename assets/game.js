@@ -38,6 +38,22 @@ function marketSpreadForDisplay(game) {
   return isNbaGame(game) ? -spread : spread;
 }
 
+function modelSpreadForDisplay(game) {
+  const away = Number(game?.modelAwayScore);
+  const home = Number(game?.modelHomeScore);
+  if (Number.isFinite(away) && Number.isFinite(home)) return home - away;
+  const fallback = Number(game?.modelHomeSpread);
+  return Number.isFinite(fallback) ? fallback : NaN;
+}
+
+function spreadTeamLabel(game, awaySpread) {
+  if (!Number.isFinite(awaySpread)) return 'N/A';
+  if (Math.abs(awaySpread) < 0.05) return 'PK';
+  return awaySpread > 0
+    ? `${game?.homeTeam || 'Home'} ${fmtSigned(-awaySpread, 2)}`
+    : `${game?.awayTeam || 'Away'} ${fmtSigned(awaySpread, 2)}`;
+}
+
 function qs(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
@@ -458,7 +474,7 @@ function renderChart(movement) {
   `;
 }
 
-function renderMovementTable(movement) {
+function renderMovementTable(game, movement) {
   const body = byId('movement-body');
   if (!body) return;
 
@@ -467,7 +483,7 @@ function renderMovementTable(movement) {
       <td>${escapeHtml(row.date || '')}</td>
       <td>${fmt(row.predictedAway, 2)}</td>
       <td>${fmt(row.predictedHome, 2)}</td>
-      <td>${fmtSigned(row.modelHomeSpread, 2)}</td>
+      <td>${spreadTeamLabel(game, Number.isFinite(Number(row.modelHomeSpread)) ? Number(row.modelHomeSpread) : (Number(row.predictedHome) - Number(row.predictedAway)))}</td>
       <td>${fmt(row.modelTotal, 2)}</td>
     </tr>
   `).join('');
@@ -553,12 +569,12 @@ function renderGameProps(game, propsData, injuryLookup = new Map()) {
     byId('game-title').textContent = `${game.awayTeam} @ ${game.homeTeam}`;
     byId('game-summary').textContent = game.summary || '';
     byId('snapshot-score').textContent = `${fmt(game.modelAwayScore, 2)} - ${fmt(game.modelHomeScore, 2)}`;
-    byId('snapshot-spread').textContent = fmtSigned(marketSpreadForDisplay(game), 2);
+    byId('snapshot-spread').textContent = spreadTeamLabel(game, marketSpreadForDisplay(game));
     byId('snapshot-total').textContent = fmt(game.marketTotal, 2);
     byId('snapshot-confidence').textContent = game.confidence || 'N/A';
 
     renderChart(game.movement || []);
-    renderMovementTable(game.movement || []);
+    renderMovementTable(game, game.movement || []);
     renderGameProps(game, propsData, injuryLookup);
   } catch (err) {
     byId('game-title').textContent = 'Unable to load game';
