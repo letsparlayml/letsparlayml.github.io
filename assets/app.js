@@ -264,9 +264,9 @@ function marketAwaySpread(game) {
   const spread = Number(game?.marketSpread);
   if (!Number.isFinite(spread)) return NaN;
 
-  // Stored marketSpread is home-team spread.
-  // Convert to away-team spread for display.
-  return -spread;
+  // Site cards display spreads from the away-team perspective for "AWAY @ HOME".
+  // NBA stores home-team spreads, while CBB/NHL are already stored in away-team display form.
+  return isNbaGame(game) ? -spread : spread;
 }
 
 function marketSpreadText(game) {

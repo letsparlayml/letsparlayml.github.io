@@ -27,6 +27,17 @@ function fmtSigned(num, digits = 2) {
   return `${n >= 0 ? '+' : ''}${n.toFixed(digits)}`;
 }
 
+
+function isNbaGame(game) {
+  return String(game?.league || '').toUpperCase() === 'NBA';
+}
+
+function marketSpreadForDisplay(game) {
+  const spread = Number(game?.marketSpread);
+  if (!Number.isFinite(spread)) return NaN;
+  return isNbaGame(game) ? -spread : spread;
+}
+
 function qs(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
@@ -542,7 +553,7 @@ function renderGameProps(game, propsData, injuryLookup = new Map()) {
     byId('game-title').textContent = `${game.awayTeam} @ ${game.homeTeam}`;
     byId('game-summary').textContent = game.summary || '';
     byId('snapshot-score').textContent = `${fmt(game.modelAwayScore, 2)} - ${fmt(game.modelHomeScore, 2)}`;
-    byId('snapshot-spread').textContent = fmtSigned(game.marketSpread, 2);
+    byId('snapshot-spread').textContent = fmtSigned(marketSpreadForDisplay(game), 2);
     byId('snapshot-total').textContent = fmt(game.marketTotal, 2);
     byId('snapshot-confidence').textContent = game.confidence || 'N/A';
 
