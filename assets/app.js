@@ -717,10 +717,8 @@ function inferredSpreadLabel(row) {
   let pickLine = marketSpread;
   let resolvedOutcome = '';
 
-  const awayPerspective = league === 'CBB' || league === 'NHL';
-
-  if (awayPerspective) {
-    // CBB and NHL result rows store marketSpread from the AWAY-team perspective.
+  if (league === 'CBB' || league === 'NHL') {
+    // CBB and NHL results rows are carrying the spread from the AWAY-team perspective.
     // Example: away +1.5  <=> home -1.5
     const predEdge = marketSpread - predMargin;
     if (Math.abs(predEdge) < 1e-9) return 'Push';
@@ -739,8 +737,8 @@ function inferredSpreadLabel(row) {
       }
     }
   } else {
-    // NBA result rows store marketSpread from the HOME-team perspective.
-    // Example: home +16.5  <=> away -16.5
+    // NBA/NHL results rows are carrying the spread from the HOME-team perspective.
+    // Example: home -2.5  <=> away +2.5
     const predEdge = predMargin + marketSpread;
     if (Math.abs(predEdge) < 1e-9) return 'Push';
 
