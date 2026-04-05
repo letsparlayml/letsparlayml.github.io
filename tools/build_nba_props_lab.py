@@ -207,6 +207,39 @@ def pick_sheet(xls: pd.ExcelFile, candidates: list[str]) -> str | None:
     return None
 
 
+
+def prop_lookup_key(item: dict | pd.Series, include_player_id: bool = True) -> tuple:
+    line_value = safe_float(item.get("line"))
+    player_id = safe_int(item.get("playerId")) if include_player_id else None
+    return (
+        clean_str(item.get("gameDate")),
+        safe_int(item.get("gameId")),
+        player_id,
+        clean_str(item.get("player")).lower(),
+        clean_str(item.get("stat")).upper(),
+        round(line_value, 3) if line_value is not None else None,
+    )
+
+
+def enrich_board_rows(items: list[dict], all_rows: list[dict]) -> list[dict]:
+    exact_lookup = {prop_lookup_key(row, True): row for row in all_rows}
+    fallback_lookup = {prop_lookup_key(row, False): row for row in all_rows}
+
+    enriched = []
+    for item in items:
+        source = exact_lookup.get(prop_lookup_key(item, True)) or fallback_lookup.get(prop_lookup_key(item, False))
+        if not source:
+            enriched.append(item)
+            continue
+
+        merged = dict(item)
+        for key, value in source.items():
+            if merged.get(key) in (None, "") and value not in (None, ""):
+                merged[key] = value
+        enriched.append(merged)
+    return enriched
+
+
 def build_role_sections(all_df: pd.DataFrame, games_map: dict[str, dict]) -> tuple[list[dict], list[dict]]:
     if all_df is None or all_df.empty:
         return [], []
@@ -289,10 +322,10 @@ def build_payload(workbook_path: Path, games_path: Path) -> dict:
             },
             "allProps": day_all,
             "sections": {
-                "consensus": [r for r in sections_by_sheet["consensus"] if r.get("gameDate") == date],
-                "floor": [r for r in sections_by_sheet["floor"] if r.get("gameDate") == date],
-                "consistency": [r for r in sections_by_sheet["consistency"] if r.get("gameDate") == date],
-                "ceiling": [r for r in sections_by_sheet["ceiling"] if r.get("gameDate") == date],
+                "consensus": enrich_board_rows([r for r in sections_by_sheet["consensus"] if r.get("gameDate") == date], day_all),
+                "floor": enrich_board_rows([r for r in sections_by_sheet["floor"] if r.get("gameDate") == date], day_all),
+                "consistency": enrich_board_rows([r for r in sections_by_sheet["consistency"] if r.get("gameDate") == date], day_all),
+                "ceiling": enrich_board_rows([r for r in sections_by_sheet["ceiling"] if r.get("gameDate") == date], day_all),
                 "roleUp": [r for r in role_up if r.get("gameDate") == date],
                 "roleDown": [r for r in role_down if r.get("gameDate") == date],
             },

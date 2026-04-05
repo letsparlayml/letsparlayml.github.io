@@ -18,19 +18,19 @@ function hasNumericValue(v) {
 }
 
 function fmt(num, digits = 1) {
-  const n = Number(num);
-  return Number.isFinite(n) ? n.toFixed(digits) : 'N/A';
+  if (!hasNumericValue(num)) return 'N/A';
+  return Number(num).toFixed(digits);
 }
 
 function fmtSigned(num, digits = 1) {
+  if (!hasNumericValue(num)) return 'N/A';
   const n = Number(num);
-  if (!Number.isFinite(n)) return 'N/A';
   return `${n >= 0 ? '+' : ''}${n.toFixed(digits)}`;
 }
 
 function fmtPct(num, digits = 1) {
-  const n = Number(num);
-  return Number.isFinite(n) ? `${(n * 100).toFixed(digits)}%` : 'N/A';
+  if (!hasNumericValue(num)) return 'N/A';
+  return `${(Number(num) * 100).toFixed(digits)}%`;
 }
 
 function americanFromProb(prob) {
@@ -497,6 +497,42 @@ function populateGameOptions(select, props, selectedValue = 'ALL') {
   select.value = seen.has(selectedValue) ? selectedValue : 'ALL';
 }
 
+function boardLookupKey(prop, includePlayerId = true) {
+  const line = hasNumericValue(prop?.line) ? Number(prop.line).toFixed(3) : '';
+  const playerId = includePlayerId && hasNumericValue(prop?.playerId) ? String(Number(prop.playerId)) : '';
+  return [
+    prop?.gameDate || '',
+    hasNumericValue(prop?.gameId) ? String(Number(prop.gameId)) : '',
+    playerId,
+    normalizeLookupToken(prop?.player || ''),
+    String(prop?.stat || '').toUpperCase(),
+    line
+  ].join('|');
+}
+
+function enrichBoardItems(items, allProps) {
+  const exact = new Map();
+  const fallback = new Map();
+
+  (allProps || []).forEach(prop => {
+    exact.set(boardLookupKey(prop, true), prop);
+    fallback.set(boardLookupKey(prop, false), prop);
+  });
+
+  return (items || []).map(item => {
+    const source = exact.get(boardLookupKey(item, true)) || fallback.get(boardLookupKey(item, false));
+    if (!source) return item;
+
+    const next = { ...item };
+    Object.entries(source).forEach(([key, value]) => {
+      if (next[key] === null || next[key] === undefined || next[key] === '') {
+        next[key] = value;
+      }
+    });
+    return next;
+  });
+}
+
 function filterBoardItems(items, filters) {
   return filterProps(items || [], filters);
 }
@@ -540,21 +576,26 @@ function applyDate(lab, date) {
   populateGameOptions(byId('game-filter'), day.allProps || [], currentFilters.game);
 
   const filters = getFilters();
-  const filteredAll = filterProps(day.allProps || [], filters);
+  const allProps = day.allProps || [];
+  const filteredAll = filterProps(allProps, filters);
+  const consensusItems = enrichBoardItems(day.sections?.consensus || [], allProps);
+  const floorItems = enrichBoardItems(day.sections?.floor || [], allProps);
+  const consistencyItems = enrichBoardItems(day.sections?.consistency || [], allProps);
+  const ceilingItems = enrichBoardItems(day.sections?.ceiling || [], allProps);
 
   setText('lab-date-hero', date);
   setText('lab-prop-count', `${filteredAll.length}/${String(day.meta?.propCount || 0)}`);
-  setText('lab-consensus-count', String(filterBoardItems(day.sections?.consensus || [], filters).length));
-  setText('lab-floor-count', String(filterBoardItems(day.sections?.floor || [], filters).length));
-  setText('lab-ceiling-count', String(filterBoardItems(day.sections?.ceiling || [], filters).length));
+  setText('lab-consensus-count', String(filterBoardItems(consensusItems, filters).length));
+  setText('lab-floor-count', String(filterBoardItems(floorItems, filters).length));
+  setText('lab-ceiling-count', String(filterBoardItems(ceilingItems, filters).length));
 
-  renderGrid('lab-consensus-grid', filterBoardItems(day.sections?.consensus || [], filters), false, 9);
-  renderGrid('lab-floor-grid', filterBoardItems(day.sections?.floor || [], filters), false, 8);
-  renderGrid('lab-consistency-grid', filterBoardItems(day.sections?.consistency || [], filters), false, 8);
-  renderGrid('lab-ceiling-grid', filterBoardItems(day.sections?.ceiling || [], filters), false, 9);
+  renderGrid('lab-consensus-grid', filterBoardItems(consensusItems, filters), false, 9);
+  renderGrid('lab-floor-grid', filterBoardItems(floorItems, filters), false, 8);
+  renderGrid('lab-consistency-grid', filterBoardItems(consistencyItems, filters), false, 8);
+  renderGrid('lab-ceiling-grid', filterBoardItems(ceilingItems, filters), false, 9);
   renderGrid('lab-role-up-grid', filterBoardItems(day.sections?.roleUp || [], filters), true, 8);
   renderGrid('lab-role-down-grid', filterBoardItems(day.sections?.roleDown || [], filters), true, 8);
-  renderExplorer(day.allProps || [], filters);
+  renderExplorer(allProps, filters);
 }
 
 (async function init() {
