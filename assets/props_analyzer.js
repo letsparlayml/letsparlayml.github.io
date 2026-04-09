@@ -254,20 +254,33 @@ function renderChart(entry, series, view) {
   const margin = { top: 18, right: 18, bottom: 48, left: 48 };
   const values = games.map(g => Number(g.value)).filter(Number.isFinite);
   const line = Number(entry.line);
-  const minY = Math.min(...values, line);
-  const maxY = Math.max(...values, line);
-  const pad = Math.max(1, (maxY - minY) * 0.15 || 2);
-  const y0 = minY - pad;
-  const y1 = maxY + pad;
+  const topValue = Math.max(...values, line, 0);
+  const y0 = 0;
+  let y1 = Math.max(1, Math.ceil(topValue));
+  if ((y1 - topValue) < 0.6) y1 += 1;
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
   const x = i => margin.left + (games.length === 1 ? plotW / 2 : (i / (games.length - 1)) * plotW);
   const y = value => margin.top + plotH - ((value - y0) / (y1 - y0 || 1)) * plotH;
 
-  const grid = [0, 0.25, 0.5, 0.75, 1].map(frac => {
-    const value = y0 + (y1 - y0) * frac;
+  const niceIntegerStep = rawStep => {
+    if (!Number.isFinite(rawStep) || rawStep <= 1) return 1;
+    const power = 10 ** Math.floor(Math.log10(rawStep));
+    const scaled = rawStep / power;
+    if (scaled <= 1) return power;
+    if (scaled <= 2) return 2 * power;
+    if (scaled <= 5) return 5 * power;
+    return 10 * power;
+  };
+
+  const tickStep = niceIntegerStep((y1 - y0) / 5);
+  const ticks = [];
+  for (let value = y0; value <= y1; value += tickStep) ticks.push(value);
+  if (ticks[ticks.length - 1] !== y1) ticks.push(y1);
+
+  const grid = ticks.map(value => {
     const py = y(value);
-    return `<g><line x1="${margin.left}" x2="${width - margin.right}" y1="${py}" y2="${py}" stroke="rgba(255,255,255,.08)" /><text x="${margin.left - 10}" y="${py + 4}" fill="#9db0d0" font-size="11" text-anchor="end">${Number(value).toFixed(1)}</text></g>`;
+    return `<g><line x1="${margin.left}" x2="${width - margin.right}" y1="${py}" y2="${py}" stroke="rgba(255,255,255,.08)" /><text x="${margin.left - 10}" y="${py + 4}" fill="#9db0d0" font-size="11" text-anchor="end">${value}</text></g>`;
   }).join('');
 
   const poly = games.map((g, i) => `${x(i)},${y(Number(g.value))}`).join(' ');
