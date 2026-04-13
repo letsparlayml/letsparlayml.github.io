@@ -1,14 +1,11 @@
 @echo off
 setlocal EnableExtensions
-
 set "ROOT=C:\python"
 set "REPO=C:\python\letsparlayml.github.io"
-set "MLB_OUT=%ROOT%\mlb_model_outputs"
 set "TOOLS=%REPO%\tools"
-
+set "MLB_OUT=%ROOT%\mlb_model_outputs"
 set "PY=C:\Users\andre\miniconda3\python.exe"
 if defined CONDA_PREFIX if exist "%CONDA_PREFIX%\python.exe" set "PY=%CONDA_PREFIX%\python.exe"
-
 set "SYNC_SCRIPT="
 if exist "%ROOT%\website_sync_v10_fixed.py" set "SYNC_SCRIPT=%ROOT%\website_sync_v10_fixed.py"
 if not defined SYNC_SCRIPT if exist "%ROOT%\website_sync_v10.py" set "SYNC_SCRIPT=%ROOT%\website_sync_v10.py"
@@ -16,27 +13,18 @@ if not defined SYNC_SCRIPT (
   echo ERROR: website_sync_v10_fixed.py or website_sync_v10.py not found in %ROOT%
   exit /b 1
 )
-
 set "ROLLUP_SCRIPT=%ROOT%\results_rollup_fixed.py"
 if not exist "%ROLLUP_SCRIPT%" (
   echo ERROR: %ROLLUP_SCRIPT% not found.
   exit /b 1
 )
-
 echo ==========================================
 echo UPDATE LIVE SITE AFTER PREDICTIONS
 echo ROOT   : %ROOT%
 echo REPO   : %REPO%
 echo PYTHON : %PY%
 echo ==========================================
-
-if not exist "%REPO%\index.html" (
-  echo ERROR: Repo not found: %REPO%
-  exit /b 1
-)
-
 pushd "%REPO%"
-
 echo.
 echo [1/10] Rebuild NBA injuries JSON...
 if exist "%REPO%\data\nba_injuries.xlsx" (
@@ -44,55 +32,45 @@ if exist "%REPO%\data\nba_injuries.xlsx" (
 ) else if exist "%REPO%\data\nba_injuries.csv" (
   "%PY%" "%TOOLS%\build_nba_injuries_json.py" --website-repo "%REPO%" --input "%REPO%\data\nba_injuries.csv"
 ) else (
-  echo No nba_injuries.xlsx or nba_injuries.csv found. Skipping injuries rebuild.
+  echo No nba injuries file found. Skipping.
 )
 if errorlevel 1 goto :fail
-
 echo.
 echo [2/10] Settle MLB game results from prior board...
 "%PY%" "%TOOLS%\build_mlb_results_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --enable --allow-statsapi-fallback --allow-missing-lines
 if errorlevel 1 goto :fail
-
 echo.
 echo [3/10] Settle MLB prop results / pending queue...
 "%PY%" "%TOOLS%\build_mlb_prop_results_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --enable
 if errorlevel 1 goto :fail
-
 echo.
 echo [4/10] Run core site sync...
 "%PY%" "%SYNC_SCRIPT%" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
-
 echo.
 echo [5/10] Refresh market lines (NBA/NHL/MLB API only)...
-"%PY%" "%TOOLS%\refresh_all_market_lines.py" --root "%ROOT%" --website-repo "%REPO%" --mlb-out "%MLB_OUT%"
+"%PY%" "%TOOLS%\refresh_all_market_lines.py" --root "%ROOT%" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
-
 echo.
 echo [6/10] Refresh results rollup and line archive...
 "%PY%" "%ROLLUP_SCRIPT%" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
-
 echo.
 echo [7/10] Build MLB site JSON...
 "%PY%" "%TOOLS%\build_mlb_site_json.py" --website-repo "%REPO%" --mlb-output-dir "%MLB_OUT%"
 if errorlevel 1 goto :fail
-
 echo.
 echo [8/10] Build MLB pitcher averages JSON...
 "%PY%" "%TOOLS%\build_mlb_pitcher_averages_json.py" --mlb-output-dir "%MLB_OUT%" --out "%REPO%\data\mlb_pitcher_averages.json"
 if errorlevel 1 goto :fail
-
 echo.
 echo [9/10] Build MLB props analyzer JSON...
 "%PY%" "%TOOLS%\build_mlb_props_analyzer_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --mlb-output-dir "%MLB_OUT%"
 if errorlevel 1 goto :fail
-
 echo.
 echo [10/10] Refresh results rollup again after MLB board write...
 "%PY%" "%ROLLUP_SCRIPT%" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
-
 echo.
 echo Commit and push if changed...
 git add -A
@@ -103,12 +81,10 @@ if errorlevel 1 (
 ) else (
   echo No changes to commit.
 )
-
 popd
 echo.
 echo Daily live site update complete.
 exit /b 0
-
 :fail
 echo.
 echo FAILED.
