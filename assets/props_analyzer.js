@@ -370,36 +370,36 @@ function updateUrl(entry, selection, currentLeague) {
 }
 
 function findInitialState(data, league) {
-  const dates = Array.isArray(data?.dates) ? data.dates : [];
-  const requestedDateRaw = qs('date') || '';
-  const fallbackDate = data?.targetDate || dates[0] || '';
-  const requestedDate = dates.includes(requestedDateRaw) ? requestedDateRaw : fallbackDate;
+  const availableDates = Array.isArray(data?.dates) ? data.dates : [];
+  const rawRequestedDate = qs('date') || data.targetDate || availableDates[0] || '';
+  const requestedDate = availableDates.includes(rawRequestedDate)
+    ? rawRequestedDate
+    : (availableDates[0] || '');
 
-  const entries = (data?.entries || []).filter(e => !requestedDate || e.gameDate === requestedDate);
+  const dateEntries = (data.entries || []).filter(e => !requestedDate || e.gameDate === requestedDate);
   const requestedPlayerId = qs('playerId');
   const requestedPlayer = normalizeLookupToken(qs('player'));
-
   let playerId = requestedPlayerId || '';
-  if (playerId && !entries.some(e => String(e.playerId) === String(playerId))) {
+
+  if (playerId && !dateEntries.some(e => String(e.playerId) === String(playerId))) {
     playerId = '';
   }
   if (!playerId && requestedPlayer) {
-    const match = entries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
+    const match = dateEntries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
     playerId = match?.playerId ? String(match.playerId) : '';
   }
-  if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
+  if (!playerId) playerId = dateEntries[0]?.playerId ? String(dateEntries[0].playerId) : '';
 
+  const playerEntries = dateEntries.filter(e => String(e.playerId) === String(playerId));
   const requestedStat = String(qs('stat') || '').toUpperCase();
-  const validStats = [...new Set(entries.filter(e => String(e.playerId) === String(playerId)).map(e => String(e.stat).toUpperCase()))];
-  const stat = validStats.includes(requestedStat) ? requestedStat : (validStats[0] || '');
+  const stat = playerEntries.some(e => String(e.stat).toUpperCase() === requestedStat)
+    ? requestedStat
+    : String(playerEntries[0]?.stat || '').toUpperCase();
 
-  const requestedLine = qs('line') || '';
-  const validLineEntries = entries
-    .filter(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)
-    .sort((a, b) => Number(a.line) - Number(b.line));
-  const line = validLineEntries.some(e => String(e.line) === String(requestedLine))
-    ? String(requestedLine)
-    : String(validLineEntries[0]?.line ?? '');
+  const requestedLine = String(qs('line') || '');
+  const line = playerEntries.some(e => String(e.stat).toUpperCase() === stat && String(e.line) === requestedLine)
+    ? requestedLine
+    : String(playerEntries.find(e => String(e.stat).toUpperCase() === stat)?.line ?? '');
 
   return {
     league: String(league || 'NBA').toUpperCase(),
@@ -536,15 +536,13 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const lineSelect = byId('analyzer-line');
     const searchInput = byId('analyzer-search');
 
-    populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
-
-    const validDates = state.data?.dates || [];
-    if (validDates.length && !validDates.includes(state.selection.date)) {
-      state.selection.date = state.data?.targetDate && validDates.includes(state.data.targetDate)
-        ? state.data.targetDate
-        : validDates[0];
+    const availableDates = state.data?.dates || [];
+    if (!availableDates.includes(state.selection.date)) {
+      state.selection.date = availableDates[0] || '';
     }
-    populateSelect(dateSelect, validDates, item => item, item => item, state.selection.date);
+
+    populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
+    populateSelect(dateSelect, availableDates, item => item, item => item, state.selection.date);
 
     const players = uniquePlayers(currentEntries(), state.selection.query);
     if (!players.some(p => String(p.playerId) === String(state.selection.playerId))) {
