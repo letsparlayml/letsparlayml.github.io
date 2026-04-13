@@ -55,42 +55,6 @@ function analyzerDisplayLabel(point) {
   return /^\d{4}-\d{2}-\d{2}$/.test(label) ? label.slice(5) : label;
 }
 
-function denverTodayIso() {
-  try {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Denver',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).formatToParts(new Date());
-    const get = type => parts.find(p => p.type === type)?.value || '';
-    const year = get('year');
-    const month = get('month');
-    const day = get('day');
-    return year && month && day ? `${year}-${month}-${day}` : '';
-  } catch (err) {
-    return new Date().toISOString().slice(0, 10);
-  }
-}
-
-function preferredAvailableDate(dates, requestedDate = '') {
-  const list = [...new Set((dates || []).filter(Boolean).map(String))].sort();
-  if (!list.length) return '';
-  const today = denverTodayIso();
-
-  if (requestedDate && list.includes(String(requestedDate)) && String(requestedDate) >= today) {
-    return String(requestedDate);
-  }
-
-  const todayExact = list.find(d => d === today);
-  if (todayExact) return todayExact;
-
-  const future = list.find(d => d >= today);
-  if (future) return future;
-
-  return list[list.length - 1];
-}
-
 function leagueConfig(league) {
   const key = String(league || 'NBA').toUpperCase();
   return {
@@ -119,6 +83,34 @@ function updateLeagueChrome(config) {
   if (labLink) labLink.textContent = config.league === 'MLB' ? 'NBA props lab' : 'NBA props lab';
 }
 
+
+function currentDenverDateIso() {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Denver',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  } catch (err) {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+function pickPreferredDate(data, league, requestedDate = '') {
+  const dates = Array.isArray(data?.dates) ? data.dates.filter(Boolean).slice().sort() : [];
+  if (!dates.length) return '';
+  const today = currentDenverDateIso();
+
+  if (String(league || '').toUpperCase() === 'MLB') {
+    const futureDates = dates.filter(d => d >= today);
+    if (requestedDate && requestedDate >= today && dates.includes(requestedDate)) return requestedDate;
+    return futureDates[0] || dates[dates.length - 1] || '';
+  }
+
+  if (requestedDate && dates.includes(requestedDate)) return requestedDate;
+  return data?.targetDate && dates.includes(data.targetDate) ? data.targetDate : (dates[0] || '');
+}
 function normalizeLookupToken(value) {
   return String(value ?? '')
     .toLowerCase()
@@ -407,8 +399,8 @@ function updateUrl(entry, selection, currentLeague) {
 
 function findInitialState(data, league) {
   const requestedDate = qs('date') || '';
-  const resolvedDate = preferredAvailableDate(data?.dates || [], requestedDate || data?.targetDate || '');
-  const entries = (data.entries || []).filter(e => !resolvedDate || e.gameDate === resolvedDate);
+  const selectedDate = pickPreferredDate(data, league, requestedDate);
+  const entries = (data.entries || []).filter(e => !selectedDate || e.gameDate === selectedDate);
   const requestedPlayerId = qs('playerId');
   const requestedPlayer = normalizeLookupToken(qs('player'));
   let playerId = requestedPlayerId || '';
@@ -417,9 +409,11 @@ function findInitialState(data, league) {
     playerId = match?.playerId ? String(match.playerId) : '';
   }
   if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
-  const stat = (qs('stat') || entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
-  const line = qs('line') || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
-  return { league: String(league || 'NBA').toUpperCase(), date: resolvedDate, playerId, stat, line, query: '', player: qs('player') || '' };
+  const requestedStat = (qs('stat') || '').toUpperCase();
+  const stat = requestedStat || (entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
+  const requestedLine = qs('line') || '';
+  const line = requestedLine || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
+  return { league: String(league || 'NBA').toUpperCase(), date: selectedDate, playerId, stat, line, query: '', player: qs('player') || '' };
 }
 
 function uniquePlayers(entries, query = '') {
@@ -547,6 +541,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const searchInput = byId('analyzer-search');
 
     populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
+
+    state.selection.date = pickPreferredDate(state.data, state.config.league, state.selection.date);
     populateSelect(dateSelect, state.data?.dates || [], item => item, item => item, state.selection.date);
 
     const players = uniquePlayers(currentEntries(), state.selection.query);
