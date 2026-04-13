@@ -133,93 +133,6 @@ function simColor(bin) {
   }
 }
 
-
-function analyzerWorkloadLabel(entry, series) {
-  const league = String(entry?.league || series?.league || '').toUpperCase();
-  if (league !== 'MLB') return 'Min';
-  const playerType = String(entry?.playerType || series?.playerType || '').toLowerCase();
-  const stat = String(entry?.stat || series?.stat || '').toUpperCase();
-  if (playerType === 'pitcher') {
-    return stat === 'OUTS' ? 'Outs' : 'IP';
-  }
-  return 'PA';
-}
-
-function analyzerSampleLabels(entry, series) {
-  const league = String(entry?.league || series?.league || '').toUpperCase();
-  const playerType = String(entry?.playerType || series?.playerType || '').toLowerCase();
-  const sampleType = String(series?.sampleType || '').toLowerCase();
-  if (league !== 'MLB') {
-    return {
-      gameLogEyebrow: 'Game log',
-      gameLogTitle: 'Most recent results',
-      similarEyebrow: 'Closest matchup sample',
-      similarTitle: 'Most similar historical games',
-      trendCopy: 'Chart uses the available sample for the current overall or location view. NBA uses recent games; MLB preview mode uses rolling-window snapshots and priors.',
-      summaryRows: ['Recent sample', 'Full sample', 'Closest-match sample', 'Same opponent inside closest sample']
-    };
-  }
-  if (playerType === 'pitcher' || sampleType === 'window_snapshot') {
-    return {
-      gameLogEyebrow: 'Pitcher preview',
-      gameLogTitle: 'Most recent snapshots',
-      similarEyebrow: 'Closest snapshot sample',
-      similarTitle: 'Most similar preview windows',
-      trendCopy: 'MLB pitcher preview mode uses rolling form, priors, projected workload, and threshold context. It is designed around pitcher markets rather than NBA-style minutes.',
-      summaryRows: ['Recent snapshot', 'Full snapshot', 'Closest snapshot sample', 'Same opponent inside snapshot sample']
-    };
-  }
-  return {
-    gameLogEyebrow: 'Game log',
-    gameLogTitle: 'Most recent results',
-    similarEyebrow: 'Closest matchup sample',
-    similarTitle: 'Most similar historical games',
-    trendCopy: 'MLB batter mode uses actual recent batter game logs plus matchup context, lineup spot, and location splits.',
-    summaryRows: ['Recent sample', 'Full sample', 'Closest-match sample', 'Same opponent inside closest sample']
-  };
-}
-
-function updateAnalyzerTableLabels(entry, series) {
-  const workload = analyzerWorkloadLabel(entry, series);
-  ['analyzer-games-col-5', 'analyzer-similar-col-5'].forEach(id => {
-    const node = byId(id);
-    if (node) node.textContent = workload;
-  });
-  const labels = analyzerSampleLabels(entry, series);
-  const map = {
-    'analyzer-game-log-eyebrow': labels.gameLogEyebrow,
-    'analyzer-game-log-title': labels.gameLogTitle,
-    'analyzer-similar-eyebrow': labels.similarEyebrow,
-    'analyzer-similar-title': labels.similarTitle,
-    'analyzer-trend-copy': labels.trendCopy,
-  };
-  Object.entries(map).forEach(([id, text]) => {
-    const node = byId(id);
-    if (node) node.textContent = text;
-  });
-  return labels;
-}
-
-function analyzerValueContextText(entry, series) {
-  const workload = analyzerWorkloadLabel(entry, series);
-  const value = entry?.expMin ?? series?.expMin ?? series?.contextMetricValue ?? entry?.contextMetricValue;
-  if (String(entry?.league || series?.league || '').toUpperCase() !== 'MLB') {
-    return { label: series?.contextMetricLabel || entry?.contextMetricLabel || 'Expected minutes', strong: value, detail: `Fair odds ${fmtAmerican(entry?.fair_american)}` };
-  }
-  if (String(entry?.playerType || series?.playerType || '').toLowerCase() === 'pitcher') {
-    return {
-      label: 'Projected workload',
-      strong: hasNumericValue(value) ? `${fmt(value, 1)} ${workload}` : '—',
-      detail: `Threshold ${fmt(entry?.line, 1)} ${entry?.stat_display || entry?.stat || ''}`.trim()
-    };
-  }
-  return {
-    label: series?.contextMetricLabel || entry?.contextMetricLabel || 'Lineup context',
-    strong: value ?? '—',
-    detail: escapeHtml(series?.boardContext || entry?.boardDriver || 'Projected lineup context')
-  };
-}
-
 function updateHero(entry, series) {
   byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
   byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
@@ -266,11 +179,6 @@ function renderKpis(entry, series, view) {
   const similarStats = calcStats(similarGames, entry.line);
   const sameOppStats = calcStats(sameOppGames, entry.line);
 
-  const valueContext = analyzerValueContextText(entry, series);
-  const isMlb = String(entry?.league || series?.league || '').toUpperCase() === 'MLB';
-  const similarityLabel = isMlb && String(entry?.playerType || series?.playerType || '').toLowerCase() === 'pitcher'
-    ? 'Closest preview average'
-    : 'Closest-match average';
   root.innerHTML = `
     <article class="hero-card kpi-card">
       <span class="stat-label">Matchup</span>
@@ -278,37 +186,37 @@ function renderKpis(entry, series, view) {
       <p class="muted">${escapeHtml(view === 'overall' ? 'All locations' : view === 'home' ? 'Home sample' : 'Away sample')}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Threshold edge</span>
+      <span class="stat-label">Model edge</span>
       <strong>${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series.modelPred ?? 0) - (entry.line ?? 0), 1)}</strong>
       <p class="muted">Model ${fmt(entry.pred_anchor ?? entry.mu_cons ?? series.modelPred, 1)} • line ${fmt(entry.line, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Recent hit rate</span>
       <strong>${fmtPct(recentStats.hitRate)}</strong>
-      <p class="muted">${recentStats.n} samples • avg ${fmt(recentStats.avg, 1)}</p>
+      <p class="muted">${recentStats.n} games • avg ${fmt(recentStats.avg, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Full-sample hit rate</span>
       <strong>${fmtPct(overallStats.hitRate)}</strong>
-      <p class="muted">${overallStats.n} samples • avg ${fmt(overallStats.avg, 1)}</p>
+      <p class="muted">${overallStats.n} games • avg ${fmt(overallStats.avg, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">${escapeHtml(similarityLabel)}</span>
+      <span class="stat-label">Closest-match average</span>
       <strong>${fmt(similarStats.avg, 1)}</strong>
-      <p class="muted">${similarStats.n} similar samples • hit ${fmtPct(similarStats.hitRate)}</p>
+      <p class="muted">${similarStats.n} most similar games • hit ${fmtPct(similarStats.hitRate)}</p>
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Same-opp sample</span>
       <strong>${fmt(sameOppStats.avg, 1)}</strong>
-      <p class="muted">${sameOppStats.n} samples • hit ${fmtPct(sameOppStats.hitRate)}</p>
+      <p class="muted">${sameOppStats.n} games • hit ${fmtPct(sameOppStats.hitRate)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">${escapeHtml(valueContext.label)}</span>
-      <strong>${escapeHtml(String(valueContext.strong ?? '—'))}</strong>
-      <p class="muted">${escapeHtml(String(valueContext.detail ?? ''))}</p>
+      <span class="stat-label">${escapeHtml(series.contextMetricLabel || entry.contextMetricLabel || 'Expected minutes')}</span>
+      <strong>${series.contextMetricValue ?? entry.contextMetricValue ?? fmt(entry.expMin ?? series.expMin, 1)}</strong>
+      <p class="muted">Fair odds ${fmtAmerican(entry.fair_american)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Clear probability</span>
+      <span class="stat-label">Board context</span>
       <strong>${fmtPct(entry.prob_cons)}</strong>
       <p class="muted">${escapeHtml(entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text')}</p>
     </article>
@@ -326,12 +234,11 @@ function renderSummary(entry, series, view) {
   const overallStats = calcStats(filterByView(series.games || [], view), entry.line);
   const similarStats = calcStats(series.similarGames || [], entry.line);
   const sameOppStats = calcStats((series.similarGames || []).filter(g => (g.opp || '') === (series.opp || '')), entry.line);
-  const labels = updateAnalyzerTableLabels(entry, series);
   const rows = [
-    [labels.summaryRows[0], recentStats],
-    [labels.summaryRows[1], overallStats],
-    [labels.summaryRows[2], similarStats],
-    [labels.summaryRows[3], sameOppStats],
+    ['Recent sample', recentStats],
+    ['Full sample', overallStats],
+    ['Closest-match sample', similarStats],
+    ['Same opponent inside closest sample', sameOppStats],
   ];
   body.innerHTML = rows.map(([label, stats]) => `
     <tr>
@@ -345,7 +252,7 @@ function renderSummary(entry, series, view) {
   `).join('');
 }
 
-function renderTableRows(rootId, games, line, entry = null, series = null) {
+function renderTableRows(rootId, games, line) {
   const body = byId(rootId);
   if (!body) return;
   if (!(games || []).length) {
@@ -424,7 +331,7 @@ function renderChart(entry, series, view) {
     const cy = y(Number(g.value));
     return `<g>
       <circle cx="${cx}" cy="${cy}" r="5" fill="${simColor(g.simBin)}" stroke="#0b1220" stroke-width="1.5">
-        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` • ${fmt(g.minutes, 1)} ${analyzerWorkloadLabel(entry, series).toLowerCase()}` : ''} (${g.simBin || 'all'})`)}</title>
+        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` in ${fmt(g.minutes, 1)} min` : ''} (${g.simBin || 'all'})`)}</title>
       </circle>
       <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml(analyzerDisplayLabel(g))}</text>
     </g>`;
@@ -463,19 +370,43 @@ function updateUrl(entry, selection, currentLeague) {
 }
 
 function findInitialState(data, league) {
-  const requestedDate = qs('date') || data.targetDate || data.dates?.[0] || '';
-  const entries = (data.entries || []).filter(e => !requestedDate || e.gameDate === requestedDate);
-  const requestedPlayerId = qs('playerId');
-  const requestedPlayer = normalizeLookupToken(qs('player'));
+  const availableDates = Array.isArray(data?.dates) ? data.dates.map(String) : [];
+  const requestedLeague = String(qs('league') || '').toUpperCase();
+  const queryDate = qs('date') || '';
+  const requestedDate = (
+    requestedLeague === String(league || 'NBA').toUpperCase() && availableDates.includes(String(queryDate))
+      ? String(queryDate)
+      : (String(data?.targetDate || '') && availableDates.includes(String(data?.targetDate || ''))
+          ? String(data.targetDate)
+          : (availableDates[0] || ''))
+  );
+
+  const entries = (data.entries || []).filter(e => !requestedDate || String(e.gameDate) === String(requestedDate));
+
+  const requestedPlayerId = requestedLeague === String(league || 'NBA').toUpperCase() ? qs('playerId') : '';
+  const requestedPlayer = requestedLeague === String(league || 'NBA').toUpperCase() ? normalizeLookupToken(qs('player')) : '';
   let playerId = requestedPlayerId || '';
   if (!playerId && requestedPlayer) {
     const match = entries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
     playerId = match?.playerId ? String(match.playerId) : '';
   }
-  if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
-  const stat = (qs('stat') || entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
-  const line = qs('line') || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
-  return { league: String(league || 'NBA').toUpperCase(), date: requestedDate, playerId, stat, line, query: '', player: qs('player') || '' };
+  if (!entries.some(e => String(e.playerId) === String(playerId))) {
+    playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
+  }
+
+  const queryStat = requestedLeague === String(league || 'NBA').toUpperCase() ? String(qs('stat') || '').toUpperCase() : '';
+  const playerEntries = entries.filter(e => String(e.playerId) === String(playerId));
+  const stat = playerEntries.some(e => String(e.stat).toUpperCase() === queryStat)
+    ? queryStat
+    : String(playerEntries[0]?.stat || '').toUpperCase();
+
+  const queryLine = requestedLeague === String(league || 'NBA').toUpperCase() ? String(qs('line') || '') : '';
+  const statEntries = playerEntries.filter(e => String(e.stat).toUpperCase() === stat);
+  const line = statEntries.some(e => String(e.line) === queryLine)
+    ? queryLine
+    : String(statEntries[0]?.line ?? '');
+
+  return { league: String(league || 'NBA').toUpperCase(), date: requestedDate, playerId, stat, line, query: '', player: requestedLeague === String(league || 'NBA').toUpperCase() ? (qs('player') || '') : '' };
 }
 
 function uniquePlayers(entries, query = '') {
@@ -632,7 +563,6 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const token = ++renderToken;
     renderControls();
     syncViewButtons(state.view);
-    updateAnalyzerTableLabels(selectedEntry(), null);
     const entry = selectedEntry();
     updateHero(entry, null);
     if (!entry) {
@@ -640,7 +570,6 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       renderKpis(null, null, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      updateAnalyzerTableLabels(null, null);
       renderTableRows('analyzer-games-body', [], null);
       renderTableRows('analyzer-similar-body', [], null);
       updateUrl(null, state.selection, state.config.league);
@@ -651,9 +580,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, null, state.view);
     renderChart(null, null, state.view);
     renderSummary(null, null, state.view);
-    updateAnalyzerTableLabels(entry, null);
-    renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
-    renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
+    renderTableRows('analyzer-games-body', [], entry?.line);
+    renderTableRows('analyzer-similar-body', [], entry?.line);
 
     const series = await selectedSeries(entry);
     if (token !== renderToken) return;
@@ -672,9 +600,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       }, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      updateAnalyzerTableLabels(entry, series);
-      renderTableRows('analyzer-games-body', [], entry?.line, entry, series);
-      renderTableRows('analyzer-similar-body', [], entry?.line, entry, series);
+      renderTableRows('analyzer-games-body', [], entry?.line);
+      renderTableRows('analyzer-similar-body', [], entry?.line);
       updateUrl(entry, state.selection, state.config.league);
       return;
     }
@@ -682,9 +609,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, series, state.view);
     renderChart(entry, series, state.view);
     renderSummary(entry, series, state.view);
-    updateAnalyzerTableLabels(entry, series);
-    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line, entry, series);
-    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line, entry, series);
+    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line);
+    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line);
     updateUrl(entry, state.selection, state.config.league);
   }
 
