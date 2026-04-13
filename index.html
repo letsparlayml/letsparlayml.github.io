@@ -5,6 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lets Parlay ML</title>
   <link rel="stylesheet" href="assets/style.css?v=7" />
+
+  <style>
+    .support-callout {
+      margin-top: 1rem;
+      padding: 1rem 1.1rem;
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(96, 165, 250, 0.08), rgba(96, 165, 250, 0.03));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .support-callout-copy {
+      min-width: 0;
+    }
+
+    .support-callout-copy h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+    }
+
+    .support-callout-copy p {
+      margin: 0;
+      color: #b7c4d8;
+      font-size: 0.96rem;
+      line-height: 1.55;
+    }
+
+    .support-callout-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.72rem 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(96, 165, 250, 0.42);
+      background: rgba(96, 165, 250, 0.12);
+      color: #dbeafe;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .support-callout-link:hover {
+      background: rgba(96, 165, 250, 0.18);
+      border-color: rgba(147, 197, 253, 0.6);
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 760px) {
+      .support-callout {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .support-callout-link {
+        width: 100%;
+      }
+    }
+  </style>
+
 </head>
 <body>
   <header class="site-header">
@@ -282,11 +345,13 @@
           <p>The results area tracks moneyline, spread, and total performance for yesterday plus current week, month, and year, both overall and separated by league. MLB prop settlement can also appear here once the prop-results builder has graded finished games.</p>
         </div>
       </div>
-      <p class="muted" style="margin-top: 1rem; font-size: 0.96rem; line-height: 1.6;">
-        If the site has helped you cash some tickets and you'd like to support it,
-        you can do so
-        <a href="https://buy.stripe.com/28E3cwf8r0YJgBO51ufUQ00" target="_blank" rel="noopener noreferrer" style="font-weight: 600;">here</a>.
-      </p>
+      <div class="support-callout">
+        <div class="support-callout-copy">
+          <h3>Support LetsParlayML</h3>
+          <p>If the site has helped you cash some tickets and you'd like to support it, you can do so here.</p>
+        </div>
+        <a class="support-callout-link" href="https://buy.stripe.com/28E3cwf8r0YJgBO51ufUQ00" target="_blank" rel="noopener noreferrer">Support the site</a>
+      </div>
     </section>
   </main>
 
