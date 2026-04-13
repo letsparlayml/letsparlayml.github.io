@@ -9,17 +9,6 @@ async function loadJson(path, fallback = null) {
   }
 }
 
-
-async function loadText(path, fallback = '') {
-  try {
-    const res = await fetch(path, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to load ${path}`);
-    return await res.text();
-  } catch (err) {
-    return fallback;
-  }
-}
-
 function byId(id) {
   return document.getElementById(id);
 }
@@ -49,22 +38,35 @@ function isNbaGame(game) {
 }
 
 function modelSpreadForDisplay(game) {
-  const away = Number(game?.modelAwayScore);
-  const home = Number(game?.modelHomeScore);
-  if (Number.isFinite(away) && Number.isFinite(home)) {
-    return home - away;
+  if (isNbaGame(game)) {
+    const away = Number(game?.modelAwayScore);
+    const home = Number(game?.modelHomeScore);
+    if (Number.isFinite(away) && Number.isFinite(home)) {
+      // NBA cards should display spread from AWAY-team perspective
+      return home - away;
+    }
+
+    const fallback = Number(game?.modelHomeSpread);
+    return Number.isFinite(fallback) ? -fallback : NaN;
   }
-  const fallback = Number(game?.modelHomeSpread);
-  return Number.isFinite(fallback) ? fallback : NaN;
+
+  // CBB/NHL: keep existing stored convention
+  const stored = Number(game?.modelHomeSpread);
+  return Number.isFinite(stored) ? stored : NaN;
 }
 
 function marketSpreadForDisplay(game) {
   const spread = Number(game?.marketSpread);
-  return Number.isFinite(spread) ? spread : NaN;
+  if (!Number.isFinite(spread)) return NaN;
+
+  // NBA only: convert stored home spread to away-team display
+  if (isNbaGame(game)) return -spread;
+
+  // CBB/NHL: keep existing stored convention
+  return spread;
 }
 
 function spreadEdgeForDisplay(game) {
-
   const model = modelSpreadForDisplay(game);
   const market = marketSpreadForDisplay(game);
   return Number.isFinite(model) && Number.isFinite(market)
@@ -132,45 +134,6 @@ function normalizeTeamToken(value) {
     .trim();
 }
 
-
-const NBA_TEAM_TOKEN_MAP = {
-  ATL: 'ATL', ATLANTAHAWKS: 'ATL',
-  BOS: 'BOS', BOSTONCELTICS: 'BOS',
-  BKN: 'BKN', BROOKLYNNETS: 'BKN', BRK: 'BKN',
-  CHA: 'CHA', CHARLOTTEHORNETS: 'CHA',
-  CHI: 'CHI', CHICAGOBULLS: 'CHI',
-  CLE: 'CLE', CLEVELANDCAVALIERS: 'CLE',
-  DAL: 'DAL', DALLASMAVERICKS: 'DAL',
-  DEN: 'DEN', DENVERNUGGETS: 'DEN',
-  DET: 'DET', DETROITPISTONS: 'DET',
-  GSW: 'GSW', GOLDENSTATEWARRIORS: 'GSW',
-  HOU: 'HOU', HOUSTONROCKETS: 'HOU',
-  IND: 'IND', INDIANAPACERS: 'IND',
-  LAC: 'LAC', LOSANGELESCLIPPERS: 'LAC', CLIPPERS: 'LAC',
-  LAL: 'LAL', LOSANGELESLAKERS: 'LAL',
-  MEM: 'MEM', MEMPHISGRIZZLIES: 'MEM',
-  MIA: 'MIA', MIAMIHEAT: 'MIA',
-  MIL: 'MIL', MILWAUKEEBUCKS: 'MIL',
-  MIN: 'MIN', MINNESOTATIMBERWOLVES: 'MIN',
-  NOP: 'NOP', NEWORLEANSPELICANS: 'NOP', NO: 'NOP',
-  NYK: 'NYK', NEWYORKKNICKS: 'NYK',
-  OKC: 'OKC', OKLAHOMACITYTHUNDER: 'OKC',
-  ORL: 'ORL', ORLANDOMAGIC: 'ORL',
-  PHI: 'PHI', PHILADELPHIAERS: 'PHI', PHILADELPHIA76ERS: 'PHI',
-  PHX: 'PHX', PHOENIXSUNS: 'PHX',
-  POR: 'POR', PORTLANDTRAILBLAZERS: 'POR',
-  SAC: 'SAC', SACRAMENTOKINGS: 'SAC',
-  SAS: 'SAS', SANANTONIOSPURS: 'SAS', SA: 'SAS',
-  TOR: 'TOR', TORONTORAPTORS: 'TOR',
-  UTA: 'UTA', UTAHJAZZ: 'UTA',
-  WAS: 'WAS', WASHINGTONWIZARDS: 'WAS'
-};
-
-function canonicalTeamToken(value) {
-  const token = normalizeTeamToken(value);
-  return NBA_TEAM_TOKEN_MAP[token] || token;
-}
-
 function canonicalInjuryStatus(value) {
   const raw = String(value ?? '').trim().toLowerCase();
   if (!raw) return '';
@@ -223,9 +186,9 @@ function buildInjuryLookup(injuryData) {
 
 function getPropInjuryContext(prop, injuryLookup) {
   if (!injuryLookup || !injuryLookup.size) return null;
-  const playerKey = normalizeLookupToken(prop?.player || prop?.PLAYER_NAME || '');
+  const playerKey = normalizeLookupToken(prop?.player);
   if (!playerKey) return null;
-  const teamKey = canonicalTeamToken(prop?.team || prop?.team_abbr || prop?.teamAbbr || prop?.TEAM || prop?.TEAM_ABBR || '');
+  const teamKey = normalizeTeamToken(prop?.team);
   return injuryLookup.get(`${playerKey}|${teamKey}`) || injuryLookup.get(`${playerKey}|`) || null;
 }
 
@@ -309,15 +272,22 @@ function modelAwaySpread(game) {
   const away = Number(game?.modelAwayScore);
   const home = Number(game?.modelHomeScore);
   if (Number.isFinite(away) && Number.isFinite(home)) {
+    // Away-team spread perspective for "AWAY @ HOME"
+    // positive = away underdog, negative = away favorite
     return home - away;
   }
+
   const fallback = Number(game?.modelHomeSpread);
-  return Number.isFinite(fallback) ? fallback : NaN;
+  return Number.isFinite(fallback) ? -fallback : NaN;
 }
 
 function marketAwaySpread(game) {
   const spread = Number(game?.marketSpread);
-  return Number.isFinite(spread) ? spread : NaN;
+  if (!Number.isFinite(spread)) return NaN;
+
+  // Site cards display spreads from the away-team perspective for "AWAY @ HOME".
+  // NBA stores home-team spreads, while CBB/NHL are already stored in away-team display form.
+  return isNbaGame(game) ? -spread : spread;
 }
 
 function marketSpreadText(game) {
@@ -377,48 +347,6 @@ function renderGameSection(games, rootId, league = 'ALL') {
   }
   root.innerHTML = filtered.map(gameCard).join('');
 }
-
-function normalizeAnalyzerStat(value) {
-  const raw = String(value || '').trim().toUpperCase();
-  const map = {
-    STRIKEOUTS: 'K',
-    STRIKEOUT: 'K',
-    WALKS: 'BB',
-    HITS: 'H',
-    'TOTAL BASES': 'TB',
-    TOTALBASES: 'TB',
-    'HOME RUNS': 'HR',
-    HOMERUNS: 'HR',
-    DOUBLES: '2B',
-    STEALS: 'SB',
-    STOLENBASES: 'SB',
-    STOLEN_BASES: 'SB',
-    RBI: 'RBI',
-    RUNS: 'R',
-    'HR+R+RBI': 'HRR',
-    HRR: 'HRR',
-    IP: 'IP',
-    OUTS: 'OUTS',
-    'HITS ALLOWED': 'HA',
-    'EARNED RUNS': 'ER',
-    EARNEDRUNS: 'ER'
-  };
-  return map[raw] || raw;
-}
-
-function propAnalyzerHref(prop, fallbackStat = '') {
-  const params = new URLSearchParams();
-  const league = String(prop?.league || 'NBA').toUpperCase();
-  if (league) params.set('league', league);
-  if (propDateValue(prop)) params.set('date', propDateValue(prop));
-  if (prop?.playerId || prop?.PLAYER_ID) params.set('playerId', String(prop.playerId || prop.PLAYER_ID));
-  else if (prop?.player || prop?.PLAYER_NAME) params.set('player', String(prop.player || prop.PLAYER_NAME));
-  const stat = normalizeAnalyzerStat(prop?.stat || prop?.stat_display || fallbackStat);
-  if (stat) params.set('stat', stat);
-  if (prop?.line !== undefined && prop?.line !== null && prop?.line !== '') params.set('line', String(prop.line));
-  return `props_analyzer.html?${params.toString()}`;
-}
-
 
 function probabilitySourceText(p) {
   return String(p.probabilityText ?? p.probability_note ?? p.matchup ?? p.note ?? '');
@@ -710,68 +638,6 @@ function selectHomepageTopProps(props, limit = 12) {
     .slice(0, limit);
 }
 
-
-function archiveMatchKey(row) {
-  const date = String(row?.date || '').trim();
-  let away = String(row?.awayTeam || '').trim();
-  let home = String(row?.homeTeam || '').trim();
-  if ((!away || !home) && String(row?.matchup || '').includes('@')) {
-    const parts = String(row.matchup).split('@').map(s => String(s || '').trim());
-    away = away || parts[0] || '';
-    home = home || parts[1] || '';
-  }
-  return `${date}|${away}|${home}`;
-}
-
-function normalizeArchiveRow(row) {
-  return {
-    marketSpread: hasNumericValue(row?.marketSpread) ? Number(row.marketSpread) : null,
-    marketTotal: hasNumericValue(row?.marketTotal) ? Number(row.marketTotal) : null,
-    marketAwayML: hasNumericValue(row?.marketAwayML) ? Number(row.marketAwayML) : hasNumericValue(row?.awayML) ? Number(row.awayML) : hasNumericValue(row?.awayMoneyline) ? Number(row.awayMoneyline) : null,
-    marketHomeML: hasNumericValue(row?.marketHomeML) ? Number(row.marketHomeML) : hasNumericValue(row?.homeML) ? Number(row.homeML) : hasNumericValue(row?.homeMoneyline) ? Number(row.homeMoneyline) : null,
-    marketLineSource: row?.source || row?.bookmakerTitle || row?.bookmakerKey || '',
-    marketLineUpdated: row?.updatedAt || row?.archivedAt || row?.fetchedAtUtc || '',
-    marketSpreadText: row?.marketSpreadText || '',
-    marketTotalText: row?.marketTotalText || ''
-  };
-}
-
-function hydrateGamesWithArchive(games, archiveRows) {
-  const latestByKey = new Map();
-  (archiveRows || []).forEach(row => {
-    const key = archiveMatchKey(row);
-    if (!key) return;
-    const prev = latestByKey.get(key);
-    const rowTs = Date.parse(row?.updatedAt || row?.archivedAt || row?.fetchedAtUtc || '') || 0;
-    const prevTs = prev ? (Date.parse(prev?.updatedAt || prev?.archivedAt || prev?.fetchedAtUtc || '') || 0) : -1;
-    if (!prev || rowTs >= prevTs) latestByKey.set(key, row);
-  });
-
-  return (games || []).map(game => {
-    const key = `${String(game?.gameDate || '').trim()}|${String(game?.awayTeam || '').trim()}|${String(game?.homeTeam || '').trim()}`;
-    const archive = latestByKey.get(key);
-    if (!archive) return game;
-    const patch = normalizeArchiveRow(archive);
-    const merged = { ...game };
-    if (!hasNumericValue(merged.marketSpread) && hasNumericValue(patch.marketSpread)) merged.marketSpread = patch.marketSpread;
-    if (!hasNumericValue(merged.marketTotal) && hasNumericValue(patch.marketTotal)) merged.marketTotal = patch.marketTotal;
-    if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(patch.marketAwayML)) merged.marketAwayML = patch.marketAwayML;
-    if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(patch.marketHomeML)) merged.marketHomeML = patch.marketHomeML;
-    if (!merged.marketLineSource && patch.marketLineSource) merged.marketLineSource = patch.marketLineSource;
-    if (!merged.marketLineUpdated && patch.marketLineUpdated) merged.marketLineUpdated = patch.marketLineUpdated;
-    if (!merged.marketSpreadText && patch.marketSpreadText) merged.marketSpreadText = patch.marketSpreadText;
-    if (!merged.marketTotalText && patch.marketTotalText) merged.marketTotalText = patch.marketTotalText;
-    return merged;
-  });
-}
-
-function hidePanelFor(nodeId) {
-  const node = byId(nodeId);
-  if (!node) return;
-  const panel = node.closest('.panel') || node.parentElement;
-  if (panel) panel.style.display = 'none';
-}
-
 function renderProps(props, bodyId = 'props-body') {
   const body = byId(bodyId);
   if (!body) return;
@@ -782,15 +648,10 @@ function renderProps(props, bodyId = 'props-body') {
     return;
   }
 
-  body.innerHTML = visibleProps.map(p => {
-    const canLink = ['NBA', 'MLB'].includes(String(p.league || '').toUpperCase());
-    const playerHtml = canLink
-      ? `<a class="table-link" href="${propAnalyzerHref(p)}">${playerBadgeHtml(p.player || '', p)}</a>`
-      : playerBadgeHtml(p.player || '', p);
-    return `
+  body.innerHTML = visibleProps.map(p => `
     <tr>
       <td>${escapeHtml(p.league || 'NBA')}</td>
-      <td>${playerHtml}</td>
+      <td>${playerBadgeHtml(p.player || '', p)}</td>
       <td>${escapeHtml(p.stat_display || p.stat || '')}</td>
       <td>${escapeHtml(hasNumericValue(p.line) ? fmt(p.line, 1) : (p.line ?? ''))}</td>
       <td>${escapeHtml(hasNumericValue(p.modelPrediction) ? fmt(p.modelPrediction, 1) : (p.modelPrediction ?? ''))}</td>
@@ -798,7 +659,7 @@ function renderProps(props, bodyId = 'props-body') {
       <td>${escapeHtml(p.confidence || propConfidenceLabel(p))}</td>
       <td>${escapeHtml(propMatchupText(p))}</td>
     </tr>
-  `;}).join('');
+  `).join('');
 }
 
 function resultOutcome(result) {
@@ -843,29 +704,56 @@ function inferredSpreadLabel(row) {
   const marketSpread = Number(row?.marketSpread);
   if (!Number.isFinite(marketSpread)) return '';
 
+  const league = String(row?.league || '').toUpperCase().trim();
   const predictedVals = parseResultScoreValues(row?.predicted || '');
   const actualVals = parseResultScoreValues(row?.actual || '');
   const teams = parseMatchupTeams(row?.matchup || '');
 
-  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN;
-  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;
+  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN; // home - away
+  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;       // home - away
   if (!Number.isFinite(predMargin)) return '';
 
-  const predEdge = predMargin - marketSpread;
-  if (Math.abs(predEdge) < 1e-9) return 'Push';
-
-  const pickHome = predEdge > 0;
-  const pickTeam = pickHome ? (teams.home || 'Home') : (teams.away || 'Away');
-  const pickLine = pickHome ? -marketSpread : marketSpread;
-
+  let pickTeam = '';
+  let pickLine = marketSpread;
   let resolvedOutcome = '';
-  if (Number.isFinite(actualMargin)) {
-    const actualEdge = actualMargin - marketSpread;
-    if (Math.abs(actualEdge) < 1e-9) {
-      resolvedOutcome = 'Push';
-    } else {
-      const actualHomeCover = actualEdge > 0;
-      resolvedOutcome = actualHomeCover === pickHome ? 'Win' : 'Loss';
+
+  if (league === 'CBB' || league === 'NHL') {
+    // CBB and NHL results rows are carrying the spread from the AWAY-team perspective.
+    // Example: away +1.5  <=> home -1.5
+    const predEdge = marketSpread - predMargin;
+    if (Math.abs(predEdge) < 1e-9) return 'Push';
+
+    const pickAway = predEdge > 0;
+    pickTeam = pickAway ? (teams.away || 'Away') : (teams.home || 'Home');
+    pickLine = pickAway ? marketSpread : -marketSpread;
+
+    if (Number.isFinite(actualMargin)) {
+      const actualEdge = marketSpread - actualMargin;
+      if (Math.abs(actualEdge) < 1e-9) {
+        resolvedOutcome = 'Push';
+      } else {
+        const actualAwayCover = actualEdge > 0;
+        resolvedOutcome = actualAwayCover === pickAway ? 'Win' : 'Loss';
+      }
+    }
+  } else {
+    // NBA/NHL results rows are carrying the spread from the HOME-team perspective.
+    // Example: home -2.5  <=> away +2.5
+    const predEdge = predMargin + marketSpread;
+    if (Math.abs(predEdge) < 1e-9) return 'Push';
+
+    const pickHome = predEdge > 0;
+    pickTeam = pickHome ? (teams.home || 'Home') : (teams.away || 'Away');
+    pickLine = pickHome ? marketSpread : -marketSpread;
+
+    if (Number.isFinite(actualMargin)) {
+      const actualEdge = actualMargin + marketSpread;
+      if (Math.abs(actualEdge) < 1e-9) {
+        resolvedOutcome = 'Push';
+      } else {
+        const actualHomeCover = actualEdge > 0;
+        resolvedOutcome = actualHomeCover === pickHome ? 'Win' : 'Loss';
+      }
     }
   }
 
@@ -898,9 +786,7 @@ function inferredTotalLabel(row) {
 
 function formatSpreadResultCell(row) {
   const existing = String(row?.spreadResult || '').trim();
-  const label = existing && existing.toLowerCase() !== 'n/a'
-    ? existing
-    : (inferredSpreadLabel(row) || 'N/A');
+  const label = /\d/.test(existing) ? existing : inferredSpreadLabel(row) || existing || 'N/A';
   return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
 }
 
@@ -908,72 +794,6 @@ function formatTotalResultCell(row) {
   const existing = String(row?.totalResult || '').trim();
   const label = /\d/.test(existing) ? existing : inferredTotalLabel(row) || existing || 'N/A';
   return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
-}
-
-
-function normalizeResultOutcome(value) {
-  const s = String(value || '').trim().toLowerCase();
-  if (!s) return 'N/A';
-  if (s === 'win' || s.endsWith(' win') || s.includes(' win')) return 'Win';
-  if (s === 'loss' || s.endsWith(' loss') || s.includes(' loss')) return 'Loss';
-  if (s === 'push' || s.endsWith(' push') || s.includes(' push')) return 'Push';
-  return 'N/A';
-}
-
-function resultBucket(rows, field) {
-  let wins = 0, losses = 0, pushes = 0;
-  (rows || []).forEach(row => {
-    const label = normalizeResultOutcome(row?.[field]);
-    if (label === 'Win') wins += 1;
-    else if (label === 'Loss') losses += 1;
-    else if (label === 'Push') pushes += 1;
-  });
-  const graded = wins + losses + pushes;
-  return {
-    wins, losses, pushes, graded,
-    winPct: wins + losses ? Number(((wins / (wins + losses)) * 100).toFixed(1)) : null,
-  };
-}
-
-function summarizeRows(rows) {
-  return {
-    ML: resultBucket(rows, 'mlResult'),
-    Spread: resultBucket(rows, 'spreadResult'),
-    Total: resultBucket(rows, 'totalResult'),
-  };
-}
-
-function recomputeResultsSummaryFromHistory(historyRows, templateSummary = {}) {
-  const periods = templateSummary?.periods || {};
-  const out = { ...(templateSummary || {}), periods: {} };
-  Object.keys(periods).forEach(key => {
-    const period = periods[key] || {};
-    const start = String(period.startDate || '');
-    const end = String(period.endDate || '');
-    const subset = (historyRows || []).filter(row => {
-      const d = String(row?.date || '');
-      return d && (!start || d >= start) && (!end || d <= end);
-    });
-    const byLeague = {};
-    Array.from(new Set(subset.map(r => String(r?.league || '')).filter(Boolean))).sort().forEach(league => {
-      byLeague[league] = summarizeRows(subset.filter(r => String(r?.league || '') === league));
-    });
-    out.periods[key] = {
-      ...period,
-      overall: summarizeRows(subset),
-      byLeague,
-      rowCount: subset.length,
-    };
-  });
-  return out;
-}
-
-function filterResultsForLaunch(rows, launchDate) {
-  const launch = String(launchDate || '').trim();
-  return (rows || []).filter(row => {
-    if (String(row?.league || '').toUpperCase() !== 'MLB') return true;
-    return launch && String(row?.date || '') >= launch;
-  });
 }
 
 function renderResults(results) {
@@ -1243,127 +1063,43 @@ function edgeBoardCard(title, items, kind) {
   return `<article class="insight-board"><h4>${escapeHtml(title)}</h4>${rows}</article>`;
 }
 
-
-function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10 }) {
-  const pool = (entries || []).filter(e => String(e?.gameDate || '') === String(date || '') && String(e?.stat || '').toUpperCase() === String(stat).toUpperCase());
-  const typed = playerType ? pool.filter(e => String(e?.playerType || '').toLowerCase() === String(playerType).toLowerCase()) : pool;
-  let base = typed.length ? typed : pool;
-  if (String(playerType).toLowerCase() === 'pitcher') {
-    base = base.filter(e => !/(^|\b)(tbd|to be determined|probable starter tbd)(\b|$)/i.test(String(e?.player || '')));
-  }
-  const deduped = [];
-  const seen = new Set();
-  base
-    .slice()
-    .sort((a, b) => {
-      if (String(playerType).toLowerCase() === 'pitcher') {
-        const predDiff = (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
-        if (predDiff) return predDiff;
-        return (Number(b?.prob_cons) || -1) - (Number(a?.prob_cons) || -1);
-      }
-      const probDiff = (Number(b?.prob_cons) || -1) - (Number(a?.prob_cons) || -1);
-      if (probDiff) return probDiff;
-      return (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
-    })
-    .forEach(item => {
-      const key = `${item.playerId || item.player}|${item.stat}|${item.line}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      deduped.push(item);
-    });
-  return deduped.slice(0, limit);
-}
-
-
-function mlbBoardDisplayLine(row) {
-  const stat = String(row?.stat || '').toUpperCase();
-  if (hasNumericValue(row?.line)) return fmt(row.line, 1);
-  if (stat === 'H') return '0.5';
-  if (stat === 'TB') return '1.5';
-  return '—';
-}
-
-function mlbBoardTable(title, rows, { showLine = true } = {}) {
-  if (!rows.length) {
-    return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No entries available yet.</div></article>`;
-  }
-  const body = rows.map(row => `
-    <tr>
-      <td><a class="table-link" href="${propAnalyzerHref({ ...row, league: 'MLB', player: row.player, playerId: row.playerId, line: row.line, stat: row.stat })}">${escapeHtml(row.player || '')}</a></td>
-      ${showLine ? `<td>${escapeHtml(mlbBoardDisplayLine(row))}</td>` : ''}
-      <td>${escapeHtml(hasNumericValue(row.pred_anchor ?? row.mu_cons) ? fmt(row.pred_anchor ?? row.mu_cons, 1) : '—')}</td>
-      <td>${escapeHtml(Number.isFinite(Number(row.prob_cons)) ? `${(Number(row.prob_cons) * 100).toFixed(1)}%` : '—')}</td>
-      <td>${escapeHtml(propMatchupText(row))}</td>
-    </tr>
-  `).join('');
-  return `
-    <article class="insight-board">
-      <h4>${escapeHtml(title)}</h4>
-      <div class="table-wrap compact-table-wrap">
-        <table class="compact-table">
-          <thead><tr><th>Player</th>${showLine ? '<th>Line</th>' : ''}<th>Model</th><th>Prob.</th><th>Matchup</th></tr></thead>
-          <tbody>${body}</tbody>
-        </table>
-      </div>
-    </article>
-  `;
-}
-
-function mlbPitcherBoardTable(title, rows) {
-  if (!rows.length) {
-    return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No entries available yet.</div></article>`;
-  }
-  const body = rows.map(row => `
-    <tr>
-      <td><a class="table-link" href="${propAnalyzerHref({ ...row, league: 'MLB', player: row.player, playerId: row.playerId, line: row.line, stat: row.stat })}">${escapeHtml(row.player || '')}</a></td>
-      <td>${escapeHtml(row.team || '')}</td>
-      <td>${escapeHtml(hasNumericValue(row.avg_anchor) ? fmt(row.avg_anchor, 1) : '—')}</td>
-      <td>${escapeHtml(hasNumericValue(row.pred_anchor ?? row.mu_cons) ? fmt(row.pred_anchor ?? row.mu_cons, 1) : '—')}</td>
-      <td>${escapeHtml(propMatchupText(row))}</td>
-    </tr>
-  `).join('');
-  return `
-    <article class="insight-board">
-      <h4>${escapeHtml(title)}</h4>
-      <div class="table-wrap compact-table-wrap">
-        <table class="compact-table">
-          <thead><tr><th>Player</th><th>Team</th><th>Average</th><th>Prediction</th><th>Matchup</th></tr></thead>
-          <tbody>${body}</tbody>
-        </table>
-      </div>
-    </article>
-  `;
-}
-
-function renderMlbHomeBoards(mlbAnalyzer, meta) {
-  const root = byId('mlb-home-props-grid');
+function renderNbaGameEdges(games, meta) {
+  const root = byId('nba-game-edges-grid');
   if (!root) return;
-  const entries = mlbAnalyzer?.entries || [];
-  const pitcherRows = (() => {
-    const rows = chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 50 });
-    const out = [];
-    const seen = new Set();
-    rows.forEach(row => {
-      const key = String(row.playerId || row.player || '');
-      if (seen.has(key)) return;
-      seen.add(key);
-      out.push(row);
-    });
-    return out.slice(0, 10);
-  })();
+
+  const nba = (games || []).filter(g => g.league === 'NBA' && g.gameDate === meta.targetDate);
+  const lined = nba.map(g => ({
+    ...g,
+    spreadEdge: spreadEdgeForDisplay(g),
+    totalEdge: hasNumericValue(g.marketTotal)
+      ? Number(g.modelTotal) - Number(g.marketTotal)
+      : NaN
+  }));
+
+  const spreadTop = lined
+    .filter(g => Number.isFinite(g.spreadEdge))
+    .sort((a, b) => Math.abs(b.spreadEdge) - Math.abs(a.spreadEdge))
+    .slice(0, 4);
+
+  const totalTop = lined
+    .filter(g => Number.isFinite(g.totalEdge))
+    .sort((a, b) => Math.abs(b.totalEdge) - Math.abs(a.totalEdge))
+    .slice(0, 4);
+
   root.innerHTML = [
-    mlbBoardTable('Best hits', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'H', playerType: 'batter', limit: 10 })),
-    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 })),
-    mlbPitcherBoardTable('Best pitcher strikeouts', pitcherRows)
+    edgeBoardCard('Biggest spread gaps', spreadTop, 'spread'),
+    edgeBoardCard('Biggest total gaps', totalTop, 'total')
   ].join('');
 }
 
-function renderNbaGameEdges(games, meta) {
-  hidePanelFor('nba-game-edges-grid');
-}
-
-function renderHomeInsights(homeInsights, meta, injuryLookup = new Map()) {
-  hidePanelFor('home-consensus-grid');
+function renderHomeInsights(homeInsights, meta) {
+  const day = homeInsights?.byDate?.[meta.targetDate];
+  if (!day) return;
+  renderInsightGrid('home-consensus-grid', day.consensusTop);
+  renderInsightGrid('home-floor-grid', day.floorTop);
+  renderInsightGrid('home-ceiling-grid', day.ceilingTop);
+  renderInsightGrid('home-role-up-grid', day.roleUp, true);
+  renderInsightGrid('home-role-down-grid', day.roleDown, true);
 }
 
 function fillHeader(meta, todayGames, tomorrowGames, props) {
@@ -1401,25 +1137,20 @@ function setupLeagueFilter(allGames, meta) {
 (async function init() {
   const root = byId('today-games-grid') || byId('games-grid');
   try {
-    const [meta, gamesRaw, rawProps, rawPropsLab, results, resultsSummary, resultsHistory, rawHomeInsights, injuries, mlbPropResults, mlbPropSummary, mlbPropPending, mlbAnalyzer, mlbResultsLaunchText, archiveRows] = await Promise.all([
+    const [meta, games, rawProps, rawPropsLab, results, resultsSummary, rawHomeInsights, injuries, mlbPropResults, mlbPropSummary, mlbPropPending] = await Promise.all([
       loadJson('data/site.json'),
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/nba_props_lab.json', null),
       loadJson('data/results.json', []),
       loadJson('data/results_summary.json', {}),
-      loadJson('data/results_history.json', []),
       loadJson('data/nba_home_insights.json', {}),
       loadJson('data/nba_injuries.json', {}),
       loadJson('data/mlb_prop_results_history.json', []),
       loadJson('data/mlb_prop_results_summary.json', {}),
-      loadJson('data/mlb_prop_results_pending.json', []),
-      loadJson('data/mlb_props_analyzer.json', { entries: [] }),
-      loadText('data/mlb_results_launch_date.txt', ''),
-      loadJson('data/market_lines_archive.json', [])
+      loadJson('data/mlb_prop_results_pending.json', [])
     ]);
     const injuryLookup = buildInjuryLookup(injuries);
-    const games = hydrateGamesWithArchive(gamesRaw, archiveRows);
     const gameLookup = buildGameLookup(games);
 
     const propsSource = flattenPropsSource(rawPropsLab);
@@ -1447,15 +1178,10 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     setupLeagueFilter(games, meta);
     renderProps(todayProps, 'props-body');
     renderProps(nextProps, 'props-next-body');
-    renderMlbHomeBoards(mlbAnalyzer, meta);
     renderNbaGameEdges(games, meta);
-    renderHomeInsights(homeInsights, meta, injuryLookup);
-    const mlbResultsLaunchDate = String(mlbResultsLaunchText || '').trim();
-    const filteredResults = filterResultsForLaunch(results, mlbResultsLaunchDate);
-    const filteredHistory = filterResultsForLaunch(resultsHistory, mlbResultsLaunchDate);
-    const effectiveSummary = recomputeResultsSummaryFromHistory(filteredHistory, resultsSummary);
-    renderResultsSummary(effectiveSummary);
-    renderResults(filteredResults);
+    renderHomeInsights(homeInsights, meta);
+    renderResultsSummary(resultsSummary);
+    renderResults(results);
     renderMlbPropResultsSummary(mlbPropSummary, mlbPropPending);
     renderMlbPropResults(mlbPropResults);
   } catch (err) {
