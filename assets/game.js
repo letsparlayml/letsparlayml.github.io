@@ -46,8 +46,7 @@ function isNbaGame(game) {
 
 function marketSpreadForDisplay(game) {
   const spread = Number(game?.marketSpread);
-  if (!Number.isFinite(spread)) return NaN;
-  return isNbaGame(game) ? -spread : spread;
+  return Number.isFinite(spread) ? spread : NaN;
 }
 
 function modelSpreadForDisplay(game) {
@@ -1012,18 +1011,19 @@ function renderMlbGameDetails(game, detail) {
   const pitchers = Array.isArray(detail?.pitchers) ? detail.pitchers : [];
   if (pitchers.length) {
     pitchersSection.style.display = '';
-    pitchersBody.innerHTML = pitchers.map(p => `
+    pitchersBody.innerHTML = pitchers.map(p => {
+      const pitcherMeta = [p.team || '', 'Starter', p.hand || ''].filter(Boolean).join(' • ');
+      return `
       <tr>
-        <td class="name-cell" data-sort="${escapeHtml(String(p.player || ''))}">${playerAnalyzerLink({ ...p, gameDate: game?.gameDate }, 'K')}<span class="subtle-meta">Starter</span></td>
-        <td data-sort="${escapeHtml(String(p.team || ''))}"><span class="team-pill">${escapeHtml(p.team || '')}</span></td>
-        <td data-sort="${escapeHtml(String(p.hand || ''))}">${escapeHtml(p.hand || '—')}</td>
+        <td class="name-cell" data-sort="${escapeHtml(String(p.player || ''))}">${playerAnalyzerLink({ ...p, gameDate: game?.gameDate }, 'K')}<span class="subtle-meta">${escapeHtml(pitcherMeta)}</span></td>
         <td data-sort="${escapeHtml(String(p.predIP ?? ''))}">${mlbMetricHtml(p.predIP, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predK ?? ''))}">${mlbMetricHtml(p.predK, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predBB ?? ''))}">${mlbMetricHtml(p.predBB, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predHitsAllowed ?? ''))}">${mlbMetricHtml(p.predHitsAllowed, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predER ?? ''))}">${mlbMetricHtml(p.predER, { digits: 1, mode: 'model' })}</td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   } else {
     pitchersSection.style.display = 'none';
     pitchersBody.innerHTML = '';
@@ -1032,11 +1032,15 @@ function renderMlbGameDetails(game, detail) {
   const batters = Array.isArray(detail?.batters) ? detail.batters : [];
   if (batters.length) {
     battersSection.style.display = '';
-    battersBody.innerHTML = batters.map(b => `
+    battersBody.innerHTML = batters.map(b => {
+      const batterMeta = [
+        b.team || '',
+        (b.order !== undefined && b.order !== null && b.order !== '') ? `#${b.order}` : '',
+        [b.batSide || '', b.oppPitchHand ? `vs ${b.oppPitchHand}` : ''].filter(Boolean).join(' ')
+      ].filter(Boolean).join(' • ');
+      return `
       <tr>
-        <td class="name-cell" data-sort="${escapeHtml(String(b.player || ''))}">${playerAnalyzerLink({ ...b, gameDate: game?.gameDate })}<span class="subtle-meta">${escapeHtml([b.batSide || '', b.oppPitchHand ? `vs ${b.oppPitchHand}` : ''].filter(Boolean).join(' • '))}</span></td>
-        <td data-sort="${escapeHtml(String(b.team || ''))}"><span class="team-pill">${escapeHtml(b.team || '')}</span></td>
-        <td data-sort="${escapeHtml(String(b.order ?? ''))}">${escapeHtml(b.order ?? '—')}</td>
+        <td class="name-cell" data-sort="${escapeHtml(String(b.player || ''))}">${playerAnalyzerLink({ ...b, gameDate: game?.gameDate })}<span class="subtle-meta">${escapeHtml(batterMeta)}</span></td>
         <td data-sort="${escapeHtml(String(b.predHits ?? ''))}">${mlbMetricHtml(b.predHits, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probHit ?? ''))}">${mlbMetricHtml(b.probHit, { pct: true })}</td>
         <td data-sort="${escapeHtml(String(b.predTB ?? ''))}">${mlbMetricHtml(b.predTB, { digits: 2, mode: 'model' })}</td>
@@ -1050,7 +1054,8 @@ function renderMlbGameDetails(game, detail) {
         <td data-sort="${escapeHtml(String(b.predHRR ?? ''))}">${mlbMetricHtml(b.predHRR, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probHRR2Plus ?? ''))}">${mlbMetricHtml(b.probHRR2Plus, { pct: true })}</td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   } else {
     battersSection.style.display = 'none';
     battersBody.innerHTML = '';
@@ -1091,6 +1096,46 @@ function archiveMoneyline(row, side) {
     if (hasNumericValue(row?.[key])) return Number(row[key]);
   }
   return null;
+}
+
+
+function archiveMatchKeyFromGame(game) {
+  return `${String(game?.gameDate || '').trim()}|${String(game?.awayTeam || '').trim()}|${String(game?.homeTeam || '').trim()}`;
+}
+
+function latestArchiveForGame(game, archiveRows) {
+  const target = archiveMatchKeyFromGame(game);
+  let best = null;
+  let bestTs = -1;
+  (archiveRows || []).forEach(row => {
+    const matchup = archiveMatchup(row);
+    const localDate = archiveLocalDate(row) || String(row?.date || '').trim();
+    const key = `${localDate}|${String(matchup.away || '').trim()}|${String(matchup.home || '').trim()}`;
+    if (key !== target) return;
+    const ts = Date.parse(row?.updatedAt || row?.archivedAt || row?.fetchedAtUtc || '') || 0;
+    if (!best || ts >= bestTs) {
+      best = row;
+      bestTs = ts;
+    }
+  });
+  return best;
+}
+
+function hydrateGameWithArchive(game, archiveRows) {
+  const row = latestArchiveForGame(game, archiveRows);
+  if (!row) return game;
+  const merged = { ...game };
+  if (!hasNumericValue(merged.marketSpread) && hasNumericValue(row?.marketSpread)) merged.marketSpread = Number(row.marketSpread);
+  if (!hasNumericValue(merged.marketTotal) && hasNumericValue(row?.marketTotal)) merged.marketTotal = Number(row.marketTotal);
+  if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.marketAwayML)) merged.marketAwayML = Number(row.marketAwayML);
+  else if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.awayML)) merged.marketAwayML = Number(row.awayML);
+  else if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.awayMoneyline)) merged.marketAwayML = Number(row.awayMoneyline);
+  if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(row?.marketHomeML)) merged.marketHomeML = Number(row.marketHomeML);
+  else if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(row?.homeML)) merged.marketHomeML = Number(row.homeML);
+  else if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(row?.homeMoneyline)) merged.marketHomeML = Number(row.homeMoneyline);
+  if (!merged.marketLineSource && row?.source) merged.marketLineSource = row.source;
+  if (!merged.marketLineUpdated && (row?.updatedAt || row?.archivedAt)) merged.marketLineUpdated = row.updatedAt || row.archivedAt;
+  return merged;
 }
 
 function renderMlbOddsMovement(game, archiveRows) {
@@ -1162,7 +1207,7 @@ function renderMlbOddsMovement(game, archiveRows) {
 (async function init() {
   try {
     const id = qs('id');
-    const [games, rawProps, rawPropsLab, injuries, archiveRows] = await Promise.all([
+    const [gamesRaw, rawProps, rawPropsLab, injuries, archiveRows] = await Promise.all([
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/nba_props_lab.json', null),
@@ -1171,6 +1216,7 @@ function renderMlbOddsMovement(game, archiveRows) {
     ]);
     const injuryLookup = buildInjuryLookup(injuries);
 
+    const games = (gamesRaw || []).map(g => hydrateGameWithArchive(g, archiveRows));
     const game = (games || []).find(g => g.id === id) || (games || [])[0];
     if (!game) throw new Error('No game records found.');
 
