@@ -49,32 +49,23 @@ function isNbaGame(game) {
 }
 
 function modelSpreadForDisplay(game) {
-  if (isNbaGame(game)) {
-    const away = Number(game?.modelAwayScore);
-    const home = Number(game?.modelHomeScore);
-    if (Number.isFinite(away) && Number.isFinite(home)) {
-      // NBA cards should display spread from AWAY-team perspective
-      return home - away;
-    }
-
-    const fallback = Number(game?.modelHomeSpread);
-    return Number.isFinite(fallback) ? -fallback : NaN;
+  const away = Number(game?.modelAwayScore);
+  const home = Number(game?.modelHomeScore);
+  if (Number.isFinite(away) && Number.isFinite(home)) {
+    return home - away;
   }
+  const fallback = Number(game?.modelHomeSpread);
+  return Number.isFinite(fallback) ? fallback : NaN;
+}
 
   // CBB/NHL: keep existing stored convention
   const stored = Number(game?.modelHomeSpread);
   return Number.isFinite(stored) ? stored : NaN;
 }
 
-function marketSpreadForDisplay(game) {
+function ForDisplay(game) {
   const spread = Number(game?.marketSpread);
-  if (!Number.isFinite(spread)) return NaN;
-
-  // NBA only: convert stored home spread to away-team display
-  if (isNbaGame(game)) return -spread;
-
-  // CBB/NHL: keep existing stored convention
-  return spread;
+  return Number.isFinite(spread) ? spread : NaN;
 }
 
 function spreadEdgeForDisplay(game) {
@@ -322,22 +313,15 @@ function modelAwaySpread(game) {
   const away = Number(game?.modelAwayScore);
   const home = Number(game?.modelHomeScore);
   if (Number.isFinite(away) && Number.isFinite(home)) {
-    // Away-team spread perspective for "AWAY @ HOME"
-    // positive = away underdog, negative = away favorite
     return home - away;
   }
-
   const fallback = Number(game?.modelHomeSpread);
-  return Number.isFinite(fallback) ? -fallback : NaN;
+  return Number.isFinite(fallback) ? fallback : NaN;
 }
 
 function marketAwaySpread(game) {
   const spread = Number(game?.marketSpread);
-  if (!Number.isFinite(spread)) return NaN;
-
-  // Site cards display spreads from the away-team perspective for "AWAY @ HOME".
-  // NBA stores home-team spreads, while CBB/NHL are already stored in away-team display form.
-  return isNbaGame(game) ? -spread : spread;
+  return Number.isFinite(spread) ? spread : NaN;
 }
 
 function marketSpreadText(game) {
@@ -863,56 +847,29 @@ function inferredSpreadLabel(row) {
   const marketSpread = Number(row?.marketSpread);
   if (!Number.isFinite(marketSpread)) return '';
 
-  const league = String(row?.league || '').toUpperCase().trim();
   const predictedVals = parseResultScoreValues(row?.predicted || '');
   const actualVals = parseResultScoreValues(row?.actual || '');
   const teams = parseMatchupTeams(row?.matchup || '');
 
-  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN; // home - away
-  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;       // home - away
+  const predMargin = predictedVals.length === 2 ? predictedVals[1] - predictedVals[0] : NaN;
+  const actualMargin = actualVals.length === 2 ? actualVals[1] - actualVals[0] : NaN;
   if (!Number.isFinite(predMargin)) return '';
 
-  let pickTeam = '';
-  let pickLine = marketSpread;
+  const predEdge = predMargin - marketSpread;
+  if (Math.abs(predEdge) < 1e-9) return 'Push';
+
+  const pickHome = predEdge > 0;
+  const pickTeam = pickHome ? (teams.home || 'Home') : (teams.away || 'Away');
+  const pickLine = pickHome ? -marketSpread : marketSpread;
+
   let resolvedOutcome = '';
-
-  if (league === 'CBB' || league === 'NHL') {
-    // CBB and NHL results rows are carrying the spread from the AWAY-team perspective.
-    // Example: away +1.5  <=> home -1.5
-    const predEdge = marketSpread - predMargin;
-    if (Math.abs(predEdge) < 1e-9) return 'Push';
-
-    const pickAway = predEdge > 0;
-    pickTeam = pickAway ? (teams.away || 'Away') : (teams.home || 'Home');
-    pickLine = pickAway ? marketSpread : -marketSpread;
-
-    if (Number.isFinite(actualMargin)) {
-      const actualEdge = marketSpread - actualMargin;
-      if (Math.abs(actualEdge) < 1e-9) {
-        resolvedOutcome = 'Push';
-      } else {
-        const actualAwayCover = actualEdge > 0;
-        resolvedOutcome = actualAwayCover === pickAway ? 'Win' : 'Loss';
-      }
-    }
-  } else {
-    // NBA/NHL results rows are carrying the spread from the HOME-team perspective.
-    // Example: home -2.5  <=> away +2.5
-    const predEdge = predMargin + marketSpread;
-    if (Math.abs(predEdge) < 1e-9) return 'Push';
-
-    const pickHome = predEdge > 0;
-    pickTeam = pickHome ? (teams.home || 'Home') : (teams.away || 'Away');
-    pickLine = pickHome ? marketSpread : -marketSpread;
-
-    if (Number.isFinite(actualMargin)) {
-      const actualEdge = actualMargin + marketSpread;
-      if (Math.abs(actualEdge) < 1e-9) {
-        resolvedOutcome = 'Push';
-      } else {
-        const actualHomeCover = actualEdge > 0;
-        resolvedOutcome = actualHomeCover === pickHome ? 'Win' : 'Loss';
-      }
+  if (Number.isFinite(actualMargin)) {
+    const actualEdge = actualMargin - marketSpread;
+    if (Math.abs(actualEdge) < 1e-9) {
+      resolvedOutcome = 'Push';
+    } else {
+      const actualHomeCover = actualEdge > 0;
+      resolvedOutcome = actualHomeCover === pickHome ? 'Win' : 'Loss';
     }
   }
 

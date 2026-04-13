@@ -46,8 +46,7 @@ function isNbaGame(game) {
 
 function marketSpreadForDisplay(game) {
   const spread = Number(game?.marketSpread);
-  if (!Number.isFinite(spread)) return NaN;
-  return isNbaGame(game) ? -spread : spread;
+  return Number.isFinite(spread) ? spread : NaN;
 }
 
 function modelSpreadForDisplay(game) {
