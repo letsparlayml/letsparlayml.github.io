@@ -55,6 +55,42 @@ function analyzerDisplayLabel(point) {
   return /^\d{4}-\d{2}-\d{2}$/.test(label) ? label.slice(5) : label;
 }
 
+function denverTodayIso() {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Denver',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date());
+    const get = type => parts.find(p => p.type === type)?.value || '';
+    const year = get('year');
+    const month = get('month');
+    const day = get('day');
+    return year && month && day ? `${year}-${month}-${day}` : '';
+  } catch (err) {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+function preferredAvailableDate(dates, requestedDate = '') {
+  const list = [...new Set((dates || []).filter(Boolean).map(String))].sort();
+  if (!list.length) return '';
+  const today = denverTodayIso();
+
+  if (requestedDate && list.includes(String(requestedDate)) && String(requestedDate) >= today) {
+    return String(requestedDate);
+  }
+
+  const todayExact = list.find(d => d === today);
+  if (todayExact) return todayExact;
+
+  const future = list.find(d => d >= today);
+  if (future) return future;
+
+  return list[list.length - 1];
+}
+
 function leagueConfig(league) {
   const key = String(league || 'NBA').toUpperCase();
   return {
@@ -370,46 +406,20 @@ function updateUrl(entry, selection, currentLeague) {
 }
 
 function findInitialState(data, league) {
-  const availableDates = Array.isArray(data?.dates) ? data.dates : [];
-  const rawRequestedDate = qs('date') || data.targetDate || availableDates[0] || '';
-  const requestedDate = availableDates.includes(rawRequestedDate)
-    ? rawRequestedDate
-    : (availableDates[0] || '');
-
-  const dateEntries = (data.entries || []).filter(e => !requestedDate || e.gameDate === requestedDate);
+  const requestedDate = qs('date') || '';
+  const resolvedDate = preferredAvailableDate(data?.dates || [], requestedDate || data?.targetDate || '');
+  const entries = (data.entries || []).filter(e => !resolvedDate || e.gameDate === resolvedDate);
   const requestedPlayerId = qs('playerId');
   const requestedPlayer = normalizeLookupToken(qs('player'));
   let playerId = requestedPlayerId || '';
-
-  if (playerId && !dateEntries.some(e => String(e.playerId) === String(playerId))) {
-    playerId = '';
-  }
   if (!playerId && requestedPlayer) {
-    const match = dateEntries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
+    const match = entries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
     playerId = match?.playerId ? String(match.playerId) : '';
   }
-  if (!playerId) playerId = dateEntries[0]?.playerId ? String(dateEntries[0].playerId) : '';
-
-  const playerEntries = dateEntries.filter(e => String(e.playerId) === String(playerId));
-  const requestedStat = String(qs('stat') || '').toUpperCase();
-  const stat = playerEntries.some(e => String(e.stat).toUpperCase() === requestedStat)
-    ? requestedStat
-    : String(playerEntries[0]?.stat || '').toUpperCase();
-
-  const requestedLine = String(qs('line') || '');
-  const line = playerEntries.some(e => String(e.stat).toUpperCase() === stat && String(e.line) === requestedLine)
-    ? requestedLine
-    : String(playerEntries.find(e => String(e.stat).toUpperCase() === stat)?.line ?? '');
-
-  return {
-    league: String(league || 'NBA').toUpperCase(),
-    date: requestedDate,
-    playerId,
-    stat,
-    line,
-    query: '',
-    player: qs('player') || ''
-  };
+  if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
+  const stat = (qs('stat') || entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
+  const line = qs('line') || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
+  return { league: String(league || 'NBA').toUpperCase(), date: resolvedDate, playerId, stat, line, query: '', player: qs('player') || '' };
 }
 
 function uniquePlayers(entries, query = '') {
@@ -536,13 +546,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const lineSelect = byId('analyzer-line');
     const searchInput = byId('analyzer-search');
 
-    const availableDates = state.data?.dates || [];
-    if (!availableDates.includes(state.selection.date)) {
-      state.selection.date = availableDates[0] || '';
-    }
-
     populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
-    populateSelect(dateSelect, availableDates, item => item, item => item, state.selection.date);
+    populateSelect(dateSelect, state.data?.dates || [], item => item, item => item, state.selection.date);
 
     const players = uniquePlayers(currentEntries(), state.selection.query);
     if (!players.some(p => String(p.playerId) === String(state.selection.playerId))) {
