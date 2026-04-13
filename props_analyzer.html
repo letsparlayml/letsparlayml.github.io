@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NBA Props Analyzer</title>
+  <title>Props Analyzer</title>
   <link rel="stylesheet" href="assets/style.css?v=7" />
 </head>
 <body>
@@ -13,9 +13,9 @@
         <a href="index.html">← Back to home</a>
         <a href="props_lab.html">NBA props lab</a>
       </nav>
-      <p class="eyebrow">NBA props analyzer</p>
+      <p class="eyebrow">Props analyzer</p>
       <h1>Interactive prop matchup view</h1>
-      <p class="subhead">Use the daily analyzer build to inspect a player’s recent game log, home and away splits, closest matchup sample, and the current model context for the selected line.</p>
+      <p class="subhead">Use the analyzer build to inspect a player prop with model context, trend snapshots, and matchup notes. NBA keeps the full historical game-log view, while MLB preview mode uses rolling windows and priors until the full history feed is wired in.</p>
 
       <div class="hero-grid hero-grid-five hero-grid-tight">
         <div class="hero-card"><span class="stat-label">Date</span><strong id="analyzer-hero-date">—</strong></div>
@@ -36,6 +36,13 @@
         </div>
       </div>
       <div class="control-grid analyzer-control-grid">
+        <label>
+          League
+          <select id="analyzer-league">
+            <option value="NBA">NBA</option>
+            <option value="MLB">MLB</option>
+          </select>
+        </label>
         <label>
           Date
           <select id="analyzer-date"></select>
@@ -81,9 +88,9 @@
     <section class="panel">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Recent games</p>
+          <p class="eyebrow">Trend view</p>
           <h2>Trend chart</h2>
-          <p class="muted">Chart uses the most recent sample for the current overall or location view. Dot colors reflect matchup similarity buckets when available.</p>
+          <p class="muted" id="analyzer-trend-copy">Chart uses the available sample for the current overall or location view. NBA uses recent games; MLB preview mode uses rolling-window snapshots and priors.</p>
         </div>
       </div>
       <div id="analyzer-chart" class="chart-box analyzer-chart-box"></div>
@@ -123,21 +130,21 @@
     <section class="panel">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Game log</p>
-          <h2>Most recent results</h2>
+          <p class="eyebrow" id="analyzer-game-log-eyebrow">Game log</p>
+          <h2 id="analyzer-game-log-title">Most recent results</h2>
         </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Opp</th>
-              <th>Loc</th>
-              <th>Value</th>
-              <th>Min</th>
-              <th>Hit</th>
-              <th>Similarity</th>
+              <th id="analyzer-games-col-1">Date</th>
+              <th id="analyzer-games-col-2">Opp</th>
+              <th id="analyzer-games-col-3">Loc</th>
+              <th id="analyzer-games-col-4">Value</th>
+              <th id="analyzer-games-col-5">Min</th>
+              <th id="analyzer-games-col-6">Hit</th>
+              <th id="analyzer-games-col-7">Similarity</th>
             </tr>
           </thead>
           <tbody id="analyzer-games-body"></tbody>
@@ -148,21 +155,21 @@
     <section class="panel">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Closest matchup sample</p>
-          <h2>Most similar historical games</h2>
+          <p class="eyebrow" id="analyzer-similar-eyebrow">Closest matchup sample</p>
+          <h2 id="analyzer-similar-title">Most similar historical games</h2>
         </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Opp</th>
-              <th>Loc</th>
-              <th>Value</th>
-              <th>Min</th>
-              <th>Hit</th>
-              <th>Similarity</th>
+              <th id="analyzer-similar-col-1">Date</th>
+              <th id="analyzer-similar-col-2">Opp</th>
+              <th id="analyzer-similar-col-3">Loc</th>
+              <th id="analyzer-similar-col-4">Value</th>
+              <th id="analyzer-similar-col-5">Min</th>
+              <th id="analyzer-similar-col-6">Hit</th>
+              <th id="analyzer-similar-col-7">Similarity</th>
             </tr>
           </thead>
           <tbody id="analyzer-similar-body"></tbody>
@@ -171,6 +178,6 @@
     </section>
   </main>
 
-  <script src="assets/props_analyzer.js?v=1"></script>
+  <script src="assets/props_analyzer.js?v=3"></script>
 </body>
 </html>

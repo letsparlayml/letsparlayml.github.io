@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lets Parlay ML</title>
-  <link rel="stylesheet" href="assets/style.css?v=6" />
+  <link rel="stylesheet" href="assets/style.css?v=7" />
 </head>
 <body>
   <header class="site-header">
@@ -20,6 +20,8 @@
           <a href="#props">Props</a>
           <a href="#nba-quick-looks">NBA quick looks</a>
           <a href="props_lab.html">Props lab</a>
+          <a href="props_analyzer.html">Props analyzer</a>
+          <a href="line_tracker.html">Line tracker</a>
           <a href="#results">Results</a>
           <a href="#about">About</a>
         </nav>
@@ -56,13 +58,14 @@
           <p class="eyebrow">Games</p>
           <h2>Predictions</h2>
         </div>
-        <div class="filter-row">
+        <div class="filter-row filter-row-actions">
           <label>
             League
             <select id="league-filter">
               <option value="ALL">All</option>
             </select>
           </label>
+          <a class="button-link button-link-subtle" href="line_tracker.html">Open line tracker</a>
         </div>
       </div>
 
@@ -90,7 +93,7 @@
           <h2>Top props for today</h2>
           <p class="muted">Quick board on the homepage. Use the props lab for filters, drivers, hit rates, and strategy buckets.</p>
         </div>
-        <a class="button-link" href="props_lab.html">Open NBA props lab</a>
+        <div class="button-link-row"><a class="button-link" href="props_lab.html">Open NBA props lab</a><a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open prop analyzer</a></div>
       </div>
       <div class="table-wrap">
         <table>
@@ -135,6 +138,20 @@
           <tbody id="props-next-body"></tbody>
         </table>
       </div>
+    </section>
+
+
+
+    <section class="panel" id="mlb-home-props">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">MLB</p>
+          <h2>Top prop boards</h2>
+          <p class="muted">Quick MLB prop boards from the analyzer index for today’s slate.</p>
+        </div>
+        <a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open MLB prop analyzer</a>
+      </div>
+      <div id="mlb-home-props-grid" class="mlb-home-grid"></div>
     </section>
 
     <section class="panel" id="nba-quick-looks">
@@ -210,6 +227,34 @@
           <tbody id="results-body"></tbody>
         </table>
       </div>
+
+      <div class="section-heading" style="margin-top:1.2rem;">
+        <div>
+          <p class="eyebrow">MLB props</p>
+          <h3 class="subsection-title" style="margin-bottom:.2rem;">Settled prop results</h3>
+          <p class="muted">Latest settled date: <span id="mlb-prop-results-date-label">—</span> • Pending props: <span id="mlb-prop-results-pending-count">0</span></p>
+        </div>
+      </div>
+
+      <div id="mlb-prop-results-summary-grid" class="results-summary-grid"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Player</th>
+              <th>Matchup</th>
+              <th>Stat</th>
+              <th>Line</th>
+              <th>Model</th>
+              <th>Actual</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="mlb-prop-results-body"></tbody>
+        </table>
+      </div>
     </section>
 
     <section class="panel" id="about">
@@ -234,12 +279,12 @@
         </div>
         <div class="info-card">
           <h3>How results are graded</h3>
-          <p>The results area tracks moneyline, spread, and total performance for yesterday plus current week, month, and year, both overall and separated by league.</p>
+          <p>The results area tracks moneyline, spread, and total performance for yesterday plus current week, month, and year, both overall and separated by league. MLB prop settlement can also appear here once the prop-results builder has graded finished games.</p>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="assets/app.js?v=6"></script>
+  <script src="assets/app.js?v=8"></script>
 </body>
 </html>

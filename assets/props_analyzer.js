@@ -49,6 +49,40 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
+function analyzerDisplayLabel(point) {
+  const label = String(point?.label || point?.shortLabel || point?.gameDate || '');
+  if (!label) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(label) ? label.slice(5) : label;
+}
+
+function leagueConfig(league) {
+  const key = String(league || 'NBA').toUpperCase();
+  return {
+    league: key,
+    title: `${key} props analyzer`,
+    eyebrow: `${key} props analyzer`,
+    indexPath: key === 'MLB' ? 'data/mlb_props_analyzer.json' : 'data/nba_props_analyzer.json',
+    detailPrefix: key === 'MLB' ? 'data/mlb_props_analyzer' : 'data/nba_props_analyzer',
+    buildCommand: key === 'MLB' ? 'tools/build_mlb_props_analyzer_json.py' : 'tools/build_nba_props_analyzer_json.py',
+  };
+}
+
+function updateLeagueChrome(config) {
+  document.title = `${config.title}`;
+  const eyebrow = document.querySelector('.site-header .eyebrow');
+  if (eyebrow) eyebrow.textContent = config.eyebrow;
+  const title = document.querySelector('.site-header h1');
+  if (title) title.textContent = 'Interactive prop matchup view';
+  const subhead = document.querySelector('.site-header .subhead');
+  if (subhead) {
+    subhead.textContent = config.league === 'MLB'
+      ? 'Preview MLB mode uses model probabilities plus recent rolling windows and priors. Full game-log detail can be added later when you wire in historical batter results.'
+      : 'Use the daily analyzer build to inspect a player’s recent game log, home and away splits, closest matchup sample, and the current model context for the selected line.';
+  }
+  const labLink = document.querySelector('a[href="props_lab.html"]');
+  if (labLink) labLink.textContent = config.league === 'MLB' ? 'NBA props lab' : 'NBA props lab';
+}
+
 function normalizeLookupToken(value) {
   return String(value ?? '')
     .toLowerCase()
@@ -99,6 +133,93 @@ function simColor(bin) {
   }
 }
 
+
+function analyzerWorkloadLabel(entry, series) {
+  const league = String(entry?.league || series?.league || '').toUpperCase();
+  if (league !== 'MLB') return 'Min';
+  const playerType = String(entry?.playerType || series?.playerType || '').toLowerCase();
+  const stat = String(entry?.stat || series?.stat || '').toUpperCase();
+  if (playerType === 'pitcher') {
+    return stat === 'OUTS' ? 'Outs' : 'IP';
+  }
+  return 'PA';
+}
+
+function analyzerSampleLabels(entry, series) {
+  const league = String(entry?.league || series?.league || '').toUpperCase();
+  const playerType = String(entry?.playerType || series?.playerType || '').toLowerCase();
+  const sampleType = String(series?.sampleType || '').toLowerCase();
+  if (league !== 'MLB') {
+    return {
+      gameLogEyebrow: 'Game log',
+      gameLogTitle: 'Most recent results',
+      similarEyebrow: 'Closest matchup sample',
+      similarTitle: 'Most similar historical games',
+      trendCopy: 'Chart uses the available sample for the current overall or location view. NBA uses recent games; MLB preview mode uses rolling-window snapshots and priors.',
+      summaryRows: ['Recent sample', 'Full sample', 'Closest-match sample', 'Same opponent inside closest sample']
+    };
+  }
+  if (playerType === 'pitcher' || sampleType === 'window_snapshot') {
+    return {
+      gameLogEyebrow: 'Pitcher preview',
+      gameLogTitle: 'Most recent snapshots',
+      similarEyebrow: 'Closest snapshot sample',
+      similarTitle: 'Most similar preview windows',
+      trendCopy: 'MLB pitcher preview mode uses rolling form, priors, projected workload, and threshold context. It is designed around pitcher markets rather than NBA-style minutes.',
+      summaryRows: ['Recent snapshot', 'Full snapshot', 'Closest snapshot sample', 'Same opponent inside snapshot sample']
+    };
+  }
+  return {
+    gameLogEyebrow: 'Game log',
+    gameLogTitle: 'Most recent results',
+    similarEyebrow: 'Closest matchup sample',
+    similarTitle: 'Most similar historical games',
+    trendCopy: 'MLB batter mode uses actual recent batter game logs plus matchup context, lineup spot, and location splits.',
+    summaryRows: ['Recent sample', 'Full sample', 'Closest-match sample', 'Same opponent inside closest sample']
+  };
+}
+
+function updateAnalyzerTableLabels(entry, series) {
+  const workload = analyzerWorkloadLabel(entry, series);
+  ['analyzer-games-col-5', 'analyzer-similar-col-5'].forEach(id => {
+    const node = byId(id);
+    if (node) node.textContent = workload;
+  });
+  const labels = analyzerSampleLabels(entry, series);
+  const map = {
+    'analyzer-game-log-eyebrow': labels.gameLogEyebrow,
+    'analyzer-game-log-title': labels.gameLogTitle,
+    'analyzer-similar-eyebrow': labels.similarEyebrow,
+    'analyzer-similar-title': labels.similarTitle,
+    'analyzer-trend-copy': labels.trendCopy,
+  };
+  Object.entries(map).forEach(([id, text]) => {
+    const node = byId(id);
+    if (node) node.textContent = text;
+  });
+  return labels;
+}
+
+function analyzerValueContextText(entry, series) {
+  const workload = analyzerWorkloadLabel(entry, series);
+  const value = entry?.expMin ?? series?.expMin ?? series?.contextMetricValue ?? entry?.contextMetricValue;
+  if (String(entry?.league || series?.league || '').toUpperCase() !== 'MLB') {
+    return { label: series?.contextMetricLabel || entry?.contextMetricLabel || 'Expected minutes', strong: value, detail: `Fair odds ${fmtAmerican(entry?.fair_american)}` };
+  }
+  if (String(entry?.playerType || series?.playerType || '').toLowerCase() === 'pitcher') {
+    return {
+      label: 'Projected workload',
+      strong: hasNumericValue(value) ? `${fmt(value, 1)} ${workload}` : '—',
+      detail: `Threshold ${fmt(entry?.line, 1)} ${entry?.stat_display || entry?.stat || ''}`.trim()
+    };
+  }
+  return {
+    label: series?.contextMetricLabel || entry?.contextMetricLabel || 'Lineup context',
+    strong: value ?? '—',
+    detail: escapeHtml(series?.boardContext || entry?.boardDriver || 'Projected lineup context')
+  };
+}
+
 function updateHero(entry, series) {
   byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
   byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
@@ -113,9 +234,12 @@ function setStatus(html) {
 }
 
 function filterByView(games, view) {
-  if (view === 'home') return (games || []).filter(g => Number(g.isHome) === 1);
-  if (view === 'away') return (games || []).filter(g => Number(g.isHome) === 0);
-  return games || [];
+  const rows = games || [];
+  const hasLocation = rows.some(g => Number(g.isHome) === 1 || Number(g.isHome) === 0);
+  if (!hasLocation) return rows;
+  if (view === 'home') return rows.filter(g => Number(g.isHome) === 1);
+  if (view === 'away') return rows.filter(g => Number(g.isHome) === 0);
+  return rows;
 }
 
 function recentWindowGames(series, view) {
@@ -142,6 +266,11 @@ function renderKpis(entry, series, view) {
   const similarStats = calcStats(similarGames, entry.line);
   const sameOppStats = calcStats(sameOppGames, entry.line);
 
+  const valueContext = analyzerValueContextText(entry, series);
+  const isMlb = String(entry?.league || series?.league || '').toUpperCase() === 'MLB';
+  const similarityLabel = isMlb && String(entry?.playerType || series?.playerType || '').toLowerCase() === 'pitcher'
+    ? 'Closest preview average'
+    : 'Closest-match average';
   root.innerHTML = `
     <article class="hero-card kpi-card">
       <span class="stat-label">Matchup</span>
@@ -149,37 +278,37 @@ function renderKpis(entry, series, view) {
       <p class="muted">${escapeHtml(view === 'overall' ? 'All locations' : view === 'home' ? 'Home sample' : 'Away sample')}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Model edge</span>
+      <span class="stat-label">Threshold edge</span>
       <strong>${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series.modelPred ?? 0) - (entry.line ?? 0), 1)}</strong>
       <p class="muted">Model ${fmt(entry.pred_anchor ?? entry.mu_cons ?? series.modelPred, 1)} • line ${fmt(entry.line, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Recent hit rate</span>
       <strong>${fmtPct(recentStats.hitRate)}</strong>
-      <p class="muted">${recentStats.n} games • avg ${fmt(recentStats.avg, 1)}</p>
+      <p class="muted">${recentStats.n} samples • avg ${fmt(recentStats.avg, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Full-sample hit rate</span>
       <strong>${fmtPct(overallStats.hitRate)}</strong>
-      <p class="muted">${overallStats.n} games • avg ${fmt(overallStats.avg, 1)}</p>
+      <p class="muted">${overallStats.n} samples • avg ${fmt(overallStats.avg, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Closest-match average</span>
+      <span class="stat-label">${escapeHtml(similarityLabel)}</span>
       <strong>${fmt(similarStats.avg, 1)}</strong>
-      <p class="muted">${similarStats.n} most similar games • hit ${fmtPct(similarStats.hitRate)}</p>
+      <p class="muted">${similarStats.n} similar samples • hit ${fmtPct(similarStats.hitRate)}</p>
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Same-opp sample</span>
       <strong>${fmt(sameOppStats.avg, 1)}</strong>
-      <p class="muted">${sameOppStats.n} games • hit ${fmtPct(sameOppStats.hitRate)}</p>
+      <p class="muted">${sameOppStats.n} samples • hit ${fmtPct(sameOppStats.hitRate)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Expected minutes</span>
-      <strong>${fmt(entry.expMin ?? series.expMin, 1)}</strong>
-      <p class="muted">Fair odds ${fmtAmerican(entry.fair_american)}</p>
+      <span class="stat-label">${escapeHtml(valueContext.label)}</span>
+      <strong>${escapeHtml(String(valueContext.strong ?? '—'))}</strong>
+      <p class="muted">${escapeHtml(String(valueContext.detail ?? ''))}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Board context</span>
+      <span class="stat-label">Clear probability</span>
       <strong>${fmtPct(entry.prob_cons)}</strong>
       <p class="muted">${escapeHtml(entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text')}</p>
     </article>
@@ -197,11 +326,12 @@ function renderSummary(entry, series, view) {
   const overallStats = calcStats(filterByView(series.games || [], view), entry.line);
   const similarStats = calcStats(series.similarGames || [], entry.line);
   const sameOppStats = calcStats((series.similarGames || []).filter(g => (g.opp || '') === (series.opp || '')), entry.line);
+  const labels = updateAnalyzerTableLabels(entry, series);
   const rows = [
-    ['Recent sample', recentStats],
-    ['Full sample', overallStats],
-    ['Closest-match sample', similarStats],
-    ['Same opponent inside closest sample', sameOppStats],
+    [labels.summaryRows[0], recentStats],
+    [labels.summaryRows[1], overallStats],
+    [labels.summaryRows[2], similarStats],
+    [labels.summaryRows[3], sameOppStats],
   ];
   body.innerHTML = rows.map(([label, stats]) => `
     <tr>
@@ -215,17 +345,22 @@ function renderSummary(entry, series, view) {
   `).join('');
 }
 
-function renderTableRows(rootId, games, line) {
+function renderTableRows(rootId, games, line, entry = null, series = null) {
   const body = byId(rootId);
   if (!body) return;
   if (!(games || []).length) {
-    body.innerHTML = '<tr><td colspan="7">No games available for this view.</td></tr>';
+    body.innerHTML = '<tr><td colspan="7">No samples available for this view.</td></tr>';
     return;
   }
-  const rows = games.slice().sort((a, b) => (b.gameDate || '').localeCompare(a.gameDate || '')).slice(0, 12);
+  const rows = games.slice().sort((a, b) => {
+    if (Number.isFinite(Number(a.seq)) || Number.isFinite(Number(b.seq))) {
+      return Number(b.seq || 0) - Number(a.seq || 0);
+    }
+    return String(b.gameDate || '').localeCompare(String(a.gameDate || ''));
+  }).slice(0, 12);
   body.innerHTML = rows.map(g => `
     <tr>
-      <td>${escapeHtml(g.gameDate || '')}</td>
+      <td>${escapeHtml(g.label || g.gameDate || '')}</td>
       <td>${escapeHtml(g.opp || '')}</td>
       <td>${escapeHtml(g.location || '')}</td>
       <td>${fmt(g.value, 1)}</td>
@@ -289,9 +424,9 @@ function renderChart(entry, series, view) {
     const cy = y(Number(g.value));
     return `<g>
       <circle cx="${cx}" cy="${cy}" r="5" fill="${simColor(g.simBin)}" stroke="#0b1220" stroke-width="1.5">
-        <title>${escapeHtml(`${g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)} in ${fmt(g.minutes, 1)} min (${g.simBin || 'all'})`)}</title>
+        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` • ${fmt(g.minutes, 1)} ${analyzerWorkloadLabel(entry, series).toLowerCase()}` : ''} (${g.simBin || 'all'})`)}</title>
       </circle>
-      <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml((g.gameDate || '').slice(5))}</text>
+      <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml(analyzerDisplayLabel(g))}</text>
     </g>`;
   }).join('');
 
@@ -312,24 +447,35 @@ function syncViewButtons(view) {
   });
 }
 
-function updateUrl(entry) {
-  if (!entry) return;
+function updateUrl(entry, selection, currentLeague) {
+  if (!entry && !selection) return;
   const params = new URLSearchParams();
-  if (entry.gameDate) params.set('date', entry.gameDate);
-  if (entry.playerId) params.set('playerId', String(entry.playerId));
-  if (entry.stat) params.set('stat', String(entry.stat).toUpperCase());
-  if (entry.line !== undefined && entry.line !== null) params.set('line', String(entry.line));
+  const league = String(currentLeague || entry?.league || selection?.league || 'NBA').toUpperCase();
+  params.set('league', league);
+  if (entry?.gameDate || selection?.date) params.set('date', entry?.gameDate || selection?.date);
+  if (entry?.playerId || selection?.playerId) params.set('playerId', String(entry?.playerId || selection?.playerId));
+  if (!params.get('playerId') && (entry?.player || selection?.player)) params.set('player', String(entry?.player || selection?.player));
+  if (entry?.stat || selection?.stat) params.set('stat', String(entry?.stat || selection?.stat).toUpperCase());
+  if (entry?.line !== undefined && entry?.line !== null) params.set('line', String(entry.line));
+  else if (selection?.line) params.set('line', String(selection.line));
   const next = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, '', next);
 }
 
-function findInitialState(data) {
-  const date = qs('date') || data.targetDate || data.dates?.[0] || '';
-  const entries = (data.entries || []).filter(e => !date || e.gameDate === date);
-  const playerId = qs('playerId') || (entries[0]?.playerId ? String(entries[0].playerId) : '');
+function findInitialState(data, league) {
+  const requestedDate = qs('date') || data.targetDate || data.dates?.[0] || '';
+  const entries = (data.entries || []).filter(e => !requestedDate || e.gameDate === requestedDate);
+  const requestedPlayerId = qs('playerId');
+  const requestedPlayer = normalizeLookupToken(qs('player'));
+  let playerId = requestedPlayerId || '';
+  if (!playerId && requestedPlayer) {
+    const match = entries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
+    playerId = match?.playerId ? String(match.playerId) : '';
+  }
+  if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
   const stat = (qs('stat') || entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
   const line = qs('line') || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
-  return { date, playerId, stat, line, query: '' };
+  return { league: String(league || 'NBA').toUpperCase(), date: requestedDate, playerId, stat, line, query: '', player: qs('player') || '' };
 }
 
 function uniquePlayers(entries, query = '') {
@@ -363,13 +509,29 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
 }
 
 (function init() {
-  const state = { data: null, selection: null, view: 'overall' };
+  const initialLeague = String(qs('league') || 'NBA').toUpperCase();
+  const state = {
+    config: leagueConfig(initialLeague),
+    data: null,
+    selection: null,
+    view: 'overall',
+    bound: false,
+  };
 
-  async function load() {
-    const data = await loadJson('data/nba_props_analyzer.json', { dates: [], entries: [], seriesIndex: {} });
-    state.data = data || { dates: [], entries: [], seriesIndex: {} };
-    state.selection = findInitialState(state.data);
-    bind();
+  const seriesCache = new Map();
+  let renderToken = 0;
+
+  async function load(league = state.config.league) {
+    state.config = leagueConfig(league);
+    updateLeagueChrome(state.config);
+    const empty = { targetDate: '', dates: [], entries: [], seriesIndex: {} };
+    const data = await loadJson(state.config.indexPath, empty);
+    state.data = data || empty;
+    state.selection = findInitialState(state.data, state.config.league);
+    if (!state.bound) {
+      bind();
+      state.bound = true;
+    }
     render();
   }
 
@@ -384,15 +546,14 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     return exact || candidates.sort((a, b) => Number(a.line) - Number(b.line))[0];
   }
 
-  const seriesCache = new Map();
-  let renderToken = 0;
-
   async function selectedSeries(entry) {
+    if (!entry) return null;
+    if (entry.inlineSeries) return entry.inlineSeries;
     if (!entry?.seriesKey) return null;
     if (seriesCache.has(entry.seriesKey)) return seriesCache.get(entry.seriesKey);
     const relPath = state.data?.seriesIndex?.[entry.seriesKey];
     const fallbackPath = entry?.gameDate && entry?.playerId && entry?.stat
-      ? `data/nba_props_analyzer/${entry.gameDate}/${entry.playerId}_${String(entry.stat).toLowerCase()}.json`
+      ? `${state.config.detailPrefix}/${entry.gameDate}/${entry.playerId}_${String(entry.stat).toLowerCase()}.json`
       : '';
     const candidates = [relPath, relPath ? `./${relPath}` : '', fallbackPath].filter(Boolean);
     const promise = (async () => {
@@ -403,13 +564,12 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       return null;
     })();
     seriesCache.set(entry.seriesKey, promise);
-    const payload = await promise;
-    return payload;
+    return await promise;
   }
 
   function renderStatus(entry, series) {
     if (!state.data?.entries?.length) {
-      setStatus('<div class="status-banner warning">Analyzer data is not built yet. Run <code>tools/build_nba_props_analyzer_json.py</code> and refresh the page.</div>');
+      setStatus(`<div class="status-banner warning">Analyzer data is not built yet. Run <code>${escapeHtml(state.config.buildCommand)}</code> and refresh the page.</div>`);
       return;
     }
     if (!entry) {
@@ -424,6 +584,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     if (entry.injuryStatus || series.injuryStatus) {
       notes.push(`<div class="status-banner danger">Listed on injury report: <strong>${escapeHtml(entry.injuryStatus || series.injuryStatus)}</strong>${series.injuryNote ? ` — ${escapeHtml(series.injuryNote)}` : ''}</div>`);
     }
+    if (series.sampleNote) {
+      notes.push(`<div class="status-banner info">${escapeHtml(series.sampleNote)}</div>`);
+    }
     if (series.error) {
       notes.push(`<div class="status-banner warning">Historical build note: ${escapeHtml(series.error)}</div>`);
     }
@@ -432,12 +595,14 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
   }
 
   function renderControls() {
+    const leagueSelect = byId('analyzer-league');
     const dateSelect = byId('analyzer-date');
     const playerSelect = byId('analyzer-player');
     const statSelect = byId('analyzer-stat');
     const lineSelect = byId('analyzer-line');
     const searchInput = byId('analyzer-search');
 
+    populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
     populateSelect(dateSelect, state.data?.dates || [], item => item, item => item, state.selection.date);
 
     const players = uniquePlayers(currentEntries(), state.selection.query);
@@ -467,6 +632,7 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const token = ++renderToken;
     renderControls();
     syncViewButtons(state.view);
+    updateAnalyzerTableLabels(selectedEntry(), null);
     const entry = selectedEntry();
     updateHero(entry, null);
     if (!entry) {
@@ -474,8 +640,10 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       renderKpis(null, null, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
+      updateAnalyzerTableLabels(null, null);
       renderTableRows('analyzer-games-body', [], null);
       renderTableRows('analyzer-similar-body', [], null);
+      updateUrl(null, state.selection, state.config.league);
       return;
     }
 
@@ -483,8 +651,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, null, state.view);
     renderChart(null, null, state.view);
     renderSummary(null, null, state.view);
-    renderTableRows('analyzer-games-body', [], entry?.line);
-    renderTableRows('analyzer-similar-body', [], entry?.line);
+    updateAnalyzerTableLabels(entry, null);
+    renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
+    renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
 
     const series = await selectedSeries(entry);
     if (token !== renderToken) return;
@@ -503,21 +672,27 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       }, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], entry?.line);
-      renderTableRows('analyzer-similar-body', [], entry?.line);
-      updateUrl(entry);
+      updateAnalyzerTableLabels(entry, series);
+      renderTableRows('analyzer-games-body', [], entry?.line, entry, series);
+      renderTableRows('analyzer-similar-body', [], entry?.line, entry, series);
+      updateUrl(entry, state.selection, state.config.league);
       return;
     }
 
     renderKpis(entry, series, state.view);
     renderChart(entry, series, state.view);
     renderSummary(entry, series, state.view);
-    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line);
-    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line);
-    updateUrl(entry);
+    updateAnalyzerTableLabels(entry, series);
+    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line, entry, series);
+    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line, entry, series);
+    updateUrl(entry, state.selection, state.config.league);
   }
 
   function bind() {
+    byId('analyzer-league')?.addEventListener('change', e => {
+      state.view = 'overall';
+      load(e.target.value || 'NBA');
+    });
     byId('analyzer-date')?.addEventListener('change', e => {
       state.selection.date = e.target.value;
       render();
@@ -546,5 +721,5 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     });
   }
 
-  load();
+  load(initialLeague);
 })();

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lets Parlay ML • Line Tracker</title>
+  <link rel="stylesheet" href="assets/style.css?v=7" />
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="wrap">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">Market movement tool</p>
+          <h1>Line tracker</h1>
+          <p class="subhead">Pregame line history for the current board. This page tracks opening, latest pregame line, pregame range, and model-vs-market gaps in one consistent format.</p>
+        </div>
+        <nav class="top-nav solo-nav">
+          <a href="index.html#games">Games</a>
+          <a href="index.html#props">Props</a>
+          <a href="props_lab.html">Props lab</a>
+          <a href="line_tracker.html">Line tracker</a>
+          <a href="index.html#results">Results</a>
+        </nav>
+      </div>
+      <div class="hero-grid hero-grid-five hero-grid-tight">
+        <div class="hero-card">
+          <span class="stat-label">Tracked games</span>
+          <strong id="tracker-hero-games">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Leagues</span>
+          <strong id="tracker-hero-leagues">—</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Archive snapshots</span>
+          <strong id="tracker-hero-snapshots">0</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Largest spread move</span>
+          <strong id="tracker-hero-spread-move">—</strong>
+        </div>
+        <div class="hero-card">
+          <span class="stat-label">Largest total move</span>
+          <strong id="tracker-hero-total-move">—</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap page-grid">
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">How it works</p>
+          <h2>Consistent pregame tracking</h2>
+          <p class="muted">Spreads on this page are shown from the away-team perspective across every league. Positive means the away team is getting points, pucks, or runs. Current means the latest pregame snapshot. Once a game starts, current becomes the close.</p>
+        </div>
+      </div>
+      <div class="about-grid">
+        <div class="info-card">
+          <h3>Best away vs best home</h3>
+          <p>The best away spread is the highest away spread seen before start. The best home spread is the lowest away spread seen before start.</p>
+        </div>
+        <div class="info-card">
+          <h3>Best over vs best under</h3>
+          <p>The best over total is the lowest total seen before start. The best under total is the highest total seen before start.</p>
+        </div>
+        <div class="info-card">
+          <h3>Model edge</h3>
+          <p>Spread edge uses the model’s away-team spread from the projected scores. Total edge uses the model total. Positive spread edge favors the away side at that number.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Tracker</p>
+          <h2>Current board</h2>
+        </div>
+        <div class="control-grid tracker-controls">
+          <label>
+            League
+            <select id="tracker-league-filter">
+              <option value="ALL">All</option>
+            </select>
+          </label>
+          <label>
+            Date
+            <select id="tracker-date-filter">
+              <option value="ALL">All tracked dates</option>
+            </select>
+          </label>
+          <label>
+            Sort by
+            <select id="tracker-sort-filter">
+              <option value="start">Start time</option>
+              <option value="spreadMove">Largest spread move</option>
+              <option value="totalMove">Largest total move</option>
+              <option value="spreadEdge">Largest spread edge now</option>
+              <option value="totalEdge">Largest total edge now</option>
+              <option value="snapshots">Most snapshots</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div id="tracker-summary-grid" class="results-summary-grid"></div>
+
+      <div class="table-wrap">
+        <table class="tracker-table">
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>League</th>
+              <th>Matchup</th>
+              <th>Snaps</th>
+              <th>Spread O → Cur/Close</th>
+              <th>Spread range</th>
+              <th>Spread edge</th>
+              <th>Total O → Cur/Close</th>
+              <th>Total range</th>
+              <th>Total edge</th>
+              <th>Moneyline now</th>
+            </tr>
+          </thead>
+          <tbody id="tracker-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Detail</p>
+          <h2 id="tracker-detail-title">Select a game</h2>
+          <p id="tracker-detail-subhead" class="muted">Click a matchup in the table to inspect the full pregame snapshot timeline.</p>
+        </div>
+      </div>
+      <div id="tracker-detail-cards" class="results-summary-grid"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>As of</th>
+              <th>Away spread</th>
+              <th>Total</th>
+              <th>Away ML</th>
+              <th>Home ML</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody id="tracker-detail-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/line_tracker.js?v=3"></script>
+</body>
+</html>
