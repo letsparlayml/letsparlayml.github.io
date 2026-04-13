@@ -901,8 +901,10 @@ function inferredTotalLabel(row) {
 }
 
 function formatSpreadResultCell(row) {
-  const inferred = inferredSpreadLabel(row);
-  const label = inferred || 'N/A';
+  const existing = String(row?.spreadResult || '').trim();
+  const label = existing && existing.toLowerCase() !== 'n/a'
+    ? existing
+    : (inferredSpreadLabel(row) || 'N/A');
   return `<span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>`;
 }
 
