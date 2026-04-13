@@ -3,8 +3,9 @@ import argparse
 import csv
 import json
 from pathlib import Path
-from datetime import datetime, UTC
+from datetime import datetime
 import re
+import unicodedata
 
 try:
     from openpyxl import load_workbook
@@ -65,18 +66,6 @@ def convert_value(value):
             return str(value)
     return str(value).strip()
 
-def pick_default_input(repo: Path) -> Path:
-    candidates = [
-        repo / "data" / "nba_injuries.xlsx",
-        repo / "data" / "nba_injuries.csv",
-        repo / "nba_injuries.xlsx",
-        repo / "nba_injuries.csv",
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return repo / "data" / "nba_injuries.xlsx"
-
 def main():
     parser = argparse.ArgumentParser(description="Build nba_injuries.json from a manual Excel or CSV file.")
     parser.add_argument("--website-repo", required=True, help="Path to the website repo root.")
@@ -85,7 +74,7 @@ def main():
     args = parser.parse_args()
 
     repo = Path(args.website_repo)
-    input_path = Path(args.input) if args.input else pick_default_input(repo)
+    input_path = Path(args.input) if args.input else repo / "data" / "nba_injuries.xlsx"
     output_path = Path(args.output) if args.output else repo / "data" / "nba_injuries.json"
 
     if not input_path.exists():
@@ -115,14 +104,13 @@ def main():
     players.sort(key=lambda x: (x["gameDate"], x["team"], x["player"]))
 
     payload = {
-        "updatedAt": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "updatedAt": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
         "sourceFile": input_path.name,
         "players": players,
     }
 
     output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"Wrote {len(players)} injury rows to {output_path}")
-    print(f"Source file: {input_path}")
 
 if __name__ == "__main__":
     main()

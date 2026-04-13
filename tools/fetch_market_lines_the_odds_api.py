@@ -1,9 +1,10 @@
+
 from __future__ import annotations
 
 import argparse
 import json
 import os
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -60,8 +61,10 @@ TEAM_MAPS = {
     },
 }
 
+
 def clean(value: Any) -> str:
     return "" if value is None else str(value).strip()
+
 
 def to_float(value: Any):
     try:
@@ -71,31 +74,27 @@ def to_float(value: Any):
     except Exception:
         return None
 
+
 def load_json(path: Path, default):
     if not path.exists():
         return default
     return json.loads(path.read_text(encoding="utf-8"))
 
+
 def save_json(path: Path, data):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
 
 def iso_z(value: str) -> str:
     return value.replace('+00:00', 'Z') if value else ''
 
-def parse_iso(value: str):
-    value = clean(value)
-    if not value:
-        return None
-    try:
-        return datetime.fromisoformat(value.replace('Z', '+00:00')).astimezone(UTC)
-    except Exception:
-        return None
 
 def local_date_from_iso(value: str) -> str:
-    dt = parse_iso(value)
-    if dt is None:
+    if not value:
         return ''
+    dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
     return dt.astimezone(DISPLAY_TZ).date().isoformat()
+
 
 def game_sort_key(row: dict[str, Any]) -> tuple:
     key = clean(row.get('bookmakerKey')).lower()
@@ -107,6 +106,7 @@ def game_sort_key(row: dict[str, Any]) -> tuple:
     has_total = row.get('marketTotal') is not None
     has_ml = row.get('awayMoneyline') is not None and row.get('homeMoneyline') is not None
     return (0 if has_spread else 1, 0 if has_total else 1, 0 if has_ml else 1, idx, key)
+
 
 def api_get(session: requests.Session, sport_key: str, api_key: str, timeout: int, bookmakers: str) -> list[dict[str, Any]]:
     params: dict[str, Any] = {
@@ -126,16 +126,22 @@ def api_get(session: requests.Session, sport_key: str, api_key: str, timeout: in
         raise ValueError(f'Unexpected payload for {sport_key}')
     return data
 
-def build_selected_rows(events: list[dict[str, Any]], league: str, now_utc: datetime) -> list[dict[str, Any]]:
+
+def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[str, Any]]:
     team_map = TEAM_MAPS[league]
-    selected: dict[tuple[str, str, str, str], dict[str, Any]] = {}
-    skipped_live = 0
+    selected: dict[tuple[str, str, str], dict[str, Any]] = {}
+    now_utc = datetime.now(timezone.utc)
+    skipped_started = 0
     for event in events:
         commence = iso_z(clean(event.get('commence_time')))
-        commence_dt = parse_iso(commence)
+        try:
+            commence_dt = datetime.fromisoformat(commence.replace('Z', '+00:00')) if commence else None
+        except Exception:
+            commence_dt = None
         if commence_dt is not None and commence_dt <= now_utc:
-            skipped_live += 1
+            skipped_started += 1
             continue
+
         home_full = clean(event.get('home_team'))
         away_full = clean(event.get('away_team'))
         home = team_map.get(home_full, home_full.upper())
@@ -186,15 +192,15 @@ def build_selected_rows(events: list[dict[str, Any]], league: str, now_utc: date
             if cur is None or game_sort_key(row) < game_sort_key(cur):
                 selected[key] = row
     rows = sorted(selected.values(), key=lambda r: (r['date'], r['awayTeam'], r['homeTeam']))
-    return rows, skipped_live
+    if skipped_started:
+        print(f'[ODDS] {league}: skipped {skipped_started} started/live events to preserve pregame close')
+    return rows
 
-def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, Any]], now_utc: datetime):
+
+def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, Any]]):
     lookup = {(r['league'], r['date'], r['awayTeam'], r['homeTeam']): r for r in selected_rows}
     applied = 0
     for g in games:
-        game_dt = parse_iso(clean(g.get('gameDateTimeUtc') or g.get('gameDate') or ''))
-        if game_dt is not None and game_dt <= now_utc:
-            continue
         league = clean(g.get('league')).upper()
         away = clean(g.get('awayTeam')).upper()
         home = clean(g.get('homeTeam')).upper()
@@ -207,11 +213,12 @@ def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, An
         g['marketAwayML'] = row.get('marketAwayML')
         g['marketHomeML'] = row.get('marketHomeML')
         g['marketLineSource'] = row.get('source')
-        g['marketLineUpdated'] = row.get('updatedAt') or datetime.now(UTC).isoformat(timespec='seconds').replace('+00:00', 'Z')
+        g['marketLineUpdated'] = row.get('updatedAt') or datetime.utcnow().isoformat(timespec='seconds') + 'Z'
         if row.get('gameDate'):
             g['gameDateTimeUtc'] = row['gameDate']
         applied += 1
     return applied
+
 
 def merge_archive(archive: list[dict[str, Any]], selected_rows: list[dict[str, Any]]):
     same_game = {(r['league'], r['date'], r['awayTeam'], r['homeTeam']) for r in selected_rows}
@@ -229,6 +236,7 @@ def merge_archive(archive: list[dict[str, Any]], selected_rows: list[dict[str, A
     cleaned.extend(selected_rows)
     return cleaned
 
+
 def main() -> int:
     ap = argparse.ArgumentParser(description='Fetch NBA/NHL/MLB market lines from The Odds API and update site data.')
     ap.add_argument('--api-key', default=os.environ.get('ODDS_API_KEY', ''))
@@ -240,7 +248,6 @@ def main() -> int:
     if not args.api_key:
         raise SystemExit('Missing API key. Pass --api-key or set ODDS_API_KEY.')
 
-    now_utc = datetime.now(UTC)
     repo = Path(args.website_repo)
     data_dir = repo / 'data'
     games_path = data_dir / 'games.json'
@@ -248,7 +255,7 @@ def main() -> int:
     games = load_json(games_path, [])
     archive = load_json(archive_path, [])
     session = requests.Session()
-    session.headers.update({'User-Agent': 'LetsParlayML unified odds fetcher/1.1'})
+    session.headers.update({'User-Agent': 'LetsParlayML unified odds fetcher/1.0'})
 
     all_selected: list[dict[str, Any]] = []
     for sport_key in [s.strip() for s in args.sports.split(',') if s.strip()]:
@@ -257,20 +264,20 @@ def main() -> int:
             print(f'[ODDS] skip unknown sport: {sport_key}')
             continue
         events = api_get(session, sport_key, args.api_key, args.timeout, args.bookmakers)
-        selected, skipped_live = build_selected_rows(events, league, now_utc)
+        selected = build_selected_rows(events, league)
         all_selected.extend(selected)
-        print(f'[ODDS] {league}: fetched {len(events)} events, selected {len(selected)} pregame rows, skipped {skipped_live} live/started events')
+        print(f'[ODDS] {league}: fetched {len(events)} events, selected {len(selected)} rows')
         raw_path = data_dir / f'{league.lower()}_market_lines_api.json'
         raw_path.write_text(json.dumps(selected, ensure_ascii=False, indent=2), encoding='utf-8')
 
-    applied = apply_to_games(games, all_selected, now_utc)
+    applied = apply_to_games(games, all_selected)
     merged_archive = merge_archive(archive, all_selected)
     save_json(games_path, games)
     save_json(archive_path, merged_archive)
-    print(f'[ODDS] Updated {applied} pregame games in {games_path}')
+    print(f'[ODDS] Updated {applied} games in {games_path}')
     print(f'[ODDS] Archive now has {len(merged_archive)} rows in {archive_path}')
-    print('[ODDS] Lines now freeze once the scheduled start time has passed.')
     return 0
+
 
 if __name__ == '__main__':
     raise SystemExit(main())

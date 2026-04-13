@@ -58,17 +58,13 @@ function modelSpreadForDisplay(game) {
   return Number.isFinite(fallback) ? fallback : NaN;
 }
 
-  // CBB/NHL: keep existing stored convention
-  const stored = Number(game?.modelHomeSpread);
-  return Number.isFinite(stored) ? stored : NaN;
-}
-
-function ForDisplay(game) {
+function marketSpreadForDisplay(game) {
   const spread = Number(game?.marketSpread);
   return Number.isFinite(spread) ? spread : NaN;
 }
 
 function spreadEdgeForDisplay(game) {
+
   const model = modelSpreadForDisplay(game);
   const market = marketSpreadForDisplay(game);
   return Number.isFinite(model) && Number.isFinite(market)

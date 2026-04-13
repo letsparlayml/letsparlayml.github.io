@@ -46,7 +46,8 @@ function isNbaGame(game) {
 
 function marketSpreadForDisplay(game) {
   const spread = Number(game?.marketSpread);
-  return Number.isFinite(spread) ? spread : NaN;
+  if (!Number.isFinite(spread)) return NaN;
+  return isNbaGame(game) ? -spread : spread;
 }
 
 function modelSpreadForDisplay(game) {
@@ -1092,46 +1093,6 @@ function archiveMoneyline(row, side) {
   return null;
 }
 
-
-function archiveMatchKeyFromGame(game) {
-  return `${String(game?.gameDate || '').trim()}|${String(game?.awayTeam || '').trim()}|${String(game?.homeTeam || '').trim()}`;
-}
-
-function latestArchiveForGame(game, archiveRows) {
-  const target = archiveMatchKeyFromGame(game);
-  let best = null;
-  let bestTs = -1;
-  (archiveRows || []).forEach(row => {
-    const matchup = archiveMatchup(row);
-    const localDate = archiveLocalDate(row) || String(row?.date || '').trim();
-    const key = `${localDate}|${String(matchup.away || '').trim()}|${String(matchup.home || '').trim()}`;
-    if (key !== target) return;
-    const ts = Date.parse(row?.updatedAt || row?.archivedAt || row?.fetchedAtUtc || '') || 0;
-    if (!best || ts >= bestTs) {
-      best = row;
-      bestTs = ts;
-    }
-  });
-  return best;
-}
-
-function hydrateGameWithArchive(game, archiveRows) {
-  const row = latestArchiveForGame(game, archiveRows);
-  if (!row) return game;
-  const merged = { ...game };
-  if (!hasNumericValue(merged.marketSpread) && hasNumericValue(row?.marketSpread)) merged.marketSpread = Number(row.marketSpread);
-  if (!hasNumericValue(merged.marketTotal) && hasNumericValue(row?.marketTotal)) merged.marketTotal = Number(row.marketTotal);
-  if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.marketAwayML)) merged.marketAwayML = Number(row.marketAwayML);
-  else if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.awayML)) merged.marketAwayML = Number(row.awayML);
-  else if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.awayMoneyline)) merged.marketAwayML = Number(row.awayMoneyline);
-  if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(row?.marketHomeML)) merged.marketHomeML = Number(row.marketHomeML);
-  else if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(row?.homeML)) merged.marketHomeML = Number(row.homeML);
-  else if (!hasNumericValue(merged.marketHomeML) && hasNumericValue(row?.homeMoneyline)) merged.marketHomeML = Number(row.homeMoneyline);
-  if (!merged.marketLineSource && row?.source) merged.marketLineSource = row.source;
-  if (!merged.marketLineUpdated && (row?.updatedAt || row?.archivedAt)) merged.marketLineUpdated = row.updatedAt || row.archivedAt;
-  return merged;
-}
-
 function renderMlbOddsMovement(game, archiveRows) {
   const section = byId('odds-movement-section');
   const cards = byId('odds-movement-cards');
@@ -1201,7 +1162,7 @@ function renderMlbOddsMovement(game, archiveRows) {
 (async function init() {
   try {
     const id = qs('id');
-    const [gamesRaw, rawProps, rawPropsLab, injuries, archiveRows] = await Promise.all([
+    const [games, rawProps, rawPropsLab, injuries, archiveRows] = await Promise.all([
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/nba_props_lab.json', null),
@@ -1210,7 +1171,6 @@ function renderMlbOddsMovement(game, archiveRows) {
     ]);
     const injuryLookup = buildInjuryLookup(injuries);
 
-    const games = (gamesRaw || []).map(g => hydrateGameWithArchive(g, archiveRows));
     const game = (games || []).find(g => g.id === id) || (games || [])[0];
     if (!game) throw new Error('No game records found.');
 
