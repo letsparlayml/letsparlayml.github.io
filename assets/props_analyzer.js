@@ -370,43 +370,46 @@ function updateUrl(entry, selection, currentLeague) {
 }
 
 function findInitialState(data, league) {
-  const availableDates = Array.isArray(data?.dates) ? data.dates.map(String) : [];
-  const requestedLeague = String(qs('league') || '').toUpperCase();
-  const queryDate = qs('date') || '';
-  const requestedDate = (
-    requestedLeague === String(league || 'NBA').toUpperCase() && availableDates.includes(String(queryDate))
-      ? String(queryDate)
-      : (String(data?.targetDate || '') && availableDates.includes(String(data?.targetDate || ''))
-          ? String(data.targetDate)
-          : (availableDates[0] || ''))
-  );
+  const dates = Array.isArray(data?.dates) ? data.dates : [];
+  const requestedDateRaw = qs('date') || '';
+  const fallbackDate = data?.targetDate || dates[0] || '';
+  const requestedDate = dates.includes(requestedDateRaw) ? requestedDateRaw : fallbackDate;
 
-  const entries = (data.entries || []).filter(e => !requestedDate || String(e.gameDate) === String(requestedDate));
+  const entries = (data?.entries || []).filter(e => !requestedDate || e.gameDate === requestedDate);
+  const requestedPlayerId = qs('playerId');
+  const requestedPlayer = normalizeLookupToken(qs('player'));
 
-  const requestedPlayerId = requestedLeague === String(league || 'NBA').toUpperCase() ? qs('playerId') : '';
-  const requestedPlayer = requestedLeague === String(league || 'NBA').toUpperCase() ? normalizeLookupToken(qs('player')) : '';
   let playerId = requestedPlayerId || '';
+  if (playerId && !entries.some(e => String(e.playerId) === String(playerId))) {
+    playerId = '';
+  }
   if (!playerId && requestedPlayer) {
     const match = entries.find(e => normalizeLookupToken(e.player) === requestedPlayer);
     playerId = match?.playerId ? String(match.playerId) : '';
   }
-  if (!entries.some(e => String(e.playerId) === String(playerId))) {
-    playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
-  }
+  if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
 
-  const queryStat = requestedLeague === String(league || 'NBA').toUpperCase() ? String(qs('stat') || '').toUpperCase() : '';
-  const playerEntries = entries.filter(e => String(e.playerId) === String(playerId));
-  const stat = playerEntries.some(e => String(e.stat).toUpperCase() === queryStat)
-    ? queryStat
-    : String(playerEntries[0]?.stat || '').toUpperCase();
+  const requestedStat = String(qs('stat') || '').toUpperCase();
+  const validStats = [...new Set(entries.filter(e => String(e.playerId) === String(playerId)).map(e => String(e.stat).toUpperCase()))];
+  const stat = validStats.includes(requestedStat) ? requestedStat : (validStats[0] || '');
 
-  const queryLine = requestedLeague === String(league || 'NBA').toUpperCase() ? String(qs('line') || '') : '';
-  const statEntries = playerEntries.filter(e => String(e.stat).toUpperCase() === stat);
-  const line = statEntries.some(e => String(e.line) === queryLine)
-    ? queryLine
-    : String(statEntries[0]?.line ?? '');
+  const requestedLine = qs('line') || '';
+  const validLineEntries = entries
+    .filter(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)
+    .sort((a, b) => Number(a.line) - Number(b.line));
+  const line = validLineEntries.some(e => String(e.line) === String(requestedLine))
+    ? String(requestedLine)
+    : String(validLineEntries[0]?.line ?? '');
 
-  return { league: String(league || 'NBA').toUpperCase(), date: requestedDate, playerId, stat, line, query: '', player: requestedLeague === String(league || 'NBA').toUpperCase() ? (qs('player') || '') : '' };
+  return {
+    league: String(league || 'NBA').toUpperCase(),
+    date: requestedDate,
+    playerId,
+    stat,
+    line,
+    query: '',
+    player: qs('player') || ''
+  };
 }
 
 function uniquePlayers(entries, query = '') {
@@ -534,7 +537,14 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const searchInput = byId('analyzer-search');
 
     populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
-    populateSelect(dateSelect, state.data?.dates || [], item => item, item => item, state.selection.date);
+
+    const validDates = state.data?.dates || [];
+    if (validDates.length && !validDates.includes(state.selection.date)) {
+      state.selection.date = state.data?.targetDate && validDates.includes(state.data.targetDate)
+        ? state.data.targetDate
+        : validDates[0];
+    }
+    populateSelect(dateSelect, validDates, item => item, item => item, state.selection.date);
 
     const players = uniquePlayers(currentEntries(), state.selection.query);
     if (!players.some(p => String(p.playerId) === String(state.selection.playerId))) {
