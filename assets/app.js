@@ -70,10 +70,8 @@ function marketSpreadForDisplay(game) {
   const spread = Number(game?.marketSpread);
   if (!Number.isFinite(spread)) return NaN;
 
-  // NBA only: convert stored home spread to away-team display
-  if (isNbaGame(game)) return -spread;
-
-  // CBB/NHL: keep existing stored convention
+  // games.json already stores the away-team display convention used by spreadTeamLabel
+  // across the site: positive = home favorite, negative = away favorite.
   return spread;
 }
 
@@ -296,9 +294,8 @@ function marketAwaySpread(game) {
   const spread = Number(game?.marketSpread);
   if (!Number.isFinite(spread)) return NaN;
 
-  // Site cards display spreads from the away-team perspective for "AWAY @ HOME".
-  // NBA stores home-team spreads, while CBB/NHL are already stored in away-team display form.
-  return isNbaGame(game) ? -spread : spread;
+  // Keep the stored site-wide display convention: positive = home favorite.
+  return spread;
 }
 
 function marketSpreadText(game) {
@@ -922,34 +919,59 @@ function filterResultsForLaunch(rows, launchDate) {
   });
 }
 
-function latestResultDate(rows) {
+function latestResultsDate(rows) {
   return (rows || []).reduce((latest, row) => {
-    const date = String(row?.date || '');
-    return date && (!latest || date > latest) ? date : latest;
+    const d = String(row?.date || '');
+    return d && (!latest || d > latest) ? d : latest;
   }, '');
 }
 
-function sortResultsRowsForDisplay(rows) {
-  const leagueOrder = ['NBA', 'NHL', 'CBB', 'MLB'];
+function leagueCounts(rows) {
+  const counts = new Map();
+  (rows || []).forEach(row => {
+    const league = String(row?.league || '').toUpperCase();
+    if (!league) return;
+    counts.set(league, (counts.get(league) || 0) + 1);
+  });
+  return counts;
+}
+
+function hasCompleteLeagueCoverage(preferredRows, fallbackRows) {
+  const preferred = leagueCounts(preferredRows);
+  const fallback = leagueCounts(fallbackRows);
+  for (const [league, count] of fallback.entries()) {
+    if ((preferred.get(league) || 0) < count) return false;
+  }
+  return true;
+}
+
+function sortDisplayResults(rows) {
   return (rows || []).slice().sort((a, b) => {
     const dateCmp = String(b?.date || '').localeCompare(String(a?.date || ''));
     if (dateCmp) return dateCmp;
-    const leagueA = String(a?.league || '').toUpperCase();
-    const leagueB = String(b?.league || '').toUpperCase();
-    const leagueCmp = (leagueOrder.indexOf(leagueA) === -1 ? 999 : leagueOrder.indexOf(leagueA)) - (leagueOrder.indexOf(leagueB) === -1 ? 999 : leagueOrder.indexOf(leagueB));
+    const leagueCmp = String(a?.league || '').localeCompare(String(b?.league || ''));
     if (leagueCmp) return leagueCmp;
     return String(a?.matchup || '').localeCompare(String(b?.matchup || ''));
   });
 }
 
-function selectResultsRowsForDisplay(resultsRows, historyRows, preferredDate = '') {
-  const displayDate = String(preferredDate || '').trim() || latestResultDate(historyRows) || latestResultDate(resultsRows);
-  const liveRows = sortResultsRowsForDisplay((resultsRows || []).filter(row => !displayDate || String(row?.date || '') === displayDate));
-  const historySlice = sortResultsRowsForDisplay((historyRows || []).filter(row => !displayDate || String(row?.date || '') === displayDate));
-  const liveLeagues = new Set(liveRows.map(row => String(row?.league || '').toUpperCase()).filter(Boolean));
-  const historyLeagues = new Set(historySlice.map(row => String(row?.league || '').toUpperCase()).filter(Boolean));
-  const shouldUseHistory = !liveRows.length || historySlice.length > liveRows.length || Array.from(historyLeagues).some(league => !liveLeagues.has(league));
-  return shouldUseHistory ? historySlice : liveRows;
+function selectDisplayResults(currentRows, historyRows) {
+  const currentLatestDate = latestResultsDate(currentRows);
+  const historyLatestDate = latestResultsDate(historyRows);
+
+  if (!historyLatestDate) return sortDisplayResults(currentRows || []);
+
+  const latestHistoryRows = (historyRows || []).filter(row => String(row?.date || '') === historyLatestDate);
+  if (!currentLatestDate || currentLatestDate !== historyLatestDate) {
+    return sortDisplayResults(latestHistoryRows);
+  }
+
+  const latestCurrentRows = (currentRows || []).filter(row => String(row?.date || '') === currentLatestDate);
+  if (!hasCompleteLeagueCoverage(latestCurrentRows, latestHistoryRows)) {
+    return sortDisplayResults(latestHistoryRows);
+  }
+
+  return sortDisplayResults(latestCurrentRows);
 }
 
 function renderResults(results) {
@@ -1242,10 +1264,7 @@ function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10 }
       return (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
     })
     .forEach(item => {
-      const pitcherMode = String(playerType).toLowerCase() === 'pitcher';
-      const key = pitcherMode
-        ? `${item.playerId || item.player}|${item.stat}`
-        : `${item.playerId || item.player}|${item.stat}|${item.line}`;
+      const key = `${item.playerId || item.player}|${item.stat}|${item.line}`;
       if (seen.has(key)) return;
       seen.add(key);
       deduped.push(item);
@@ -1262,7 +1281,7 @@ function mlbBoardDisplayLine(row) {
   return '—';
 }
 
-function mlbBoardTable(title, rows, { showLine = true, showAvg = false } = {}) {
+function mlbBoardTable(title, rows, { showLine = true } = {}) {
   if (!rows.length) {
     return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No entries available yet.</div></article>`;
   }
@@ -1271,7 +1290,6 @@ function mlbBoardTable(title, rows, { showLine = true, showAvg = false } = {}) {
       <td><a class="table-link" href="${propAnalyzerHref({ ...row, league: 'MLB', player: row.player, playerId: row.playerId, line: row.line, stat: row.stat })}">${escapeHtml(row.player || '')}</a></td>
       ${showLine ? `<td>${escapeHtml(mlbBoardDisplayLine(row))}</td>` : ''}
       <td>${escapeHtml(hasNumericValue(row.pred_anchor ?? row.mu_cons) ? fmt(row.pred_anchor ?? row.mu_cons, 1) : '—')}</td>
-      ${showAvg ? `<td>${escapeHtml(hasNumericValue(row.avg_anchor) ? fmt(row.avg_anchor, 1) : '—')}</td>` : ''}
       <td>${escapeHtml(Number.isFinite(Number(row.prob_cons)) ? `${(Number(row.prob_cons) * 100).toFixed(1)}%` : '—')}</td>
       <td>${escapeHtml(propMatchupText(row))}</td>
     </tr>
@@ -1281,7 +1299,7 @@ function mlbBoardTable(title, rows, { showLine = true, showAvg = false } = {}) {
       <h4>${escapeHtml(title)}</h4>
       <div class="table-wrap compact-table-wrap">
         <table class="compact-table">
-          <thead><tr><th>Player</th>${showLine ? '<th>Line</th>' : ''}<th>Model</th>${showAvg ? '<th>Avg</th>' : ''}<th>Prob.</th><th>Matchup</th></tr></thead>
+          <thead><tr><th>Player</th>${showLine ? '<th>Line</th>' : ''}<th>Model</th><th>Prob.</th><th>Matchup</th></tr></thead>
           <tbody>${body}</tbody>
         </table>
       </div>
@@ -1295,8 +1313,7 @@ function renderMlbHomeBoards(mlbAnalyzer, meta) {
   const entries = mlbAnalyzer?.entries || [];
   root.innerHTML = [
     mlbBoardTable('Best hits', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'H', playerType: 'batter', limit: 10 })),
-    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 })),
-    mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10 }), { showAvg: true })
+    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 }))
   ].join('');
 }
 
@@ -1424,8 +1441,8 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     const mlbResultsLaunchDate = String(mlbResultsLaunchText || '').trim();
     const filteredResults = filterResultsForLaunch(results, mlbResultsLaunchDate);
     const filteredHistory = filterResultsForLaunch(resultsHistory, mlbResultsLaunchDate);
+    const displayResults = selectDisplayResults(filteredResults, filteredHistory);
     const effectiveSummary = recomputeResultsSummaryFromHistory(filteredHistory, resultsSummary);
-    const displayResults = selectResultsRowsForDisplay(filteredResults, filteredHistory, meta?.resultsDate || '');
     renderResultsSummary(effectiveSummary);
     renderResults(displayResults);
     renderMlbPropResultsSummary(mlbPropSummary, mlbPropPending);
