@@ -173,7 +173,7 @@ function analyzerStatShortLabel(entry, series) {
     'BB': 'BB',
     'HRR': 'HRR',
     'SB': 'SB',
-    'HA': 'HA',
+    'HA': 'H',
     'ER': 'ER',
     'OUTS': 'Outs',
     'IP': 'IP',
@@ -190,6 +190,27 @@ function analyzerWorkloadLabel(entry, series) {
     return stat === 'OUTS' ? 'Outs' : 'IP';
   }
   return 'AB';
+}
+
+
+function analyzerStatSelectLabel(stat, league) {
+  const code = String(stat || '').toUpperCase();
+  if (String(league || '').toUpperCase() === 'MLB' && code === 'HA') return 'H';
+  return code;
+}
+
+function aliasMlbStatForPlayer(entries, playerId, stat) {
+  const league = 'MLB';
+  const target = String(stat || '').toUpperCase();
+  if (String(league).toUpperCase() !== 'MLB' || !playerId) return target;
+  const playerStats = new Set((entries || [])
+    .filter(e => String(e.playerId) === String(playerId))
+    .map(e => String(e.stat || '').toUpperCase())
+    .filter(Boolean));
+  if (playerStats.has(target)) return target;
+  if (target === 'H' && playerStats.has('HA')) return 'HA';
+  if (target === 'HA' && playerStats.has('H')) return 'H';
+  return target;
 }
 
 function updateAnalyzerTableLabels(entry, series) {
@@ -458,7 +479,10 @@ function findInitialState(data, league) {
   }
   if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
   const requestedStat = (qs('stat') || '').toUpperCase();
-  const stat = requestedStat || (entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
+  const seededStat = requestedStat || (entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
+  const stat = String(league || '').toUpperCase() === 'MLB'
+    ? aliasMlbStatForPlayer(entries, playerId, seededStat)
+    : seededStat;
   const requestedLine = qs('line') || '';
   const line = requestedLine || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
   return { league: String(league || 'NBA').toUpperCase(), date: selectedDate, playerId, stat, line, query: '', player: qs('player') || '' };
@@ -526,7 +550,11 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
   }
 
   function selectedEntry() {
-    const candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase());
+    let candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase());
+    if (!candidates.length && state.config.league === 'MLB' && ['H', 'HA'].includes(String(state.selection.stat).toUpperCase())) {
+      const fallbackStat = String(state.selection.stat).toUpperCase() === 'H' ? 'HA' : 'H';
+      candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === fallbackStat);
+    }
     if (!candidates.length) return null;
     const exact = candidates.find(e => String(e.line) === String(state.selection.line));
     return exact || candidates.sort((a, b) => Number(a.line) - Number(b.line))[0];
@@ -600,10 +628,13 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     populateSelect(playerSelect, players, item => String(item.playerId), item => item.player, state.selection.playerId);
 
     const stats = [...new Set(currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId)).map(e => String(e.stat).toUpperCase()))].sort();
+    if (state.config.league === 'MLB') {
+      state.selection.stat = aliasMlbStatForPlayer(currentEntries(), state.selection.playerId, state.selection.stat);
+    }
     if (!stats.includes(String(state.selection.stat).toUpperCase())) {
       state.selection.stat = stats[0] || '';
     }
-    populateSelect(statSelect, stats, item => item, item => item, state.selection.stat);
+    populateSelect(statSelect, stats, item => item, item => analyzerStatSelectLabel(item, state.config.league), state.selection.stat);
 
     const lineEntries = currentEntries()
       .filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase())

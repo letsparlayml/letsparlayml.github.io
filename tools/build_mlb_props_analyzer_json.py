@@ -174,6 +174,95 @@ PITCHER_MARKETS = [
     },
 ]
 
+
+def _entry_num(entry: dict[str, Any], *keys: str) -> float:
+    for key in keys:
+        try:
+            value = float(entry.get(key))
+            if math.isfinite(value):
+                return value
+        except Exception:
+            continue
+    return float('-inf')
+
+
+def choose_home_board_rows(entries: list[dict[str, Any]], *, date: str, stat: str, player_type: str, limit: int = 10, unique_by_player: bool = False) -> list[dict[str, Any]]:
+    base = [
+        entry for entry in (entries or [])
+        if clean_str(entry.get('gameDate')) == clean_str(date)
+        and clean_str(entry.get('stat')).upper() == clean_str(stat).upper()
+        and clean_str(entry.get('playerType')).lower() == clean_str(player_type).lower()
+    ]
+
+    def sort_key(entry: dict[str, Any]):
+        if clean_str(player_type).lower() == 'pitcher':
+            return (
+                _entry_num(entry, 'pred_anchor', 'mu_cons'),
+                _entry_num(entry, 'avg_anchor'),
+                _entry_num(entry, 'prob_cons'),
+            )
+        return (
+            _entry_num(entry, 'prob_cons'),
+            _entry_num(entry, 'pred_anchor', 'mu_cons'),
+        )
+
+    ordered = sorted(base, key=sort_key, reverse=True)
+    picked: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for entry in ordered:
+        if unique_by_player:
+            dedupe_key = f"{entry.get('playerId') or entry.get('player')}|{entry.get('stat')}"
+        else:
+            dedupe_key = f"{entry.get('playerId') or entry.get('player')}|{entry.get('stat')}|{entry.get('line')}"
+        if dedupe_key in seen:
+            continue
+        seen.add(dedupe_key)
+        picked.append(entry)
+        if len(picked) >= limit:
+            break
+    return picked
+
+
+def build_home_board_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
+    entries = payload.get('entries') or []
+    target_date = clean_str(payload.get('targetDate'))
+    snapshot_rows: list[dict[str, Any]] = []
+
+    board_specs = [
+        ('best_hits', 'Best hits', {'date': target_date, 'stat': 'H', 'player_type': 'batter', 'limit': 10}),
+        ('best_two_plus_total_bases', 'Best two-plus total bases', {'date': target_date, 'stat': 'TB', 'player_type': 'batter', 'limit': 10}),
+    ]
+
+    for board_key, board_title, opts in board_specs:
+        for entry in choose_home_board_rows(entries, **opts):
+            snapshot_rows.append({
+                'source': 'mlb_home_board',
+                'boardKey': board_key,
+                'boardTitle': board_title,
+                'date': clean_str(entry.get('gameDate')),
+                'league': 'MLB',
+                'player': clean_str(entry.get('player')),
+                'playerId': safe_int(entry.get('playerId')),
+                'team': clean_str(entry.get('team')),
+                'opp': clean_str(entry.get('opp')),
+                'matchup': f"{clean_str(entry.get('team'))} vs {clean_str(entry.get('opp'))}".strip(),
+                'stat': clean_str(entry.get('stat')),
+                'stat_display': clean_str(entry.get('stat_display')),
+                'line': safe_float(entry.get('line')),
+                'model': safe_float(entry.get('pred_anchor') if entry.get('pred_anchor') is not None else entry.get('mu_cons')),
+                'probability': safe_float(entry.get('prob_cons')),
+                'confidence': 'High' if safe_float(entry.get('prob_cons')) is not None and safe_float(entry.get('prob_cons')) >= 0.70 else 'Medium' if safe_float(entry.get('prob_cons')) is not None and safe_float(entry.get('prob_cons')) >= 0.55 else 'Low',
+                'gameId': safe_int(entry.get('gameId')),
+            })
+
+    return {
+        'targetDate': target_date,
+        'generatedAt': payload.get('generatedAt'),
+        'rows': snapshot_rows,
+    }
+
+
+
 def clean_str(value: Any) -> str:
     if value is None:
         return ''
@@ -946,7 +1035,10 @@ def main() -> int:
         'seriesIndex': series_index,
     }
     compact_write_json(data_dir / 'mlb_props_analyzer.json', payload)
+    home_snapshot = build_home_board_snapshot(payload)
+    compact_write_json(data_dir / 'mlb_home_board_snapshot.json', home_snapshot)
     print(f'Wrote {len(slim_entries)} MLB props analyzer entries to {data_dir / "mlb_props_analyzer.json"}')
+    print(f'Wrote {len(home_snapshot.get("rows") or [])} MLB home-board tracker rows to {data_dir / "mlb_home_board_snapshot.json"}')
     print(f'Wrote {len(series_index)} split detail files under {detail_root}')
     print(f'Historical series: {historical_count} | Snapshot fallback: {preview_count}')
     return 0

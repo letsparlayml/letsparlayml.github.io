@@ -373,6 +373,7 @@ def main() -> int:
 
     data_dir = args.website_repo / 'data'
     props_path = args.props_path or (data_dir / 'props.json')
+    snapshot_path = data_dir / 'mlb_home_board_snapshot.json'
     pending_path = data_dir / 'mlb_prop_results_pending.json'
     history_path = data_dir / 'mlb_prop_results_history.json'
     summary_path = data_dir / 'mlb_prop_results_summary.json'
@@ -385,29 +386,52 @@ def main() -> int:
         print('[INFO] MLB prop results tracking is paused until data/mlb_results_launch_date.txt is set.')
         return 0
 
-    all_props = load_json(props_path, [])
+    snapshot_payload = load_json(snapshot_path, {})
+    snapshot_rows = snapshot_payload.get('rows') if isinstance(snapshot_payload, dict) else []
     current = []
-    for p in all_props:
-        if clean_str(p.get('league')).upper() != 'MLB':
-            continue
-        game_date = clean_str(p.get('gameDate'))
-        if launch_date and game_date and game_date < launch_date:
-            continue
-        current.append({
-            'date': game_date,
-            'league': 'MLB',
-            'player': clean_str(p.get('player')),
-            'team': clean_str(p.get('team')),
-            'opp': clean_str(p.get('opp') or p.get('opponent')),
-            'matchup': f"{clean_str(p.get('team'))} vs {clean_str(p.get('opp') or p.get('opponent'))}".strip(),
-            'stat': clean_str(p.get('stat') or p.get('stat_display')),
-            'line': safe_float(p.get('line')),
-            'model': safe_float(p.get('modelPrediction') if 'modelPrediction' in p else p.get('model')),
-            'probability': safe_float(p.get('probability')),
-            'confidence': clean_str(p.get('confidence')),
-            'note': clean_str(p.get('note')),
-            'gameId': safe_int(p.get('gameId') or p.get('gamePk')),
-        })
+    if snapshot_rows:
+        for p in snapshot_rows:
+            game_date = clean_str(p.get('date') or p.get('gameDate'))
+            if launch_date and game_date and game_date < launch_date:
+                continue
+            current.append({
+                'date': game_date,
+                'league': 'MLB',
+                'player': clean_str(p.get('player')),
+                'team': clean_str(p.get('team')),
+                'opp': clean_str(p.get('opp') or p.get('opponent')),
+                'matchup': clean_str(p.get('matchup')) or f"{clean_str(p.get('team'))} vs {clean_str(p.get('opp') or p.get('opponent'))}".strip(),
+                'stat': clean_str(p.get('stat') or p.get('stat_display')),
+                'line': safe_float(p.get('line')),
+                'model': safe_float(p.get('modelPrediction') if 'modelPrediction' in p else p.get('model')),
+                'probability': safe_float(p.get('probability')),
+                'confidence': clean_str(p.get('confidence')),
+                'note': clean_str(p.get('note') or p.get('boardTitle')),
+                'gameId': safe_int(p.get('gameId') or p.get('gamePk')),
+            })
+    else:
+        all_props = load_json(props_path, [])
+        for p in all_props:
+            if clean_str(p.get('league')).upper() != 'MLB':
+                continue
+            game_date = clean_str(p.get('gameDate'))
+            if launch_date and game_date and game_date < launch_date:
+                continue
+            current.append({
+                'date': game_date,
+                'league': 'MLB',
+                'player': clean_str(p.get('player')),
+                'team': clean_str(p.get('team')),
+                'opp': clean_str(p.get('opp') or p.get('opponent')),
+                'matchup': f"{clean_str(p.get('team'))} vs {clean_str(p.get('opp') or p.get('opponent'))}".strip(),
+                'stat': clean_str(p.get('stat') or p.get('stat_display')),
+                'line': safe_float(p.get('line')),
+                'model': safe_float(p.get('modelPrediction') if 'modelPrediction' in p else p.get('model')),
+                'probability': safe_float(p.get('probability')),
+                'confidence': clean_str(p.get('confidence')),
+                'note': clean_str(p.get('note')),
+                'gameId': safe_int(p.get('gameId') or p.get('gamePk')),
+            })
 
     pending = load_json(pending_path, [])
     history = load_json(history_path, [])
@@ -444,7 +468,8 @@ def main() -> int:
     write_json(pending_path, unresolved)
     write_json(summary_path, summarize(history))
 
-    print(f'Loaded {len(current)} current MLB props from {props_path}')
+    source_label = snapshot_path if snapshot_rows else props_path
+    print(f'Loaded {len(current)} current MLB props from {source_label}')
     print(f'Settled {len(settled_rows)} MLB props; {len(unresolved)} still pending')
     print(f'Wrote MLB prop history -> {history_path}')
     print(f'Wrote MLB prop pending queue -> {pending_path}')
