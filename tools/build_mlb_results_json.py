@@ -423,6 +423,17 @@ def main() -> int:
             continue
         new_rows.append(build_row(game, scraped))
 
+    if not new_rows:
+        history = results_history
+        latest_date = max((clean_str(row.get('date')) for row in history if clean_str(row.get('date'))), default='')
+        latest_rows = [row for row in history if clean_str(row.get('date')) == latest_date]
+        write_json(data_dir / 'results.json', latest_rows)
+        refresh_results_summary(data_dir, history)
+        print('No new MLB result rows added. Refreshed results.json from results_history.json.')
+        if latest_date:
+            print(f'Latest results date: {latest_date}')
+        return 0
+
     history = results_history + new_rows
     history.sort(key=lambda row: (clean_str(row.get('date')), clean_str(row.get('league')), clean_str(row.get('matchup')), safe_int(row.get('gamePk')) or 0))
     write_json(data_dir / 'results_history.json', history)
@@ -431,11 +442,6 @@ def main() -> int:
     latest_rows = [row for row in history if clean_str(row.get('date')) == latest_date]
     write_json(data_dir / 'results.json', latest_rows)
     refresh_results_summary(data_dir, history)
-
-    if not new_rows:
-        print('No new MLB result rows added. Refreshed results.json from results_history.json.')
-        print(f'Latest results date: {latest_date}')
-        return 0
 
     print(f'Added {len(new_rows)} MLB rows.')
     print(f'Latest results date: {latest_date}')
