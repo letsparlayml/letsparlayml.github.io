@@ -323,7 +323,8 @@ def prep_batter_logs(logs_df: pd.DataFrame) -> pd.DataFrame:
         df['isHome'] = None
         df['location'] = ''
     df['batting_order_clean'] = df.get('batting_order', pd.Series(index=df.index)).map(parse_batting_order)
-    df['plate_appearances'] = pd.to_numeric(df.get('atBats'), errors='coerce').fillna(0) + pd.to_numeric(df.get('baseOnBalls'), errors='coerce').fillna(0)
+    df['atBats'] = pd.to_numeric(df.get('atBats'), errors='coerce')
+    df['plate_appearances'] = df['atBats'].fillna(0) + pd.to_numeric(df.get('baseOnBalls'), errors='coerce').fillna(0)
     for col in ['hits','totalBases','doubles','homeRuns','strikeOuts','baseOnBalls','stolenBases','runs','R','rbi','RBI','runsBattedIn']:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -336,7 +337,7 @@ def prep_batter_logs(logs_df: pd.DataFrame) -> pd.DataFrame:
     if 'hrr' not in df.columns:
         df['hrr'] = pd.to_numeric(df.get('hits'), errors='coerce').fillna(0) + pd.to_numeric(df.get('runs'), errors='coerce').fillna(0) + pd.to_numeric(df.get('rbi'), errors='coerce').fillna(0)
     keep = ['gamePk','player_id','player_name','team','opponent','game_ts','gameDateLocal','isHome','location',
-            'batting_order_clean','plate_appearances','hits','totalBases','doubles','homeRuns','strikeOuts',
+            'batting_order_clean','atBats','plate_appearances','hits','totalBases','doubles','homeRuns','strikeOuts',
             'baseOnBalls','stolenBases','runs','rbi','hrr']
     keep = [c for c in keep if c in df.columns]
     return df[keep].sort_values(['player_id', 'game_ts']).reset_index(drop=True)
@@ -530,7 +531,7 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
     player_logs = batter_logs_lookup.get(player_id or -1, pd.DataFrame())
     games, similar_games = build_historical_games(
         player_logs, target_ts, market['value_col'], opp, location, max_games=max_games,
-        minutes_col='plate_appearances', extra_context_col='batting_order_clean', projected_order=projected_order
+        minutes_col='atBats', extra_context_col='batting_order_clean', projected_order=projected_order
     )
     history_mode = bool(games)
     avg_anchor = None

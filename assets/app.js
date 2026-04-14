@@ -1211,33 +1211,45 @@ function edgeBoardCard(title, items, kind) {
 }
 
 
-function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10 }) {
+function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10, uniqueByPlayer = false }) {
   const pool = (entries || []).filter(e => String(e?.gameDate || '') === String(date || '') && String(e?.stat || '').toUpperCase() === String(stat).toUpperCase());
   const typed = playerType ? pool.filter(e => String(e?.playerType || '').toLowerCase() === String(playerType).toLowerCase()) : pool;
   let base = typed.length ? typed : pool;
   if (String(playerType).toLowerCase() === 'pitcher') {
     base = base.filter(e => !/(^|\b)(tbd|to be determined|probable starter tbd)(\b|$)/i.test(String(e?.player || '')));
   }
+
+  const sorted = base.slice().sort((a, b) => {
+    if (String(playerType).toLowerCase() === 'pitcher') {
+      const predDiff = (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
+      if (predDiff) return predDiff;
+      const avgDiff = (Number(b?.avg_anchor) || 0) - (Number(a?.avg_anchor) || 0);
+      if (avgDiff) return avgDiff;
+      return (Number(b?.prob_cons) || -1) - (Number(a?.prob_cons) || -1);
+    }
+    const probDiff = (Number(b?.prob_cons) || -1) - (Number(a?.prob_cons) || -1);
+    if (probDiff) return probDiff;
+    return (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
+  });
+
+  if (uniqueByPlayer) {
+    const grouped = new Map();
+    sorted.forEach(item => {
+      const key = `${item.playerId || item.player}|${item.stat}`;
+      if (grouped.has(key)) return;
+      grouped.set(key, item);
+    });
+    return Array.from(grouped.values()).slice(0, limit);
+  }
+
   const deduped = [];
   const seen = new Set();
-  base
-    .slice()
-    .sort((a, b) => {
-      if (String(playerType).toLowerCase() === 'pitcher') {
-        const predDiff = (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
-        if (predDiff) return predDiff;
-        return (Number(b?.prob_cons) || -1) - (Number(a?.prob_cons) || -1);
-      }
-      const probDiff = (Number(b?.prob_cons) || -1) - (Number(a?.prob_cons) || -1);
-      if (probDiff) return probDiff;
-      return (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
-    })
-    .forEach(item => {
-      const key = `${item.playerId || item.player}|${item.stat}|${item.line}`;
-      if (seen.has(key)) return;
-      seen.add(key);
-      deduped.push(item);
-    });
+  sorted.forEach(item => {
+    const key = `${item.playerId || item.player}|${item.stat}|${item.line}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deduped.push(item);
+  });
   return deduped.slice(0, limit);
 }
 
@@ -1284,7 +1296,7 @@ function renderMlbHomeBoards(mlbAnalyzer, meta) {
   root.innerHTML = [
     mlbBoardTable('Best hits', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'H', playerType: 'batter', limit: 10 })),
     mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 })),
-    mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10 }), { showLine: true, showAvg: true })
+    mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10, uniqueByPlayer: true }), { showLine: false, showAvg: true })
   ].join('');
 }
 

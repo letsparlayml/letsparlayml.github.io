@@ -161,6 +161,53 @@ function simColor(bin) {
   }
 }
 
+function analyzerStatShortLabel(entry, series) {
+  const stat = String(entry?.stat || series?.stat || '').trim().toUpperCase();
+  if (!stat) return 'Value';
+  const map = {
+    'H': 'H',
+    'TB': 'TB',
+    '2B': '2B',
+    'HR': 'HR',
+    'K': 'K',
+    'BB': 'BB',
+    'HRR': 'HRR',
+    'SB': 'SB',
+    'HA': 'HA',
+    'ER': 'ER',
+    'OUTS': 'Outs',
+    'IP': 'IP',
+  };
+  return map[stat] || stat;
+}
+
+function analyzerWorkloadLabel(entry, series) {
+  const league = String(entry?.league || series?.league || '').toUpperCase();
+  if (league !== 'MLB') return 'Min';
+  const playerType = String(entry?.playerType || series?.playerType || '').toLowerCase();
+  const stat = String(entry?.stat || series?.stat || '').trim().toUpperCase();
+  if (playerType === 'pitcher') {
+    return stat === 'OUTS' ? 'Outs' : 'IP';
+  }
+  return 'AB';
+}
+
+function updateAnalyzerTableLabels(entry, series) {
+  const league = String(entry?.league || series?.league || '').toUpperCase();
+  const valueLabel = league === 'MLB' ? analyzerStatShortLabel(entry, series) : 'Value';
+  const workloadLabel = analyzerWorkloadLabel(entry, series);
+  byId('analyzer-games-col-4').textContent = valueLabel;
+  byId('analyzer-similar-col-4').textContent = valueLabel;
+  byId('analyzer-games-col-5').textContent = workloadLabel;
+  byId('analyzer-similar-col-5').textContent = workloadLabel;
+}
+
+function sampleValueSuffix(entry, series) {
+  const league = String(entry?.league || series?.league || '').toUpperCase();
+  if (league !== 'MLB') return 'min';
+  return analyzerWorkloadLabel(entry, series);
+}
+
 function updateHero(entry, series) {
   byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
   byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
@@ -280,7 +327,7 @@ function renderSummary(entry, series, view) {
   `).join('');
 }
 
-function renderTableRows(rootId, games, line) {
+function renderTableRows(rootId, games, line, entry, series) {
   const body = byId(rootId);
   if (!body) return;
   if (!(games || []).length) {
@@ -293,6 +340,7 @@ function renderTableRows(rootId, games, line) {
     }
     return String(b.gameDate || '').localeCompare(String(a.gameDate || ''));
   }).slice(0, 12);
+  const workloadLabel = sampleValueSuffix(entry, series);
   body.innerHTML = rows.map(g => `
     <tr>
       <td>${escapeHtml(g.label || g.gameDate || '')}</td>
@@ -359,7 +407,7 @@ function renderChart(entry, series, view) {
     const cy = y(Number(g.value));
     return `<g>
       <circle cx="${cx}" cy="${cy}" r="5" fill="${simColor(g.simBin)}" stroke="#0b1220" stroke-width="1.5">
-        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` in ${fmt(g.minutes, 1)} min` : ''} (${g.simBin || 'all'})`)}</title>
+        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` • ${fmt(g.minutes, 1)} ${sampleValueSuffix(entry, series)}` : ''} (${g.simBin || 'all'})`)}</title>
       </circle>
       <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml(analyzerDisplayLabel(g))}</text>
     </g>`;
@@ -574,13 +622,14 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     syncViewButtons(state.view);
     const entry = selectedEntry();
     updateHero(entry, null);
+    updateAnalyzerTableLabels(entry, null);
     if (!entry) {
       renderStatus(null, null);
       renderKpis(null, null, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], null);
-      renderTableRows('analyzer-similar-body', [], null);
+      renderTableRows('analyzer-games-body', [], null, null, null);
+      renderTableRows('analyzer-similar-body', [], null, null, null);
       updateUrl(null, state.selection, state.config.league);
       return;
     }
@@ -589,13 +638,14 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, null, state.view);
     renderChart(null, null, state.view);
     renderSummary(null, null, state.view);
-    renderTableRows('analyzer-games-body', [], entry?.line);
-    renderTableRows('analyzer-similar-body', [], entry?.line);
+    renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
+    renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
 
     const series = await selectedSeries(entry);
     if (token !== renderToken) return;
 
     updateHero(entry, series);
+    updateAnalyzerTableLabels(entry, series);
     renderStatus(entry, series);
     if (!series) {
       renderKpis(entry, {
@@ -609,8 +659,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       }, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], entry?.line);
-      renderTableRows('analyzer-similar-body', [], entry?.line);
+      renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
+      renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
       updateUrl(entry, state.selection, state.config.league);
       return;
     }
@@ -618,8 +668,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, series, state.view);
     renderChart(entry, series, state.view);
     renderSummary(entry, series, state.view);
-    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line);
-    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line);
+    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line, entry, series);
+    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line, entry, series);
     updateUrl(entry, state.selection, state.config.league);
   }
 
