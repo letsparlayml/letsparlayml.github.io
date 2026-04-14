@@ -120,6 +120,30 @@ function normalizeLookupToken(value) {
     .trim();
 }
 
+
+function normalizeStatToken(value) {
+  return String(value || '').toUpperCase().trim();
+}
+
+function playerEntriesForSelection(entries, playerId) {
+  return (entries || []).filter(e => String(e.playerId) === String(playerId));
+}
+
+function canonicalStatForSelection(entries, playerId, stat, league = 'NBA') {
+  const raw = normalizeStatToken(stat);
+  const playerEntries = playerEntriesForSelection(entries, playerId);
+  if (!playerEntries.length) return raw;
+  const available = [...new Set(playerEntries.map(e => normalizeStatToken(e.stat)).filter(Boolean))];
+  if (available.includes(raw)) return raw;
+  if (String(league || '').toUpperCase() === 'MLB') {
+    const hasPitcherHa = available.includes('HA');
+    const hasBatterH = available.includes('H');
+    if (raw === 'H' && hasPitcherHa && !hasBatterH) return 'HA';
+    if (raw === 'HA' && hasBatterH && !hasPitcherHa) return 'H';
+  }
+  return available[0] || raw;
+}
+
 function median(values) {
   const nums = (values || []).filter(hasNumericValue).slice().sort((a, b) => a - b);
   if (!nums.length) return null;
@@ -159,74 +183,6 @@ function simColor(bin) {
     case 'far 25%': return '#ff7e79';
     default: return '#9db0d0';
   }
-}
-
-function analyzerStatShortLabel(entry, series) {
-  const stat = String(entry?.stat || series?.stat || '').trim().toUpperCase();
-  if (!stat) return 'Value';
-  const map = {
-    'H': 'H',
-    'TB': 'TB',
-    '2B': '2B',
-    'HR': 'HR',
-    'K': 'K',
-    'BB': 'BB',
-    'HRR': 'HRR',
-    'SB': 'SB',
-    'HA': 'H',
-    'ER': 'ER',
-    'OUTS': 'Outs',
-    'IP': 'IP',
-  };
-  return map[stat] || stat;
-}
-
-function analyzerWorkloadLabel(entry, series) {
-  const league = String(entry?.league || series?.league || '').toUpperCase();
-  if (league !== 'MLB') return 'Min';
-  const playerType = String(entry?.playerType || series?.playerType || '').toLowerCase();
-  const stat = String(entry?.stat || series?.stat || '').trim().toUpperCase();
-  if (playerType === 'pitcher') {
-    return stat === 'OUTS' ? 'Outs' : 'IP';
-  }
-  return 'AB';
-}
-
-
-function analyzerStatSelectLabel(stat, league) {
-  const code = String(stat || '').toUpperCase();
-  if (String(league || '').toUpperCase() === 'MLB' && code === 'HA') return 'H';
-  return code;
-}
-
-function aliasMlbStatForPlayer(entries, playerId, stat) {
-  const league = 'MLB';
-  const target = String(stat || '').toUpperCase();
-  if (String(league).toUpperCase() !== 'MLB' || !playerId) return target;
-  const playerStats = new Set((entries || [])
-    .filter(e => String(e.playerId) === String(playerId))
-    .map(e => String(e.stat || '').toUpperCase())
-    .filter(Boolean));
-  if (playerStats.has(target)) return target;
-  if (target === 'H' && playerStats.has('HA')) return 'HA';
-  if (target === 'HA' && playerStats.has('H')) return 'H';
-  return target;
-}
-
-function updateAnalyzerTableLabels(entry, series) {
-  const league = String(entry?.league || series?.league || '').toUpperCase();
-  const valueLabel = league === 'MLB' ? analyzerStatShortLabel(entry, series) : 'Value';
-  const workloadLabel = analyzerWorkloadLabel(entry, series);
-  byId('analyzer-games-col-4').textContent = valueLabel;
-  byId('analyzer-similar-col-4').textContent = valueLabel;
-  byId('analyzer-games-col-5').textContent = workloadLabel;
-  byId('analyzer-similar-col-5').textContent = workloadLabel;
-}
-
-function sampleValueSuffix(entry, series) {
-  const league = String(entry?.league || series?.league || '').toUpperCase();
-  if (league !== 'MLB') return 'min';
-  return analyzerWorkloadLabel(entry, series);
 }
 
 function updateHero(entry, series) {
@@ -348,7 +304,7 @@ function renderSummary(entry, series, view) {
   `).join('');
 }
 
-function renderTableRows(rootId, games, line, entry, series) {
+function renderTableRows(rootId, games, line) {
   const body = byId(rootId);
   if (!body) return;
   if (!(games || []).length) {
@@ -361,7 +317,6 @@ function renderTableRows(rootId, games, line, entry, series) {
     }
     return String(b.gameDate || '').localeCompare(String(a.gameDate || ''));
   }).slice(0, 12);
-  const workloadLabel = sampleValueSuffix(entry, series);
   body.innerHTML = rows.map(g => `
     <tr>
       <td>${escapeHtml(g.label || g.gameDate || '')}</td>
@@ -428,7 +383,7 @@ function renderChart(entry, series, view) {
     const cy = y(Number(g.value));
     return `<g>
       <circle cx="${cx}" cy="${cy}" r="5" fill="${simColor(g.simBin)}" stroke="#0b1220" stroke-width="1.5">
-        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` • ${fmt(g.minutes, 1)} ${sampleValueSuffix(entry, series)}` : ''} (${g.simBin || 'all'})`)}</title>
+        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` in ${fmt(g.minutes, 1)} min` : ''} (${g.simBin || 'all'})`)}</title>
       </circle>
       <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml(analyzerDisplayLabel(g))}</text>
     </g>`;
@@ -478,13 +433,10 @@ function findInitialState(data, league) {
     playerId = match?.playerId ? String(match.playerId) : '';
   }
   if (!playerId) playerId = entries[0]?.playerId ? String(entries[0].playerId) : '';
-  const requestedStat = (qs('stat') || '').toUpperCase();
-  const seededStat = requestedStat || (entries.find(e => String(e.playerId) === String(playerId))?.stat || '').toUpperCase();
-  const stat = String(league || '').toUpperCase() === 'MLB'
-    ? aliasMlbStatForPlayer(entries, playerId, seededStat)
-    : seededStat;
+  const requestedStat = normalizeStatToken(qs('stat') || '');
+  const stat = canonicalStatForSelection(entries, playerId, requestedStat || (entries.find(e => String(e.playerId) === String(playerId))?.stat || ''), league);
   const requestedLine = qs('line') || '';
-  const line = requestedLine || String(entries.find(e => String(e.playerId) === String(playerId) && String(e.stat).toUpperCase() === stat)?.line ?? '');
+  const line = requestedLine || String(entries.find(e => String(e.playerId) === String(playerId) && normalizeStatToken(e.stat) === stat)?.line ?? '');
   return { league: String(league || 'NBA').toUpperCase(), date: selectedDate, playerId, stat, line, query: '', player: qs('player') || '' };
 }
 
@@ -550,11 +502,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
   }
 
   function selectedEntry() {
-    let candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase());
-    if (!candidates.length && state.config.league === 'MLB' && ['H', 'HA'].includes(String(state.selection.stat).toUpperCase())) {
-      const fallbackStat = String(state.selection.stat).toUpperCase() === 'H' ? 'HA' : 'H';
-      candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === fallbackStat);
-    }
+    const stat = canonicalStatForSelection(currentEntries(), state.selection.playerId, state.selection.stat, state.config.league);
+    state.selection.stat = stat;
+    const candidates = currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId) && normalizeStatToken(e.stat) === stat);
     if (!candidates.length) return null;
     const exact = candidates.find(e => String(e.line) === String(state.selection.line));
     return exact || candidates.sort((a, b) => Number(a.line) - Number(b.line))[0];
@@ -569,7 +519,17 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const fallbackPath = entry?.gameDate && entry?.playerId && entry?.stat
       ? `${state.config.detailPrefix}/${entry.gameDate}/${entry.playerId}_${String(entry.stat).toLowerCase()}.json`
       : '';
-    const candidates = [relPath, relPath ? `./${relPath}` : '', fallbackPath].filter(Boolean);
+    const aliasStat = state.config.league === 'MLB' && normalizeStatToken(entry?.stat) === 'H' ? 'ha' : '';
+    const aliasFallbackPath = entry?.gameDate && entry?.playerId && aliasStat
+      ? `${state.config.detailPrefix}/${entry.gameDate}/${entry.playerId}_${aliasStat}.json`
+      : '';
+    const pitcherAliasFallbackPath = entry?.gameDate && entry?.playerId && state.config.league === 'MLB' && normalizeStatToken(entry?.stat) === 'HA'
+      ? `${state.config.detailPrefix}/${entry.gameDate}/pitcher_${entry.playerId}_ha.json`
+      : '';
+    const batterFallbackPath = entry?.gameDate && entry?.playerId && state.config.league === 'MLB' && normalizeStatToken(entry?.stat) === 'H'
+      ? `${state.config.detailPrefix}/${entry.gameDate}/${entry.playerId}_h.json`
+      : '';
+    const candidates = [relPath, relPath ? `./${relPath}` : '', fallbackPath, aliasFallbackPath, pitcherAliasFallbackPath, batterFallbackPath].filter(Boolean);
     const promise = (async () => {
       for (const path of candidates) {
         const payload = await loadJson(path, null);
@@ -627,17 +587,15 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     }
     populateSelect(playerSelect, players, item => String(item.playerId), item => item.player, state.selection.playerId);
 
-    const stats = [...new Set(currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId)).map(e => String(e.stat).toUpperCase()))].sort();
-    if (state.config.league === 'MLB') {
-      state.selection.stat = aliasMlbStatForPlayer(currentEntries(), state.selection.playerId, state.selection.stat);
-    }
-    if (!stats.includes(String(state.selection.stat).toUpperCase())) {
+    const stats = [...new Set(currentEntries().filter(e => String(e.playerId) === String(state.selection.playerId)).map(e => normalizeStatToken(e.stat)))].sort();
+    state.selection.stat = canonicalStatForSelection(currentEntries(), state.selection.playerId, state.selection.stat, state.config.league);
+    if (!stats.includes(state.selection.stat)) {
       state.selection.stat = stats[0] || '';
     }
-    populateSelect(statSelect, stats, item => item, item => analyzerStatSelectLabel(item, state.config.league), state.selection.stat);
+    populateSelect(statSelect, stats, item => item, item => item, state.selection.stat);
 
     const lineEntries = currentEntries()
-      .filter(e => String(e.playerId) === String(state.selection.playerId) && String(e.stat).toUpperCase() === String(state.selection.stat).toUpperCase())
+      .filter(e => String(e.playerId) === String(state.selection.playerId) && normalizeStatToken(e.stat) === state.selection.stat)
       .sort((a, b) => Number(a.line) - Number(b.line));
     if (!lineEntries.some(e => String(e.line) === String(state.selection.line))) {
       state.selection.line = lineEntries[0] ? String(lineEntries[0].line) : '';
@@ -653,14 +611,13 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     syncViewButtons(state.view);
     const entry = selectedEntry();
     updateHero(entry, null);
-    updateAnalyzerTableLabels(entry, null);
     if (!entry) {
       renderStatus(null, null);
       renderKpis(null, null, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], null, null, null);
-      renderTableRows('analyzer-similar-body', [], null, null, null);
+      renderTableRows('analyzer-games-body', [], null);
+      renderTableRows('analyzer-similar-body', [], null);
       updateUrl(null, state.selection, state.config.league);
       return;
     }
@@ -669,14 +626,13 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, null, state.view);
     renderChart(null, null, state.view);
     renderSummary(null, null, state.view);
-    renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
-    renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
+    renderTableRows('analyzer-games-body', [], entry?.line);
+    renderTableRows('analyzer-similar-body', [], entry?.line);
 
     const series = await selectedSeries(entry);
     if (token !== renderToken) return;
 
     updateHero(entry, series);
-    updateAnalyzerTableLabels(entry, series);
     renderStatus(entry, series);
     if (!series) {
       renderKpis(entry, {
@@ -690,8 +646,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       }, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
-      renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
+      renderTableRows('analyzer-games-body', [], entry?.line);
+      renderTableRows('analyzer-similar-body', [], entry?.line);
       updateUrl(entry, state.selection, state.config.league);
       return;
     }
@@ -699,8 +655,8 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, series, state.view);
     renderChart(entry, series, state.view);
     renderSummary(entry, series, state.view);
-    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line, entry, series);
-    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line, entry, series);
+    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line);
+    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line);
     updateUrl(entry, state.selection, state.config.league);
   }
 

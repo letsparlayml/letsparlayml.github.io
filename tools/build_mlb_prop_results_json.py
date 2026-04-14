@@ -4,8 +4,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -53,6 +54,152 @@ def load_json(path: Path, default: Any):
 def write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding='utf-8')
+
+
+def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date: str) -> list[dict[str, Any]]:
+    entries = payload.get('entries') or []
+
+    def choose_rows(stat: str, player_type: str = 'batter', limit: int = 10) -> list[dict[str, Any]]:
+        pool = [
+            e for e in entries
+            if clean_str(e.get('gameDate')) == clean_str(target_date)
+            and normalize_stat(e.get('stat')) == normalize_stat(stat)
+        ]
+        if player_type:
+            typed = [e for e in pool if clean_str(e.get('playerType')).lower() == clean_str(player_type).lower()]
+            base = typed if typed else pool
+        else:
+            base = pool
+
+        def sort_key(row: dict[str, Any]):
+            pred = safe_float(row.get('pred_anchor'))
+            if pred is None:
+                pred = safe_float(row.get('mu_cons')) or 0.0
+            prob = safe_float(row.get('prob_cons'))
+            prob = -1.0 if prob is None else prob
+            return (-prob, -pred, clean_str(row.get('player')))
+
+        seen: set[tuple[Any, ...]] = set()
+        chosen: list[dict[str, Any]] = []
+        for row in sorted(base, key=sort_key):
+            key = (clean_str(row.get('playerId') or row.get('player')), normalize_stat(row.get('stat')), safe_float(row.get('line')))
+            if key in seen:
+                continue
+            seen.add(key)
+            chosen.append(row)
+            if len(chosen) >= limit:
+                break
+        return chosen
+
+    board_specs = [
+        ('Best hits', 'H', 'batter', 10),
+        ('Best two-plus total bases', 'TB', 'batter', 10),
+    ]
+    rows: list[dict[str, Any]] = []
+    for board_title, stat, player_type, limit in board_specs:
+        for entry in choose_rows(stat, player_type=player_type, limit=limit):
+            team = clean_str(entry.get('team'))
+            opp = clean_str(entry.get('opp'))
+            prob = safe_float(entry.get('prob_cons'))
+            pred = safe_float(entry.get('pred_anchor'))
+            if pred is None:
+                pred = safe_float(entry.get('mu_cons'))
+            note = clean_str(entry.get('boardDriver') or entry.get('summary') or entry.get('driver_summary'))
+            if not note and team and opp and prob is not None:
+                note = f'{team} vs {opp} • {prob * 100:.0f}% to clear'
+            rows.append({
+                'date': clean_str(entry.get('gameDate')),
+                'league': 'MLB',
+                'player': clean_str(entry.get('player')),
+                'team': team,
+                'opp': opp,
+                'matchup': f'{team} vs {opp}'.strip(),
+                'stat': normalize_stat(entry.get('stat')),
+                'line': safe_float(entry.get('line')),
+                'model': pred,
+                'probability': prob,
+                'confidence': '',
+                'note': note,
+                'gameId': safe_int(entry.get('gameId')),
+                'board': board_title,
+            })
+    return rows
+
+
+def load_board_snapshot_rows(snapshot_path: Path, launch_date: str = '') -> list[dict[str, Any]]:
+    payload = load_json(snapshot_path, {})
+    if isinstance(payload, list):
+        rows = payload
+    else:
+        rows = payload.get('rows') or []
+    out = []
+    for row in rows:
+        date = clean_str(row.get('date') or row.get('gameDate'))
+        if launch_date and date and date < launch_date:
+            continue
+        out.append({
+            'date': date,
+            'league': 'MLB',
+            'player': clean_str(row.get('player')),
+            'team': clean_str(row.get('team')),
+            'opp': clean_str(row.get('opp') or row.get('opponent')),
+            'matchup': clean_str(row.get('matchup')) or f"{clean_str(row.get('team'))} vs {clean_str(row.get('opp') or row.get('opponent'))}".strip(),
+            'stat': normalize_stat(row.get('stat') or row.get('stat_display')),
+            'line': safe_float(row.get('line')),
+            'model': safe_float(row.get('modelPrediction') if 'modelPrediction' in row else row.get('model')),
+            'probability': safe_float(row.get('probability')),
+            'confidence': clean_str(row.get('confidence')),
+            'note': clean_str(row.get('note')),
+            'gameId': safe_int(row.get('gameId') or row.get('gamePk')),
+            'board': clean_str(row.get('board')),
+        })
+    return out
+
+
+def local_today_iso() -> str:
+    try:
+        return pd.Timestamp.now(tz=DISPLAY_TIMEZONE).date().isoformat()
+    except Exception:
+        return datetime.now(timezone.utc).date().isoformat()
+
+
+def date_range_inclusive(start_date: str, end_date: str) -> list[str]:
+    if not start_date or not end_date or start_date > end_date:
+        return []
+    start = datetime.fromisoformat(start_date).date()
+    end = datetime.fromisoformat(end_date).date()
+    dates: list[str] = []
+    cur = start
+    while cur <= end:
+        dates.append(cur.isoformat())
+        cur += timedelta(days=1)
+    return dates
+
+
+def load_git_board_rows(repo: Path, target_date: str) -> list[dict[str, Any]]:
+    if not target_date or not (repo / '.git').exists():
+        return []
+    try:
+        rev_list = subprocess.run(
+            ['git', 'rev-list', 'HEAD', '--', 'data/mlb_props_analyzer.json'],
+            cwd=repo, capture_output=True, text=True, check=True
+        )
+    except Exception:
+        return []
+    revisions = [line.strip() for line in rev_list.stdout.splitlines() if line.strip()]
+    for rev in revisions:
+        try:
+            shown = subprocess.run(
+                ['git', 'show', f'{rev}:data/mlb_props_analyzer.json'],
+                cwd=repo, capture_output=True, text=True, check=True
+            )
+            payload = json.loads(shown.stdout)
+        except Exception:
+            continue
+        if clean_str(payload.get('targetDate')) != clean_str(target_date):
+            continue
+        return board_source_rows_from_analyzer_payload(payload, target_date)
+    return []
 
 
 def load_table_latest(base_dir: Path, table: str) -> pd.DataFrame:
@@ -372,6 +519,7 @@ def main() -> int:
         return 0
 
     data_dir = args.website_repo / 'data'
+    repo = args.website_repo
     props_path = args.props_path or (data_dir / 'props.json')
     snapshot_path = data_dir / 'mlb_home_board_snapshot.json'
     pending_path = data_dir / 'mlb_prop_results_pending.json'
@@ -386,30 +534,18 @@ def main() -> int:
         print('[INFO] MLB prop results tracking is paused until data/mlb_results_launch_date.txt is set.')
         return 0
 
-    snapshot_payload = load_json(snapshot_path, {})
-    snapshot_rows = snapshot_payload.get('rows') if isinstance(snapshot_payload, dict) else []
-    current = []
-    if snapshot_rows:
-        for p in snapshot_rows:
-            game_date = clean_str(p.get('date') or p.get('gameDate'))
-            if launch_date and game_date and game_date < launch_date:
-                continue
-            current.append({
-                'date': game_date,
-                'league': 'MLB',
-                'player': clean_str(p.get('player')),
-                'team': clean_str(p.get('team')),
-                'opp': clean_str(p.get('opp') or p.get('opponent')),
-                'matchup': clean_str(p.get('matchup')) or f"{clean_str(p.get('team'))} vs {clean_str(p.get('opp') or p.get('opponent'))}".strip(),
-                'stat': clean_str(p.get('stat') or p.get('stat_display')),
-                'line': safe_float(p.get('line')),
-                'model': safe_float(p.get('modelPrediction') if 'modelPrediction' in p else p.get('model')),
-                'probability': safe_float(p.get('probability')),
-                'confidence': clean_str(p.get('confidence')),
-                'note': clean_str(p.get('note') or p.get('boardTitle')),
-                'gameId': safe_int(p.get('gameId') or p.get('gamePk')),
-            })
-    else:
+    history = load_json(history_path, [])
+    pending = load_json(pending_path, [])
+
+    yesterday = (datetime.fromisoformat(local_today_iso()).date() - timedelta(days=1)).isoformat()
+    pending = [
+        row for row in pending
+        if clean_str(row.get('date')) and clean_str(row.get('date')) >= launch_date and clean_str(row.get('date')) <= yesterday
+    ]
+
+    current = load_board_snapshot_rows(snapshot_path, launch_date)
+    source_label = str(snapshot_path)
+    if not current:
         all_props = load_json(props_path, [])
         for p in all_props:
             if clean_str(p.get('league')).upper() != 'MLB':
@@ -431,10 +567,23 @@ def main() -> int:
                 'confidence': clean_str(p.get('confidence')),
                 'note': clean_str(p.get('note')),
                 'gameId': safe_int(p.get('gameId') or p.get('gamePk')),
+                'board': clean_str(p.get('board')),
             })
+        source_label = str(props_path)
 
-    pending = load_json(pending_path, [])
-    history = load_json(history_path, [])
+    existing_counts: dict[str, int] = defaultdict(int)
+    for row in history + pending:
+        row_date = clean_str(row.get('date'))
+        if row_date:
+            existing_counts[row_date] += 1
+
+    git_backfill = []
+    for missing_date in date_range_inclusive(launch_date, yesterday):
+        if existing_counts.get(missing_date, 0) >= 20:
+            continue
+        git_backfill.extend(load_git_board_rows(repo, missing_date))
+
+    current = merge_unique(current, git_backfill)
     pending = merge_unique(pending, current)
 
     batter_df = prep_batter_logs(load_table_latest(args.mlb_data_dir, 'batter_game_logs'))
@@ -468,8 +617,9 @@ def main() -> int:
     write_json(pending_path, unresolved)
     write_json(summary_path, summarize(history))
 
-    source_label = snapshot_path if snapshot_rows else props_path
-    print(f'Loaded {len(current)} current MLB props from {source_label}')
+    print(f'Loaded {len(current)} tracked MLB board props from {source_label}')
+    if git_backfill:
+        print(f'Backfilled {len(git_backfill)} MLB board props from git history for prior dates.')
     print(f'Settled {len(settled_rows)} MLB props; {len(unresolved)} still pending')
     print(f'Wrote MLB prop history -> {history_path}')
     print(f'Wrote MLB prop pending queue -> {pending_path}')

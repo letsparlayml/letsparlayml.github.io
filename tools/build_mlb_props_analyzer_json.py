@@ -174,95 +174,6 @@ PITCHER_MARKETS = [
     },
 ]
 
-
-def _entry_num(entry: dict[str, Any], *keys: str) -> float:
-    for key in keys:
-        try:
-            value = float(entry.get(key))
-            if math.isfinite(value):
-                return value
-        except Exception:
-            continue
-    return float('-inf')
-
-
-def choose_home_board_rows(entries: list[dict[str, Any]], *, date: str, stat: str, player_type: str, limit: int = 10, unique_by_player: bool = False) -> list[dict[str, Any]]:
-    base = [
-        entry for entry in (entries or [])
-        if clean_str(entry.get('gameDate')) == clean_str(date)
-        and clean_str(entry.get('stat')).upper() == clean_str(stat).upper()
-        and clean_str(entry.get('playerType')).lower() == clean_str(player_type).lower()
-    ]
-
-    def sort_key(entry: dict[str, Any]):
-        if clean_str(player_type).lower() == 'pitcher':
-            return (
-                _entry_num(entry, 'pred_anchor', 'mu_cons'),
-                _entry_num(entry, 'avg_anchor'),
-                _entry_num(entry, 'prob_cons'),
-            )
-        return (
-            _entry_num(entry, 'prob_cons'),
-            _entry_num(entry, 'pred_anchor', 'mu_cons'),
-        )
-
-    ordered = sorted(base, key=sort_key, reverse=True)
-    picked: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    for entry in ordered:
-        if unique_by_player:
-            dedupe_key = f"{entry.get('playerId') or entry.get('player')}|{entry.get('stat')}"
-        else:
-            dedupe_key = f"{entry.get('playerId') or entry.get('player')}|{entry.get('stat')}|{entry.get('line')}"
-        if dedupe_key in seen:
-            continue
-        seen.add(dedupe_key)
-        picked.append(entry)
-        if len(picked) >= limit:
-            break
-    return picked
-
-
-def build_home_board_snapshot(payload: dict[str, Any]) -> dict[str, Any]:
-    entries = payload.get('entries') or []
-    target_date = clean_str(payload.get('targetDate'))
-    snapshot_rows: list[dict[str, Any]] = []
-
-    board_specs = [
-        ('best_hits', 'Best hits', {'date': target_date, 'stat': 'H', 'player_type': 'batter', 'limit': 10}),
-        ('best_two_plus_total_bases', 'Best two-plus total bases', {'date': target_date, 'stat': 'TB', 'player_type': 'batter', 'limit': 10}),
-    ]
-
-    for board_key, board_title, opts in board_specs:
-        for entry in choose_home_board_rows(entries, **opts):
-            snapshot_rows.append({
-                'source': 'mlb_home_board',
-                'boardKey': board_key,
-                'boardTitle': board_title,
-                'date': clean_str(entry.get('gameDate')),
-                'league': 'MLB',
-                'player': clean_str(entry.get('player')),
-                'playerId': safe_int(entry.get('playerId')),
-                'team': clean_str(entry.get('team')),
-                'opp': clean_str(entry.get('opp')),
-                'matchup': f"{clean_str(entry.get('team'))} vs {clean_str(entry.get('opp'))}".strip(),
-                'stat': clean_str(entry.get('stat')),
-                'stat_display': clean_str(entry.get('stat_display')),
-                'line': safe_float(entry.get('line')),
-                'model': safe_float(entry.get('pred_anchor') if entry.get('pred_anchor') is not None else entry.get('mu_cons')),
-                'probability': safe_float(entry.get('prob_cons')),
-                'confidence': 'High' if safe_float(entry.get('prob_cons')) is not None and safe_float(entry.get('prob_cons')) >= 0.70 else 'Medium' if safe_float(entry.get('prob_cons')) is not None and safe_float(entry.get('prob_cons')) >= 0.55 else 'Low',
-                'gameId': safe_int(entry.get('gameId')),
-            })
-
-    return {
-        'targetDate': target_date,
-        'generatedAt': payload.get('generatedAt'),
-        'rows': snapshot_rows,
-    }
-
-
-
 def clean_str(value: Any) -> str:
     if value is None:
         return ''
@@ -412,8 +323,7 @@ def prep_batter_logs(logs_df: pd.DataFrame) -> pd.DataFrame:
         df['isHome'] = None
         df['location'] = ''
     df['batting_order_clean'] = df.get('batting_order', pd.Series(index=df.index)).map(parse_batting_order)
-    df['atBats'] = pd.to_numeric(df.get('atBats'), errors='coerce')
-    df['plate_appearances'] = df['atBats'].fillna(0) + pd.to_numeric(df.get('baseOnBalls'), errors='coerce').fillna(0)
+    df['plate_appearances'] = pd.to_numeric(df.get('atBats'), errors='coerce').fillna(0) + pd.to_numeric(df.get('baseOnBalls'), errors='coerce').fillna(0)
     for col in ['hits','totalBases','doubles','homeRuns','strikeOuts','baseOnBalls','stolenBases','runs','R','rbi','RBI','runsBattedIn']:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -426,7 +336,7 @@ def prep_batter_logs(logs_df: pd.DataFrame) -> pd.DataFrame:
     if 'hrr' not in df.columns:
         df['hrr'] = pd.to_numeric(df.get('hits'), errors='coerce').fillna(0) + pd.to_numeric(df.get('runs'), errors='coerce').fillna(0) + pd.to_numeric(df.get('rbi'), errors='coerce').fillna(0)
     keep = ['gamePk','player_id','player_name','team','opponent','game_ts','gameDateLocal','isHome','location',
-            'batting_order_clean','atBats','plate_appearances','hits','totalBases','doubles','homeRuns','strikeOuts',
+            'batting_order_clean','plate_appearances','hits','totalBases','doubles','homeRuns','strikeOuts',
             'baseOnBalls','stolenBases','runs','rbi','hrr']
     keep = [c for c in keep if c in df.columns]
     return df[keep].sort_values(['player_id', 'game_ts']).reset_index(drop=True)
@@ -620,7 +530,7 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
     player_logs = batter_logs_lookup.get(player_id or -1, pd.DataFrame())
     games, similar_games = build_historical_games(
         player_logs, target_ts, market['value_col'], opp, location, max_games=max_games,
-        minutes_col='atBats', extra_context_col='batting_order_clean', projected_order=projected_order
+        minutes_col='plate_appearances', extra_context_col='batting_order_clean', projected_order=projected_order
     )
     history_mode = bool(games)
     avg_anchor = None
@@ -935,6 +845,96 @@ def series_detail_relpath(game_date: str, player_id: int | None, stat: str, play
         suffix = f'pitcher_{suffix}'
     return f'data/mlb_props_analyzer/{game_date}/{suffix}.json'
 
+
+def choose_home_board_rows(entries: list[dict[str, Any]], game_date: str, stat: str, player_type: str = 'batter', limit: int = 10) -> list[dict[str, Any]]:
+    pool = [
+        e for e in (entries or [])
+        if clean_str(e.get('gameDate')) == clean_str(game_date)
+        and clean_str(e.get('stat')).upper() == clean_str(stat).upper()
+    ]
+    if player_type:
+        typed = [e for e in pool if clean_str(e.get('playerType')).lower() == clean_str(player_type).lower()]
+        base = typed if typed else pool
+    else:
+        base = pool
+    if clean_str(player_type).lower() == 'pitcher':
+        filtered = []
+        for row in base:
+            player_name = clean_str(row.get('player')).lower()
+            if 'tbd' in player_name or 'to be determined' in player_name or 'probable starter tbd' in player_name:
+                continue
+            filtered.append(row)
+        base = filtered
+
+    def sort_key(row: dict[str, Any]):
+        pred = safe_float(row.get('pred_anchor'))
+        if pred is None:
+            pred = safe_float(row.get('mu_cons')) or 0.0
+        prob = safe_float(row.get('prob_cons'))
+        prob = -1.0 if prob is None else prob
+        if clean_str(player_type).lower() == 'pitcher':
+            return (-pred, -prob, clean_str(row.get('player')))
+        return (-prob, -pred, clean_str(row.get('player')))
+
+    seen: set[tuple[Any, ...]] = set()
+    chosen: list[dict[str, Any]] = []
+    for row in sorted(base, key=sort_key):
+        key = (clean_str(row.get('playerId') or row.get('player')), clean_str(row.get('stat')).upper(), safe_float(row.get('line')))
+        if key in seen:
+            continue
+        seen.add(key)
+        chosen.append(row)
+        if len(chosen) >= limit:
+            break
+    return chosen
+
+
+def board_snapshot_row(entry: dict[str, Any], board_title: str) -> dict[str, Any]:
+    team = clean_str(entry.get('team'))
+    opp = clean_str(entry.get('opp'))
+    prob = safe_float(entry.get('prob_cons'))
+    pred = safe_float(entry.get('pred_anchor'))
+    if pred is None:
+        pred = safe_float(entry.get('mu_cons'))
+    note = clean_str(entry.get('boardDriver') or entry.get('summary') or entry.get('driver_summary'))
+    if not note and team and opp and prob is not None:
+        note = f'{team} vs {opp} • {prob * 100:.0f}% to clear'
+    return {
+        'date': clean_str(entry.get('gameDate')),
+        'league': 'MLB',
+        'player': clean_str(entry.get('player')),
+        'team': team,
+        'opp': opp,
+        'matchup': f'{team} vs {opp}'.strip(),
+        'stat': clean_str(entry.get('stat')).upper(),
+        'stat_display': clean_str(entry.get('stat_display')),
+        'line': safe_float(entry.get('line')),
+        'model': pred,
+        'probability': prob,
+        'confidence': '',
+        'note': note,
+        'gameId': safe_int(entry.get('gameId')),
+        'board': board_title,
+    }
+
+
+def build_home_board_snapshot(entries: list[dict[str, Any]], target_date: str) -> dict[str, Any]:
+    if not target_date:
+        return {'targetDate': '', 'generatedAt': pd.Timestamp.now(tz=timezone.utc).isoformat(), 'rows': []}
+    rows: list[dict[str, Any]] = []
+    board_specs = [
+        ('Best hits', 'H', 'batter', 10),
+        ('Best two-plus total bases', 'TB', 'batter', 10),
+    ]
+    for board_title, stat, player_type, limit in board_specs:
+        for entry in choose_home_board_rows(entries, target_date, stat, player_type=player_type, limit=limit):
+            rows.append(board_snapshot_row(entry, board_title))
+    return {
+        'targetDate': target_date,
+        'generatedAt': pd.Timestamp.now(tz=timezone.utc).isoformat(),
+        'rows': rows,
+    }
+
 def main() -> int:
     args = parse_args()
     repo = args.website_repo
@@ -1035,11 +1035,11 @@ def main() -> int:
         'seriesIndex': series_index,
     }
     compact_write_json(data_dir / 'mlb_props_analyzer.json', payload)
-    home_snapshot = build_home_board_snapshot(payload)
-    compact_write_json(data_dir / 'mlb_home_board_snapshot.json', home_snapshot)
+    snapshot = build_home_board_snapshot(slim_entries, payload['targetDate'])
+    compact_write_json(data_dir / 'mlb_home_board_snapshot.json', snapshot)
     print(f'Wrote {len(slim_entries)} MLB props analyzer entries to {data_dir / "mlb_props_analyzer.json"}')
-    print(f'Wrote {len(home_snapshot.get("rows") or [])} MLB home-board tracker rows to {data_dir / "mlb_home_board_snapshot.json"}')
     print(f'Wrote {len(series_index)} split detail files under {detail_root}')
+    print(f'Wrote {len(snapshot.get("rows") or [])} MLB home-board snapshot rows to {data_dir / "mlb_home_board_snapshot.json"}')
     print(f'Historical series: {historical_count} | Snapshot fallback: {preview_count}')
     return 0
 
