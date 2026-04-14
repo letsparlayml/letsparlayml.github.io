@@ -922,6 +922,36 @@ function filterResultsForLaunch(rows, launchDate) {
   });
 }
 
+function latestResultDate(rows) {
+  return (rows || []).reduce((latest, row) => {
+    const date = String(row?.date || '');
+    return date && (!latest || date > latest) ? date : latest;
+  }, '');
+}
+
+function sortResultsRowsForDisplay(rows) {
+  const leagueOrder = ['NBA', 'NHL', 'CBB', 'MLB'];
+  return (rows || []).slice().sort((a, b) => {
+    const dateCmp = String(b?.date || '').localeCompare(String(a?.date || ''));
+    if (dateCmp) return dateCmp;
+    const leagueA = String(a?.league || '').toUpperCase();
+    const leagueB = String(b?.league || '').toUpperCase();
+    const leagueCmp = (leagueOrder.indexOf(leagueA) === -1 ? 999 : leagueOrder.indexOf(leagueA)) - (leagueOrder.indexOf(leagueB) === -1 ? 999 : leagueOrder.indexOf(leagueB));
+    if (leagueCmp) return leagueCmp;
+    return String(a?.matchup || '').localeCompare(String(b?.matchup || ''));
+  });
+}
+
+function selectResultsRowsForDisplay(resultsRows, historyRows, preferredDate = '') {
+  const displayDate = String(preferredDate || '').trim() || latestResultDate(historyRows) || latestResultDate(resultsRows);
+  const liveRows = sortResultsRowsForDisplay((resultsRows || []).filter(row => !displayDate || String(row?.date || '') === displayDate));
+  const historySlice = sortResultsRowsForDisplay((historyRows || []).filter(row => !displayDate || String(row?.date || '') === displayDate));
+  const liveLeagues = new Set(liveRows.map(row => String(row?.league || '').toUpperCase()).filter(Boolean));
+  const historyLeagues = new Set(historySlice.map(row => String(row?.league || '').toUpperCase()).filter(Boolean));
+  const shouldUseHistory = !liveRows.length || historySlice.length > liveRows.length || Array.from(historyLeagues).some(league => !liveLeagues.has(league));
+  return shouldUseHistory ? historySlice : liveRows;
+}
+
 function renderResults(results) {
   const body = byId('results-body');
   if (!body) return;
@@ -1212,7 +1242,10 @@ function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10 }
       return (Number(b?.pred_anchor ?? b?.mu_cons) || 0) - (Number(a?.pred_anchor ?? a?.mu_cons) || 0);
     })
     .forEach(item => {
-      const key = `${item.playerId || item.player}|${item.stat}|${item.line}`;
+      const pitcherMode = String(playerType).toLowerCase() === 'pitcher';
+      const key = pitcherMode
+        ? `${item.playerId || item.player}|${item.stat}`
+        : `${item.playerId || item.player}|${item.stat}|${item.line}`;
       if (seen.has(key)) return;
       seen.add(key);
       deduped.push(item);
@@ -1229,7 +1262,7 @@ function mlbBoardDisplayLine(row) {
   return '—';
 }
 
-function mlbBoardTable(title, rows, { showLine = true } = {}) {
+function mlbBoardTable(title, rows, { showLine = true, showAvg = false } = {}) {
   if (!rows.length) {
     return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No entries available yet.</div></article>`;
   }
@@ -1238,6 +1271,7 @@ function mlbBoardTable(title, rows, { showLine = true } = {}) {
       <td><a class="table-link" href="${propAnalyzerHref({ ...row, league: 'MLB', player: row.player, playerId: row.playerId, line: row.line, stat: row.stat })}">${escapeHtml(row.player || '')}</a></td>
       ${showLine ? `<td>${escapeHtml(mlbBoardDisplayLine(row))}</td>` : ''}
       <td>${escapeHtml(hasNumericValue(row.pred_anchor ?? row.mu_cons) ? fmt(row.pred_anchor ?? row.mu_cons, 1) : '—')}</td>
+      ${showAvg ? `<td>${escapeHtml(hasNumericValue(row.avg_anchor) ? fmt(row.avg_anchor, 1) : '—')}</td>` : ''}
       <td>${escapeHtml(Number.isFinite(Number(row.prob_cons)) ? `${(Number(row.prob_cons) * 100).toFixed(1)}%` : '—')}</td>
       <td>${escapeHtml(propMatchupText(row))}</td>
     </tr>
@@ -1247,7 +1281,7 @@ function mlbBoardTable(title, rows, { showLine = true } = {}) {
       <h4>${escapeHtml(title)}</h4>
       <div class="table-wrap compact-table-wrap">
         <table class="compact-table">
-          <thead><tr><th>Player</th>${showLine ? '<th>Line</th>' : ''}<th>Model</th><th>Prob.</th><th>Matchup</th></tr></thead>
+          <thead><tr><th>Player</th>${showLine ? '<th>Line</th>' : ''}<th>Model</th>${showAvg ? '<th>Avg</th>' : ''}<th>Prob.</th><th>Matchup</th></tr></thead>
           <tbody>${body}</tbody>
         </table>
       </div>
@@ -1261,7 +1295,8 @@ function renderMlbHomeBoards(mlbAnalyzer, meta) {
   const entries = mlbAnalyzer?.entries || [];
   root.innerHTML = [
     mlbBoardTable('Best hits', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'H', playerType: 'batter', limit: 10 })),
-    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 }))
+    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 })),
+    mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10 }), { showAvg: true })
   ].join('');
 }
 
@@ -1390,8 +1425,9 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     const filteredResults = filterResultsForLaunch(results, mlbResultsLaunchDate);
     const filteredHistory = filterResultsForLaunch(resultsHistory, mlbResultsLaunchDate);
     const effectiveSummary = recomputeResultsSummaryFromHistory(filteredHistory, resultsSummary);
+    const displayResults = selectResultsRowsForDisplay(filteredResults, filteredHistory, meta?.resultsDate || '');
     renderResultsSummary(effectiveSummary);
-    renderResults(filteredResults);
+    renderResults(displayResults);
     renderMlbPropResultsSummary(mlbPropSummary, mlbPropPending);
     renderMlbPropResults(mlbPropResults);
   } catch (err) {

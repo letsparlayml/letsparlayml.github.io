@@ -424,7 +424,15 @@ def main() -> int:
         new_rows.append(build_row(game, scraped))
 
     if not new_rows:
-        print('No new MLB result rows added.')
+        history = list(results_history)
+        if history:
+            latest_date = max((clean_str(row.get('date')) for row in history if clean_str(row.get('date'))), default='')
+            latest_rows = [row for row in history if clean_str(row.get('date')) == latest_date]
+            write_json(data_dir / 'results.json', latest_rows)
+            refresh_results_summary(data_dir, history)
+            print(f'No new MLB result rows added. Refreshed results.json from history for latest date: {latest_date}')
+        else:
+            print('No new MLB result rows added.')
         return 0
 
     history = results_history + new_rows

@@ -79,10 +79,11 @@ def normalize_game_numeric_id(value) -> str:
 def find_latest_file(patterns, roots):
     candidates = []
     for root in roots:
-        if not root or not Path(root).exists():
+        root_path = Path(root) if root else None
+        if not root_path or not root_path.exists():
             continue
         for pattern in patterns:
-            candidates.extend(Path(root).glob(pattern))
+            candidates.extend(root_path.rglob(pattern))
     candidates = [p for p in candidates if p.is_file()]
     if not candidates:
         return None
