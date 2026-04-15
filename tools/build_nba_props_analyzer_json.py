@@ -68,6 +68,31 @@ def clean_str(value) -> str:
     return text
 
 
+def coalesce_named_column(df: pd.DataFrame, target: str, candidates: list[str]) -> pd.DataFrame:
+    df = df.copy()
+    existing = [c for c in candidates if c in df.columns]
+    if not existing:
+        return df
+
+    if target not in df.columns:
+        df[target] = np.nan
+
+    out = df[target]
+    for c in existing:
+        s = df[c]
+        if s.dtype == object:
+            s = s.replace("", np.nan)
+        out = out.where(out.notna(), s)
+
+    df[target] = out
+
+    drop_cols = [c for c in existing if c != target]
+    if drop_cols:
+        df = df.drop(columns=drop_cols, errors="ignore")
+
+    return df
+
+
 def normalize_game_numeric_id(value) -> str:
     if value is None:
         return ""
@@ -451,6 +476,15 @@ def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, u
     xls = pd.ExcelFile(workbook_path)
     all_sheet = "all_candidates" if "all_candidates" in xls.sheet_names else xls.sheet_names[0]
     all_df = pd.read_excel(workbook_path, sheet_name=all_sheet)
+
+    # normalize workbook columns after upstream merges/ranker changes
+    all_df = coalesce_named_column(all_df, "PLAYER_NAME", ["PLAYER_NAME", "PLAYER_NAME_x", "PLAYER_NAME_y"])
+    all_df = coalesce_named_column(all_df, "PLAYER_ID", ["PLAYER_ID", "PLAYER_ID_x", "PLAYER_ID_y"])
+    all_df = coalesce_named_column(all_df, "GAME_ID", ["GAME_ID", "GAME_ID_x", "GAME_ID_y"])
+    all_df = coalesce_named_column(all_df, "GAME_DATE", ["GAME_DATE", "GAME_DATE_x", "GAME_DATE_y"])
+    all_df = coalesce_named_column(all_df, "TEAM_SIDE", ["TEAM_SIDE", "TEAM_SIDE_x", "TEAM_SIDE_y"])
+    all_df = coalesce_named_column(all_df, "IS_HOME", ["IS_HOME", "IS_HOME_x", "IS_HOME_y"])
+
     all_df = all_df.dropna(subset=["PLAYER_ID", "PLAYER_NAME", "stat", "line"]).copy()
     all_df["GAME_DATE"] = pd.to_datetime(all_df["GAME_DATE"], errors="coerce")
     all_df["__date"] = all_df["GAME_DATE"].map(iso_date)
