@@ -266,12 +266,25 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Results</p>
-          <h2>Previous-day results</h2>
-          <p class="muted">Graded for <span id="results-date-label"></span></p>
+          <h2>Results explorer</h2>
+          <p class="muted">Viewing <span id="results-date-label"></span>. Use the filters below to move day by day or search across all graded dates.</p>
         </div>
       </div>
 
       <div id="results-summary-grid" class="results-summary-grid"></div>
+
+      <div class="results-controls-grid">
+        <label>
+          Date
+          <select id="results-date-filter"></select>
+        </label>
+        <label>
+          Search
+          <input id="results-search-input" type="search" placeholder="Team, matchup, league, result" />
+        </label>
+      </div>
+      <p id="results-view-meta" class="muted results-view-meta">0 games shown</p>
+      <div id="results-view-summary-grid" class="results-summary-grid"></div>
 
       <div class="table-wrap">
         <table>
@@ -294,12 +307,29 @@
       <div class="section-heading" style="margin-top:1.2rem;">
         <div>
           <p class="eyebrow">MLB props</p>
-          <h3 class="subsection-title" style="margin-bottom:.2rem;">Settled prop results</h3>
-          <p class="muted">Latest settled date: <span id="mlb-prop-results-date-label">—</span> • Pending props: <span id="mlb-prop-results-pending-count">0</span></p>
+          <h3 class="subsection-title" style="margin-bottom:.2rem;">Settled prop results explorer</h3>
+          <p class="muted">Viewing <span id="mlb-prop-results-date-label">—</span> • Pending props: <span id="mlb-prop-results-pending-count">0</span></p>
         </div>
       </div>
 
       <div id="mlb-prop-results-summary-grid" class="results-summary-grid"></div>
+
+      <div class="results-controls-grid results-controls-grid-props">
+        <label>
+          Date
+          <select id="mlb-prop-results-date-filter"></select>
+        </label>
+        <label>
+          Stat
+          <select id="mlb-prop-results-stat-filter"></select>
+        </label>
+        <label>
+          Search
+          <input id="mlb-prop-results-search-input" type="search" placeholder="Player, team, matchup, board" />
+        </label>
+      </div>
+      <p id="mlb-prop-results-view-meta" class="muted results-view-meta">0 props shown</p>
+      <div id="mlb-prop-results-view-summary-grid" class="results-summary-grid"></div>
 
       <div class="table-wrap">
         <table>

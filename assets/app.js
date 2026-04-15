@@ -44,6 +44,47 @@ function setText(id, value) {
   if (el) el.textContent = value ?? '';
 }
 
+function normalizeSearchText(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function uniqueSortedDates(rows) {
+  return Array.from(new Set((rows || []).map(row => String(row?.date || '').trim()).filter(Boolean)))
+    .sort((a, b) => b.localeCompare(a));
+}
+
+function dedupeRowsByKey(rows, keyFn) {
+  const seen = new Map();
+  (rows || []).forEach(row => {
+    const key = keyFn(row);
+    if (key) seen.set(key, row);
+  });
+  return Array.from(seen.values());
+}
+
+function populateDateSelect(select, dates, preferredDate = '', allLabel = 'All dates') {
+  if (!select) return;
+  const wanted = String(preferredDate || '').trim();
+  const options = ['__ALL__', ...dates];
+  select.innerHTML = options.map(value => {
+    const label = value === '__ALL__' ? allLabel : value;
+    return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+  }).join('');
+  if (wanted && options.includes(wanted)) select.value = wanted;
+  else select.value = dates[0] || '__ALL__';
+}
+
+function filterRowsByDate(rows, selectedDate) {
+  const wanted = String(selectedDate || '').trim();
+  if (!wanted || wanted === '__ALL__') return (rows || []).slice();
+  return (rows || []).filter(row => String(row?.date || '') === wanted);
+}
+
+function currentDateLabel(selectedDate, fallbackLabel = 'All dates') {
+  const wanted = String(selectedDate || '').trim();
+  return wanted && wanted !== '__ALL__' ? wanted : fallbackLabel;
+}
+
 function isNbaGame(game) {
   return String(game?.league || '').toUpperCase() === 'NBA';
 }
@@ -917,7 +958,7 @@ function sortResultsRows(rows) {
   return (rows || []).slice().sort((a, b) => {
     const aKey = `${String(a?.date || '')}|${String(a?.league || '')}|${String(a?.matchup || '')}`;
     const bKey = `${String(b?.date || '')}|${String(b?.league || '')}|${String(b?.matchup || '')}`;
-    return aKey.localeCompare(bKey);
+    return bKey.localeCompare(aKey);
   });
 }
 
@@ -946,18 +987,108 @@ function selectDisplayResultsRows(resultsRows, historyRows, preferredDate = '') 
 function renderResults(results) {
   const body = byId('results-body');
   if (!body) return;
-  body.innerHTML = (results || []).map(r => `
+  const items = Array.isArray(results) ? results : [];
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="8">No game results match this view yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = items.map(r => `
     <tr>
       <td>${escapeHtml(r.date || '')}</td>
       <td>${escapeHtml(r.league || '')}</td>
       <td>${escapeHtml(r.matchup || '')}</td>
-      <td>${escapeHtml(r.predicted || r.pick || '')}</td>
+      <td>${escapeHtml(r.predicted || '')}</td>
       <td>${escapeHtml(r.actual || '')}</td>
-      <td><span class="result-badge ${resultBadgeClass(r.mlResult || r.status)}">${escapeHtml(r.mlResult || r.status || 'N/A')}</span></td>
-      <td>${formatSpreadResultCell(r)}</td>
-      <td>${formatTotalResultCell(r)}</td>
+      <td><span class="result-badge ${resultBadgeClass(r.mlResult)}">${escapeHtml(r.mlResult || '')}</span></td>
+      <td><span class="result-badge ${resultBadgeClass(r.spreadResult)}">${escapeHtml(r.spreadResult || '')}</span></td>
+      <td><span class="result-badge ${resultBadgeClass(r.totalResult)}">${escapeHtml(r.totalResult || '')}</span></td>
     </tr>
   `).join('');
+}
+
+function resultRowSearchText(row) {
+  return normalizeSearchText([
+    row?.date,
+    row?.league,
+    row?.matchup,
+    row?.predicted,
+    row?.actual,
+    row?.mlResult,
+    row?.spreadResult,
+    row?.totalResult,
+  ].join(' '));
+}
+
+function renderResultsViewSummary(rows, context = {}) {
+  const root = byId('results-view-summary-grid');
+  if (!root) return;
+  const dateLabel = context?.dateLabel || 'All dates';
+  const query = String(context?.query || '').trim();
+  if (!rows.length) {
+    root.innerHTML = `<div class="empty-state">No game results match ${escapeHtml(dateLabel)}${query ? ` with search "${escapeHtml(query)}"` : ''}.</div>`;
+    return;
+  }
+
+  const byLeague = {};
+  Array.from(new Set(rows.map(r => String(r?.league || '')).filter(Boolean))).sort().forEach(league => {
+    byLeague[league] = summarizeRows(rows.filter(r => String(r?.league || '') === league));
+  });
+  const leagueOrder = ['NBA', 'MLB', 'NHL', 'CBB'];
+  const leagues = [...leagueOrder.filter(league => byLeague[league]), ...Object.keys(byLeague).filter(league => !leagueOrder.includes(league)).sort()];
+  const searchLine = query ? `Search: ${escapeHtml(query)}` : 'Search: none';
+
+  root.innerHTML = `
+    <article class="summary-card">
+      <div class="summary-card-head">
+        <div>
+          <span class="summary-kicker">Current game-results view</span>
+          <h3>${escapeHtml(dateLabel)}</h3>
+        </div>
+        <span class="summary-rows">${escapeHtml(String(rows.length))} games</span>
+      </div>
+      <p class="muted summary-inline-note">${searchLine}</p>
+      <div class="sport-breakdown-grid">
+        ${sportSummaryBlockHtml('Overall', summarizeRows(rows), true)}
+        ${leagues.map(league => sportSummaryBlockHtml(league, byLeague[league])).join('')}
+      </div>
+    </article>
+  `;
+}
+
+function setupResultsExplorer(resultsRows, historyRows, preferredDate = '') {
+  const dateSelect = byId('results-date-filter');
+  const searchInput = byId('results-search-input');
+  const metaNode = byId('results-view-meta');
+  const sourceRows = dedupeRowsByKey([...(historyRows || []), ...(resultsRows || [])], row => `${row?.date || ''}|${row?.league || ''}|${row?.matchup || ''}`);
+  const sortedRows = sortResultsRows(sourceRows);
+  const dates = uniqueSortedDates(sortedRows);
+  populateDateSelect(dateSelect, dates, preferredDate, 'All graded dates');
+
+  const rerender = () => {
+    const selectedDate = dateSelect?.value || dates[0] || '__ALL__';
+    const query = normalizeSearchText(searchInput?.value || '');
+    const dateLabel = currentDateLabel(selectedDate, 'All graded dates');
+    const visibleRows = sortResultsRows(
+      filterRowsByDate(sortedRows, selectedDate).filter(row => !query || resultRowSearchText(row).includes(query))
+    );
+
+    setText('results-date-label', dateLabel);
+    if (metaNode) {
+      metaNode.textContent = `${visibleRows.length} game${visibleRows.length === 1 ? '' : 's'} shown`;
+    }
+    renderResultsViewSummary(visibleRows, { dateLabel, query: searchInput?.value || '' });
+    renderResults(visibleRows);
+  };
+
+  if (dateSelect && !dateSelect.dataset.bound) {
+    dateSelect.addEventListener('change', rerender);
+    dateSelect.dataset.bound = '1';
+  }
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.addEventListener('input', rerender);
+    searchInput.dataset.bound = '1';
+  }
+  rerender();
 }
 
 function summaryMetricParts(metric) {
@@ -1114,9 +1245,11 @@ function renderMlbPropResultsSummary(summary, pending) {
 function renderMlbPropResults(rows) {
   const body = byId('mlb-prop-results-body');
   if (!body) return;
-  const items = Array.isArray(rows) ? rows.slice().sort((a, b) => `${b.date || ''}|${b.player || ''}`.localeCompare(`${a.date || ''}|${a.player || ''}`)).slice(0, 40) : [];
+  const items = Array.isArray(rows)
+    ? rows.slice().sort((a, b) => `${b.date || ''}|${b.player || ''}|${b.stat || ''}`.localeCompare(`${a.date || ''}|${a.player || ''}|${a.stat || ''}`))
+    : [];
   if (!items.length) {
-    body.innerHTML = '<tr><td colspan="8">No settled MLB prop results yet.</td></tr>';
+    body.innerHTML = '<tr><td colspan="8">No settled MLB prop results match this view yet.</td></tr>';
     return;
   }
   body.innerHTML = items.map(r => `
@@ -1131,6 +1264,186 @@ function renderMlbPropResults(rows) {
       <td><span class="result-badge ${resultBadgeClass(r.result)}">${escapeHtml(r.result || 'Pending')}</span></td>
     </tr>
   `).join('');
+}
+
+function summarizePropResultRows(rows) {
+  let wins = 0, losses = 0, pushes = 0;
+  (rows || []).forEach(row => {
+    const label = normalizeResultOutcome(row?.result);
+    if (label === 'Win') wins += 1;
+    else if (label === 'Loss') losses += 1;
+    else if (label === 'Push') pushes += 1;
+  });
+  const settled = (rows || []).length;
+  const decisionCount = wins + losses + pushes;
+  return {
+    wins, losses, pushes, settled, decisionCount,
+    winRate: wins + losses ? Number((wins / (wins + losses)).toFixed(4)) : null,
+  };
+}
+
+function propResultSearchText(row) {
+  return normalizeSearchText([
+    row?.date,
+    row?.player,
+    row?.team,
+    row?.opp,
+    row?.matchup,
+    row?.stat,
+    propStatDisplay(row?.stat),
+    row?.board,
+    row?.note,
+    row?.result,
+    row?.role,
+  ].join(' '));
+}
+
+function renderMlbPropResultsViewSummary(rows, context = {}) {
+  const root = byId('mlb-prop-results-view-summary-grid');
+  if (!root) return;
+  const dateLabel = context?.dateLabel || 'All settled dates';
+  const query = String(context?.query || '').trim();
+  const statLabel = String(context?.statLabel || '').trim();
+
+  if (!rows.length) {
+    const parts = [dateLabel];
+    if (query) parts.push(`search "${query}"`);
+    if (statLabel) parts.push(statLabel);
+    root.innerHTML = `<div class="empty-state">No settled MLB props match ${escapeHtml(parts.join(' • '))}.</div>`;
+    return;
+  }
+
+  const overall = summarizePropResultRows(rows);
+  const overallParts = summaryMetricParts({
+    wins: overall.wins,
+    losses: overall.losses,
+    pushes: overall.pushes,
+    graded: overall.decisionCount,
+    winPct: overall.winRate != null ? Number(overall.winRate) * 100 : null,
+  });
+
+  const byStat = {};
+  Array.from(new Set(rows.map(r => String(r?.stat || '').toUpperCase()).filter(Boolean))).sort().forEach(stat => {
+    byStat[stat] = summarizePropResultRows(rows.filter(r => String(r?.stat || '').toUpperCase() === stat));
+  });
+
+  const orderedStats = ['H','TB','HR','HRR','K','BB','RBI','R','SB','OUTS','IP','HA','ER'];
+  const stats = [...orderedStats.filter(stat => byStat[stat]), ...Object.keys(byStat).filter(stat => !orderedStats.includes(stat)).sort()].slice(0, 6);
+
+  const notes = [];
+  if (query) notes.push(`Search: ${escapeHtml(query)}`);
+  if (statLabel) notes.push(`Stat: ${escapeHtml(statLabel)}`);
+  if (!notes.length) notes.push('Search: none');
+
+  root.innerHTML = `
+    <article class="summary-card">
+      <div class="summary-card-head">
+        <div>
+          <span class="summary-kicker">Current MLB prop-results view</span>
+          <h3>${escapeHtml(dateLabel)}</h3>
+        </div>
+        <span class="summary-rows">${escapeHtml(String(rows.length))} props</span>
+      </div>
+      <p class="muted summary-inline-note">${notes.join(' • ')}</p>
+      <div class="sport-breakdown-grid">
+        <section class="sport-summary sport-summary-overall">
+          <div class="sport-summary-head"><h4>Overall</h4></div>
+          <div class="sport-summary-metrics">
+            <div class="sport-metric-chip"><span>Record</span><strong>${escapeHtml(overallParts.record)}</strong><small>${escapeHtml(overallParts.pctText)}</small></div>
+            <div class="sport-metric-chip"><span>Settled</span><strong>${escapeHtml(String(overall.settled || 0))}</strong><small>Rows</small></div>
+            <div class="sport-metric-chip"><span>Decisions</span><strong>${escapeHtml(String(overall.decisionCount || 0))}</strong><small>Win/Loss only</small></div>
+          </div>
+        </section>
+        ${stats.map(stat => {
+          const row = byStat[stat] || {};
+          const parts = summaryMetricParts({
+            wins: row.wins,
+            losses: row.losses,
+            pushes: row.pushes,
+            graded: row.decisionCount,
+            winPct: row.winRate != null ? Number(row.winRate) * 100 : null,
+          });
+          return `
+            <section class="sport-summary">
+              <div class="sport-summary-head"><h4>${escapeHtml(propStatDisplay(stat))}</h4></div>
+              <div class="sport-summary-metrics">
+                <div class="sport-metric-chip"><span>Record</span><strong>${escapeHtml(parts.record)}</strong><small>${escapeHtml(parts.pctText)}</small></div>
+                <div class="sport-metric-chip"><span>Settled</span><strong>${escapeHtml(String(row.settled || 0))}</strong><small>Rows</small></div>
+                <div class="sport-metric-chip"><span>Decisions</span><strong>${escapeHtml(String(row.decisionCount || 0))}</strong><small>Win/Loss only</small></div>
+              </div>
+            </section>
+          `;
+        }).join('')}
+      </div>
+    </article>
+  `;
+}
+
+function setupMlbPropResultsExplorer(rows, summary, pending) {
+  const dateSelect = byId('mlb-prop-results-date-filter');
+  const statSelect = byId('mlb-prop-results-stat-filter');
+  const searchInput = byId('mlb-prop-results-search-input');
+  const metaNode = byId('mlb-prop-results-view-meta');
+
+  const sortedRows = Array.isArray(rows)
+    ? rows.slice().sort((a, b) => `${b.date || ''}|${b.player || ''}|${b.stat || ''}`.localeCompare(`${a.date || ''}|${a.player || ''}|${a.stat || ''}`))
+    : [];
+
+  const dates = uniqueSortedDates(sortedRows);
+  const preferredDate = summary?.latestSettledDate || dates[0] || '';
+  populateDateSelect(dateSelect, dates, preferredDate, 'All settled dates');
+
+  if (statSelect) {
+    const stats = Array.from(new Set(sortedRows.map(row => String(row?.stat || '').toUpperCase()).filter(Boolean)))
+      .sort((a, b) => propStatDisplay(a).localeCompare(propStatDisplay(b)));
+    statSelect.innerHTML = [
+      '<option value="">All stats</option>',
+      ...stats.map(stat => `<option value="${escapeHtml(stat)}">${escapeHtml(propStatDisplay(stat))}</option>`)
+    ].join('');
+  }
+
+  const rerender = () => {
+    const selectedDate = dateSelect?.value || preferredDate || '__ALL__';
+    const selectedStat = String(statSelect?.value || '').toUpperCase().trim();
+    const query = normalizeSearchText(searchInput?.value || '');
+    const dateLabel = currentDateLabel(selectedDate, 'All settled dates');
+
+    const visibleRows = filterRowsByDate(sortedRows, selectedDate).filter(row => {
+      if (selectedStat && String(row?.stat || '').toUpperCase() !== selectedStat) return false;
+      if (query && !propResultSearchText(row).includes(query)) return false;
+      return true;
+    });
+
+    const statLabel = selectedStat ? propStatDisplay(selectedStat) : '';
+    setText('mlb-prop-results-date-label', dateLabel);
+
+    const pendingNode = byId('mlb-prop-results-pending-count');
+    if (pendingNode) pendingNode.textContent = String(Array.isArray(pending) ? pending.length : 0);
+
+    if (metaNode) metaNode.textContent = `${visibleRows.length} prop${visibleRows.length === 1 ? '' : 's'} shown`;
+
+    renderMlbPropResultsViewSummary(visibleRows, {
+      dateLabel,
+      query: searchInput?.value || '',
+      statLabel
+    });
+    renderMlbPropResults(visibleRows);
+  };
+
+  if (dateSelect && !dateSelect.dataset.bound) {
+    dateSelect.addEventListener('change', rerender);
+    dateSelect.dataset.bound = '1';
+  }
+  if (statSelect && !statSelect.dataset.bound) {
+    statSelect.addEventListener('change', rerender);
+    statSelect.dataset.bound = '1';
+  }
+  if (searchInput && !searchInput.dataset.bound) {
+    searchInput.addEventListener('input', rerender);
+    searchInput.dataset.bound = '1';
+  }
+
+  rerender();
 }
 
 function propInsightCard(prop) {
@@ -1425,11 +1738,12 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     const filteredResults = filterResultsForLaunch(results, mlbResultsLaunchDate);
     const filteredHistory = filterResultsForLaunch(resultsHistory, mlbResultsLaunchDate);
     const effectiveSummary = recomputeResultsSummaryFromHistory(filteredHistory, resultsSummary);
-    const displayResults = selectDisplayResultsRows(filteredResults, filteredHistory, meta?.resultsDate || '');
+
     renderResultsSummary(effectiveSummary);
-    renderResults(displayResults);
+    setupResultsExplorer(filteredResults, filteredHistory, meta?.resultsDate || '');
+
     renderMlbPropResultsSummary(mlbPropSummary, mlbPropPending);
-    renderMlbPropResults(mlbPropResults);
+    setupMlbPropResultsExplorer(mlbPropResults, mlbPropSummary, mlbPropPending);
   } catch (err) {
     console.error(err);
     if (root) root.innerHTML = `<div class="empty-state">Failed to load site data: ${escapeHtml(err.message || err)}</div>`;
