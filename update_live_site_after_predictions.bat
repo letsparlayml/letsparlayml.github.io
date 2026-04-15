@@ -36,6 +36,19 @@ if exist "%REPO%\data\nba_injuries.xlsx" (
 )
 if errorlevel 1 goto :fail
 echo.
+set "MLB_SCRAPER="
+if exist "%ROOT%\mlb_master_scraper_fixed_v3.py" set "MLB_SCRAPER=%ROOT%\mlb_master_scraper_fixed_v3.py"
+if not defined MLB_SCRAPER if exist "%ROOT%\mlb_master_scraper.py" set "MLB_SCRAPER=%ROOT%\mlb_master_scraper.py"
+if not defined MLB_SCRAPER (
+  echo ERROR: MLB scraper not found in %ROOT%
+  exit /b 1
+)
+echo.
+echo [1.5/12] Refresh MLB latest player logs for results/analyzer...
+for /f %%I in ('powershell -NoProfile -Command "(Get-Date).AddDays(-2).ToString(\"yyyy-MM-dd\")"') do set "MLB_REFRESH_START=%%I"
+for /f %%I in ('powershell -NoProfile -Command "(Get-Date).ToString(\"yyyy-MM-dd\")"') do set "MLB_REFRESH_END=%%I"
+"%PY%" "%MLB_SCRAPER%" --start "%MLB_REFRESH_START%" --end "%MLB_REFRESH_END%" --out "%ROOT%\mlb_data" --latest-only --no-weather --no-statcast --no-leaderboards
+if errorlevel 1 goto :fail
 echo [2/12] Settle MLB game results from prior board...
 "%PY%" "%TOOLS%\build_mlb_results_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --enable --allow-statsapi-fallback --allow-missing-lines
 if errorlevel 1 goto :fail
