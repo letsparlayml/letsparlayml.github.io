@@ -22,7 +22,15 @@ def clean_str(value: Any) -> str:
     if value is None:
         return ''
     text = str(value).strip()
-    return '' if text.lower() == 'nan' else text
+    if text.lower() == 'nan':
+        return ''
+    try:
+        repaired = text.encode('latin1').decode('utf-8')
+        if repaired:
+            text = repaired
+    except Exception:
+        pass
+    return text
 
 
 def safe_float(value: Any) -> float | None:
@@ -339,7 +347,7 @@ def pick_game_row(prop: dict[str, Any], games_df: pd.DataFrame) -> dict[str, Any
         hit = games_df.loc[games_df['gamePk'].eq(game_pk)]
         if not hit.empty:
             return hit.iloc[-1].to_dict()
-    game_date = clean_str(prop.get('gameDate'))
+    game_date = clean_str(prop.get('gameDate') or prop.get('date'))
     team = clean_str(prop.get('team'))
     opp = clean_str(prop.get('opp') or prop.get('opponent'))
     if not game_date or not team or not opp:
@@ -378,7 +386,7 @@ def resolve_player_row(prop: dict[str, Any], batter_df: pd.DataFrame, pitcher_df
     player_norm = normalize_name(prop.get('player'))
     team = clean_str(prop.get('team'))
     opp = clean_str(prop.get('opp') or prop.get('opponent'))
-    game_date = clean_str(prop.get('gameDate'))
+    game_date = clean_str(prop.get('gameDate') or prop.get('date'))
     game_pk = safe_int(prop.get('gameId') or prop.get('gamePk'))
     stat = normalize_stat(prop.get('stat') or prop.get('stat_display'))
 

@@ -76,6 +76,9 @@ echo [11/12] Build MLB props analyzer JSON...
 "%PY%" "%TOOLS%\build_mlb_props_analyzer_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --mlb-output-dir "%MLB_OUT%"
 if errorlevel 1 goto :fail
 echo.
+echo [11.5/12] Re-settle MLB prop results after MLB refresh...
+"%PY%" "%TOOLS%\build_mlb_prop_results_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --enable
+if errorlevel 1 goto :fail
 echo [12/12] Refresh results rollup again after MLB board write...
 "%PY%" "%ROLLUP_SCRIPT%" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
