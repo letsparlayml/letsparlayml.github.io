@@ -314,8 +314,6 @@ def prepare_series(
     if df_all.empty:
         raise ValueError(f"No historical games with minutes for {player_name} {stat}")
 
-    # Keep all relevant season types by default. If caller still passes "Regular_Season",
-    # do not throw away play-in / playoff rows when they exist for this player.
     if "SEASON_TYPE" in df_all.columns:
         requested_types = _normalize_types(season_type)
         available_types = _normalize_types(df_all["SEASON_TYPE"].astype(str).tolist())
@@ -340,14 +338,17 @@ def prepare_series(
                 df_all = df_filtered
 
     if analyzer.col_game_date and analyzer.col_game_date in df_all.columns and df_all[analyzer.col_game_date].notna().any():
-        df_all[analyzer.col_game_date] = module._coerce_date(df_all[analyzer.col_game_date])
+        df_all[analyzer.col_game_date] = pd.to_datetime(
+            module._coerce_date(df_all[analyzer.col_game_date]),
+            errors="coerce"
+        ).dt.normalize()
 
-        cutoff_date = pd.to_datetime(series_game_date, errors="coerce")
-        if pd.notna(cutoff_date):
-            cutoff_date = cutoff_date.date()
+        cutoff_ts = pd.to_datetime(series_game_date, errors="coerce")
+        if pd.notna(cutoff_ts):
+            cutoff_ts = pd.Timestamp(cutoff_ts).normalize()
             df_all = df_all[
                 df_all[analyzer.col_game_date].isna()
-                | (df_all[analyzer.col_game_date] <= cutoff_date)
+                | (df_all[analyzer.col_game_date] <= cutoff_ts)
             ].copy()
 
         df_all = df_all.sort_values(analyzer.col_game_date, na_position="first").copy()
@@ -513,7 +514,6 @@ def prepare_series(
         "similarGames": build_game_logs(similar_block if similar_block is not None else pd.DataFrame(), stat_col, analyzer, module),
     }
     return series_payload, up_row
-
 
 def entry_from_row(row: pd.Series, games_map: dict[str, dict], series_key: str) -> dict[str, Any]:
     team, opp, location = derive_team_context(row, games_map)
