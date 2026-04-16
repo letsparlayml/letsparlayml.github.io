@@ -67,7 +67,7 @@ def write_json(path: Path, payload: Any) -> None:
 def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date: str) -> list[dict[str, Any]]:
     entries = payload.get('entries') or []
 
-    def choose_rows(stat: str, player_type: str = 'batter', limit: int = 10) -> list[dict[str, Any]]:
+    def choose_rows(stat: str, player_type: str = 'batter', limit: int = 10, unique_by_player: bool = False) -> list[dict[str, Any]]:
         pool = [
             e for e in entries
             if clean_str(e.get('gameDate')) == clean_str(target_date)
@@ -79,18 +79,30 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
         else:
             base = pool
 
+        if clean_str(player_type).lower() == 'pitcher':
+            base = [
+                e for e in base
+                if not __import__('re').search(r'(^|\b)(tbd|to be determined|probable starter tbd)(\b|$)', clean_str(e.get('player')), __import__('re').I)
+            ]
+
         def sort_key(row: dict[str, Any]):
             pred = safe_float(row.get('pred_anchor'))
             if pred is None:
                 pred = safe_float(row.get('mu_cons')) or 0.0
+            avg = safe_float(row.get('avg_anchor')) or 0.0
             prob = safe_float(row.get('prob_cons'))
             prob = -1.0 if prob is None else prob
+            if clean_str(player_type).lower() == 'pitcher':
+                return (-pred, -avg, -prob, clean_str(row.get('player')))
             return (-prob, -pred, clean_str(row.get('player')))
 
         seen: set[tuple[Any, ...]] = set()
         chosen: list[dict[str, Any]] = []
         for row in sorted(base, key=sort_key):
-            key = (clean_str(row.get('playerId') or row.get('player')), normalize_stat(row.get('stat')), safe_float(row.get('line')))
+            if unique_by_player:
+                key = (clean_str(row.get('playerId') or row.get('player')), normalize_stat(row.get('stat')))
+            else:
+                key = (clean_str(row.get('playerId') or row.get('player')), normalize_stat(row.get('stat')), safe_float(row.get('line')))
             if key in seen:
                 continue
             seen.add(key)
@@ -100,12 +112,13 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
         return chosen
 
     board_specs = [
-        ('Best hits', 'H', 'batter', 10),
-        ('Best two-plus total bases', 'TB', 'batter', 10),
+        ('Best hits', 'H', 'batter', 10, False),
+        ('Best two-plus total bases', 'TB', 'batter', 10, False),
+        ('Top pitcher strikeouts', 'K', 'pitcher', 10, True),
     ]
     rows: list[dict[str, Any]] = []
-    for board_title, stat, player_type, limit in board_specs:
-        for entry in choose_rows(stat, player_type=player_type, limit=limit):
+    for board_title, stat, player_type, limit, unique_by_player in board_specs:
+        for entry in choose_rows(stat, player_type=player_type, limit=limit, unique_by_player=unique_by_player):
             team = clean_str(entry.get('team'))
             opp = clean_str(entry.get('opp'))
             prob = safe_float(entry.get('prob_cons'))
@@ -530,6 +543,7 @@ def main() -> int:
     repo = args.website_repo
     props_path = args.props_path or (data_dir / 'props.json')
     snapshot_path = data_dir / 'mlb_home_board_snapshot.json'
+    analyzer_path = data_dir / 'mlb_props_analyzer.json'
     pending_path = data_dir / 'mlb_prop_results_pending.json'
     history_path = data_dir / 'mlb_prop_results_history.json'
     summary_path = data_dir / 'mlb_prop_results_summary.json'
@@ -552,6 +566,10 @@ def main() -> int:
     ]
 
     current = load_board_snapshot_rows(snapshot_path, launch_date)
+    analyzer_payload = load_json(analyzer_path, {})
+    analyzer_target_date = clean_str(analyzer_payload.get('targetDate')) if isinstance(analyzer_payload, dict) else ''
+    if analyzer_target_date and (not launch_date or analyzer_target_date >= launch_date):
+        current = merge_unique(current, board_source_rows_from_analyzer_payload(analyzer_payload, analyzer_target_date))
     source_label = str(snapshot_path)
     if not current:
         all_props = load_json(props_path, [])
@@ -587,7 +605,7 @@ def main() -> int:
 
     git_backfill = []
     for missing_date in date_range_inclusive(launch_date, yesterday):
-        if existing_counts.get(missing_date, 0) >= 20:
+        if existing_counts.get(missing_date, 0) >= 30:
             continue
         git_backfill.extend(load_git_board_rows(repo, missing_date))
 
