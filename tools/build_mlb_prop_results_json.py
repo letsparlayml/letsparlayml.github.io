@@ -19,8 +19,7 @@ FINAL_MARKERS = ('final', 'game over', 'completed early')
 PITCHER_ONLY_STATS = {'OUTS', 'IP', 'HA', 'ER'}
 
 def is_pitcher_board(board: Any) -> bool:
-    text = clean_str(board).lower()
-    return 'pitcher' in text
+    return 'pitcher' in clean_str(board).lower()
 
 def tracked_line_value(*, stat: Any, board: Any = '', player_type: Any = '', avg_value: Any = None, raw_line: Any = None) -> float | None:
     stat_norm = normalize_stat(stat)
@@ -42,9 +41,7 @@ def prop_identity_key(row: dict[str, Any]) -> tuple[Any, ...]:
         clean_str(row.get('matchup')),
         board,
     )
-    if is_pitcher:
-        return base
-    return base + (safe_float(row.get('line')),)
+    return base if is_pitcher else base + (safe_float(row.get('line')),)
 
 def clean_str(value: Any) -> str:
     if value is None:
