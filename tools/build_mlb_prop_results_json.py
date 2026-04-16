@@ -16,7 +16,35 @@ DISPLAY_TIMEZONE = 'America/Denver'
 DEFAULT_MLB_DATA_DIR = Path(r'C:\python\mlb_data')
 
 FINAL_MARKERS = ('final', 'game over', 'completed early')
+PITCHER_ONLY_STATS = {'OUTS', 'IP', 'HA', 'ER'}
 
+def is_pitcher_board(board: Any) -> bool:
+    text = clean_str(board).lower()
+    return 'pitcher' in text
+
+def tracked_line_value(*, stat: Any, board: Any = '', player_type: Any = '', avg_value: Any = None, raw_line: Any = None) -> float | None:
+    stat_norm = normalize_stat(stat)
+    avg_num = safe_float(avg_value)
+    line_num = safe_float(raw_line)
+    if clean_str(player_type).lower() == 'pitcher' or is_pitcher_board(board) or stat_norm in PITCHER_ONLY_STATS:
+        return avg_num if avg_num is not None else line_num
+    return line_num
+
+def prop_identity_key(row: dict[str, Any]) -> tuple[Any, ...]:
+    stat = normalize_stat(row.get('stat'))
+    board = clean_str(row.get('board'))
+    is_pitcher = is_pitcher_board(board) or stat in PITCHER_ONLY_STATS
+    base = (
+        clean_str(row.get('date')),
+        clean_str(row.get('player')),
+        clean_str(row.get('team')),
+        stat,
+        clean_str(row.get('matchup')),
+        board,
+    )
+    if is_pitcher:
+        return base
+    return base + (safe_float(row.get('line')),)
 
 def clean_str(value: Any) -> str:
     if value is None:
@@ -136,7 +164,13 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
                 'opp': opp,
                 'matchup': f'{team} vs {opp}'.strip(),
                 'stat': normalize_stat(entry.get('stat')),
-                'line': safe_float(entry.get('line')),
+                'line': tracked_line_value(
+                    stat=entry.get('stat'),
+                    board=board_title,
+                    player_type=player_type,
+                    avg_value=entry.get('avg_anchor') if entry.get('avg_anchor') is not None else entry.get('avg'),
+                    raw_line=entry.get('line'),
+                ),
                 'model': pred,
                 'probability': prob,
                 'confidence': '',
@@ -166,7 +200,13 @@ def load_board_snapshot_rows(snapshot_path: Path, launch_date: str = '') -> list
             'opp': clean_str(row.get('opp') or row.get('opponent')),
             'matchup': clean_str(row.get('matchup')) or f"{clean_str(row.get('team'))} vs {clean_str(row.get('opp') or row.get('opponent'))}".strip(),
             'stat': normalize_stat(row.get('stat') or row.get('stat_display')),
-            'line': safe_float(row.get('line')),
+            'line': tracked_line_value(
+                stat=row.get('stat') or row.get('stat_display'),
+                board=row.get('board'),
+                player_type=row.get('playerType'),
+                avg_value=row.get('avg_anchor') if row.get('avg_anchor') is not None else row.get('avg'),
+                raw_line=row.get('line'),
+            ),
             'model': safe_float(row.get('modelPrediction') if 'modelPrediction' in row else row.get('model')),
             'probability': safe_float(row.get('probability')),
             'confidence': clean_str(row.get('confidence')),
@@ -454,15 +494,7 @@ def outcome_label(actual: float | None, line: float | None) -> str:
 def merge_unique(existing: list[dict[str, Any]], new_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     by_key: dict[tuple[Any, ...], dict[str, Any]] = {}
     for row in existing + new_rows:
-        key = (
-            clean_str(row.get('date')),
-            clean_str(row.get('player')),
-            clean_str(row.get('team')),
-            normalize_stat(row.get('stat')),
-            safe_float(row.get('line')),
-            clean_str(row.get('matchup')),
-        )
-        by_key[key] = row
+        by_key[prop_identity_key(row)] = row
     rows = list(by_key.values())
     rows.sort(key=lambda r: (clean_str(r.get('date')), clean_str(r.get('player')), clean_str(r.get('stat'))), reverse=True)
     return rows
@@ -587,7 +619,13 @@ def main() -> int:
                 'opp': clean_str(p.get('opp') or p.get('opponent')),
                 'matchup': f"{clean_str(p.get('team'))} vs {clean_str(p.get('opp') or p.get('opponent'))}".strip(),
                 'stat': clean_str(p.get('stat') or p.get('stat_display')),
-                'line': safe_float(p.get('line')),
+                'line': tracked_line_value(
+                    stat=p.get('stat') or p.get('stat_display'),
+                    board=p.get('board'),
+                    player_type=p.get('playerType'),
+                    avg_value=p.get('avg_anchor') if p.get('avg_anchor') is not None else p.get('avg'),
+                    raw_line=p.get('line'),
+                ),
                 'model': safe_float(p.get('modelPrediction') if 'modelPrediction' in p else p.get('model')),
                 'probability': safe_float(p.get('probability')),
                 'confidence': clean_str(p.get('confidence')),
