@@ -7,7 +7,7 @@ import json
 import sys
 import math
 import re
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 from typing import Any
 from shutil import rmtree
@@ -114,6 +114,102 @@ def find_latest_file(patterns, roots):
         return None
     candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
     return candidates[0]
+
+
+def find_all_files(patterns, roots) -> list[Path]:
+    candidates: list[Path] = []
+    seen: set[str] = set()
+    for root in roots:
+        root_path = Path(root) if root else None
+        if not root_path or not root_path.exists():
+            continue
+        for pattern in patterns:
+            for p in root_path.rglob(pattern):
+                if p.is_file():
+                    key = str(p.resolve()) if p.exists() else str(p)
+                    if key not in seen:
+                        seen.add(key)
+                        candidates.append(p)
+    return candidates
+
+
+def _extract_date_window_token(path: Path | None) -> str:
+    if path is None:
+        return ""
+    m = re.search(r"(20\d{6}_20\d{6})", path.name)
+    return m.group(1) if m else ""
+
+
+def _path_priority(path: Path, website_repo: Path) -> tuple[int, int]:
+    txt = str(path).lower()
+    repo_txt = str(website_repo).lower()
+    if txt.startswith(repo_txt):
+        return (0, 0)
+    if "models_v1" in txt:
+        return (1, 0)
+    if "data_nba" in txt:
+        return (2, 0)
+    if "\\python\\" in txt or "/python/" in txt:
+        return (3, 0)
+    return (9, 0)
+
+
+def _choose_best_candidate(
+    candidates: list[Path],
+    *,
+    website_repo: Path,
+    preferred_token: str = "",
+) -> Path | None:
+    if not candidates:
+        return None
+
+    def score(p: Path):
+        token = _extract_date_window_token(p)
+        token_match = 0 if preferred_token and token == preferred_token else 1
+        pri = _path_priority(p, website_repo)
+        return (token_match, *pri, -p.stat().st_mtime)
+
+    return sorted(candidates, key=score)[0]
+
+
+def resolve_artifacts(
+    *,
+    website_repo: Path,
+    workbook: Path | None,
+    player_df: Path | None,
+    upcoming: Path | None,
+    analyzer_script: Path | None,
+) -> tuple[Path | None, Path | None, Path | None, Path | None]:
+    search_roots = [website_repo, *DEFAULT_SEARCH_ROOTS]
+
+    workbook_path = Path(workbook) if workbook else None
+    player_df_path = Path(player_df) if player_df else None
+    upcoming_path = Path(upcoming) if upcoming else None
+    analyzer_script_path = Path(analyzer_script) if analyzer_script else None
+
+    workbook_candidates = find_all_files(["props_all_in_one_*.xlsx", "*props_all_in_one*.xlsx"], search_roots)
+    upcoming_candidates = find_all_files(["player_props_upcoming_*.csv"], search_roots)
+    player_df_candidates = find_all_files(["player_df.parquet"], search_roots)
+    analyzer_candidates = find_all_files(["nba_props_analyzer*.py"], search_roots)
+
+    if workbook_path is None:
+        workbook_path = _choose_best_candidate(workbook_candidates, website_repo=website_repo)
+    preferred_token = _extract_date_window_token(workbook_path)
+
+    if upcoming_path is None:
+        upcoming_path = _choose_best_candidate(
+            upcoming_candidates,
+            website_repo=website_repo,
+            preferred_token=preferred_token,
+        )
+
+    if player_df_path is None:
+        player_df_path = _choose_best_candidate(player_df_candidates, website_repo=website_repo)
+
+    if analyzer_script_path is None:
+        analyzer_script_path = _choose_best_candidate(analyzer_candidates, website_repo=website_repo)
+
+    return workbook_path, player_df_path, upcoming_path, analyzer_script_path
 
 
 def load_games_map(games_path: Path) -> dict[str, dict]:
@@ -639,7 +735,13 @@ def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, u
     entries.sort(key=lambda x: (x.get("gameDate") or "", x.get("player") or "", x.get("stat") or "", safe_float(x.get("line")) or -999))
     dates = sorted([d for d in entries and {e.get("gameDate") for e in entries} if d])
     today_iso = datetime.now().date().isoformat()
-    target_date = today_iso if today_iso in dates else (dates[0] if dates else "")
+    target_date = ""
+    if dates:
+        if today_iso in dates:
+            target_date = today_iso
+        else:
+            future_dates = [d for d in dates if d >= today_iso]
+            target_date = (future_dates[0] if future_dates else dates[-1])
 
     series_index = {}
     for series_key, payload in series_payloads.items():
@@ -682,10 +784,23 @@ def main() -> None:
     games_path = args.games_json or (data_dir / "games.json")
     injuries_path = args.injuries_json or (data_dir / "nba_injuries.json")
 
-    workbook_path = args.workbook or find_latest_file(["props_all_in_one_*.xlsx", "*props_all_in_one*.xlsx"], [website_repo, *DEFAULT_SEARCH_ROOTS])
-    player_df_path = args.player_df or find_latest_file(["player_df.parquet"], [website_repo, *DEFAULT_SEARCH_ROOTS])
-    upcoming_path = args.upcoming or find_latest_file(["player_props_upcoming_*.csv"], [website_repo, *DEFAULT_SEARCH_ROOTS])
-    analyzer_script = args.analyzer_script or find_latest_file(["nba_props_analyzer*.py"], [website_repo, *DEFAULT_SEARCH_ROOTS])
+    workbook_path, player_df_path, upcoming_path, analyzer_script = resolve_artifacts(
+        website_repo=website_repo,
+        workbook=args.workbook,
+        player_df=args.player_df,
+        upcoming=args.upcoming,
+        analyzer_script=args.analyzer_script,
+    )
+
+    print(f"[INFO] Using workbook: {workbook_path}")
+    print(f"[INFO] Using player_df: {player_df_path}")
+    print(f"[INFO] Using upcoming CSV: {upcoming_path}")
+    print(f"[INFO] Using analyzer script: {analyzer_script}")
+
+    wb_token = _extract_date_window_token(Path(workbook_path)) if workbook_path else ""
+    up_token = _extract_date_window_token(Path(upcoming_path)) if upcoming_path else ""
+    if wb_token and up_token and wb_token != up_token:
+        print(f"[WARN] Workbook/upcoming date-window mismatch: workbook={wb_token} upcoming={up_token}")
 
     for label, path in [("games.json", games_path), ("workbook", workbook_path), ("player_df.parquet", player_df_path), ("upcoming CSV", upcoming_path), ("analyzer script", analyzer_script)]:
         if path is None or not Path(path).exists():
