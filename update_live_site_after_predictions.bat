@@ -4,6 +4,7 @@ set "ROOT=C:\python"
 set "REPO=C:\python\letsparlayml.github.io"
 set "TOOLS=%REPO%\tools"
 set "MLB_OUT=%ROOT%\mlb_model_outputs"
+set "NBA_MODELS=%ROOT%\data_nba\models_v1"
 set "PY=C:\Users\andre\miniconda3\python.exe"
 if defined CONDA_PREFIX if exist "%CONDA_PREFIX%\python.exe" set "PY=%CONDA_PREFIX%\python.exe"
 set "SYNC_SCRIPT="
@@ -36,19 +37,6 @@ if exist "%REPO%\data\nba_injuries.xlsx" (
 )
 if errorlevel 1 goto :fail
 echo.
-set "MLB_SCRAPER="
-if exist "%ROOT%\mlb_master_scraper_fixed_v3.py" set "MLB_SCRAPER=%ROOT%\mlb_master_scraper_fixed_v3.py"
-if not defined MLB_SCRAPER if exist "%ROOT%\mlb_master_scraper.py" set "MLB_SCRAPER=%ROOT%\mlb_master_scraper.py"
-if not defined MLB_SCRAPER (
-  echo ERROR: MLB scraper not found in %ROOT%
-  exit /b 1
-)
-echo.
-echo [1.5/12] Refresh MLB latest player logs for results/analyzer...
-for /f %%I in ('powershell -NoProfile -Command "(Get-Date).AddDays(-2).ToString(\"yyyy-MM-dd\")"') do set "MLB_REFRESH_START=%%I"
-for /f %%I in ('powershell -NoProfile -Command "(Get-Date).ToString(\"yyyy-MM-dd\")"') do set "MLB_REFRESH_END=%%I"
-"%PY%" "%MLB_SCRAPER%" --start "%MLB_REFRESH_START%" --end "%MLB_REFRESH_END%" --out "%ROOT%\mlb_data" --latest-only --no-weather --no-statcast --no-leaderboards
-if errorlevel 1 goto :fail
 echo [2/12] Settle MLB game results from prior board...
 "%PY%" "%TOOLS%\build_mlb_results_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --enable --allow-statsapi-fallback --allow-missing-lines
 if errorlevel 1 goto :fail
@@ -66,7 +54,7 @@ echo [5/12] Build NBA props lab JSON...
 if errorlevel 1 goto :fail
 echo.
 echo [6/12] Build NBA props analyzer JSON...
-"%PY%" "%TOOLS%\build_nba_props_analyzer_json.py" --website-repo "%REPO%"
+"%PY%" "%TOOLS%\build_nba_props_analyzer_json.py" --website-repo "%REPO%" --player-df "%NBA_MODELS%\player_df.parquet"
 if errorlevel 1 goto :fail
 echo.
 echo [7/12] Refresh market lines (NBA/NHL/MLB API only)...

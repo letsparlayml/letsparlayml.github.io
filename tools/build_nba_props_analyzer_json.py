@@ -269,8 +269,18 @@ def build_game_logs(df: pd.DataFrame, stat_col: str, analyzer, module) -> list[d
     return out
 
 
-def prepare_series(analyzer, module, player_id: str, player_name: str, stat: str, series_game_date: str, similar_n: int = 10, season_type: str = "Regular_Season") -> tuple[dict[str, Any], pd.Series | None]:
+def prepare_series(
+    analyzer,
+    module,
+    player_id: str,
+    player_name: str,
+    stat: str,
+    series_game_date: str,
+    similar_n: int = 10,
+    season_type: str | list[str] | tuple[str, ...] | set[str] | None = "All",
+) -> tuple[dict[str, Any], pd.Series | None]:
     assert analyzer.player_df is not None
+
     stat = clean_str(stat).upper()
     if stat not in analyzer.stat_cols:
         raise ValueError(f"Unknown stat: {stat}")
@@ -278,53 +288,127 @@ def prepare_series(analyzer, module, player_id: str, player_name: str, stat: str
     stat_col = analyzer.stat_cols[stat]
     pid = module._norm_id_str(player_id)
 
+    def _normalize_types(value) -> set[str]:
+        if value is None:
+            return set()
+        vals = value if isinstance(value, (list, tuple, set)) else [value]
+        out = set()
+        for x in vals:
+            s = str(x).replace("_", " ").strip().lower()
+            if not s:
+                continue
+            if s in {"regular season", "reg season", "regular"}:
+                out.add("regular season")
+            elif s in {"play-in", "play in", "playin"}:
+                out.add("play-in")
+            elif s in {"playoffs", "playoff"}:
+                out.add("playoffs")
+            elif s == "all":
+                out.add("all")
+            else:
+                out.add(s)
+        return out
+
     df_all = analyzer.player_df[analyzer.player_df[analyzer.col_player_id] == pid].copy()
-    if season_type and "SEASON_TYPE" in df_all.columns:
-        df_all = df_all[df_all["SEASON_TYPE"] == season_type].copy()
     df_all = df_all[df_all[analyzer.col_min] > 0].copy()
     if df_all.empty:
         raise ValueError(f"No historical games with minutes for {player_name} {stat}")
 
-    if analyzer.col_game_date and df_all[analyzer.col_game_date].notna().any():
+    # Keep all relevant season types by default. If caller still passes "Regular_Season",
+    # do not throw away play-in / playoff rows when they exist for this player.
+    if "SEASON_TYPE" in df_all.columns:
+        requested_types = _normalize_types(season_type)
+        available_types = _normalize_types(df_all["SEASON_TYPE"].astype(str).tolist())
+        has_postseason_rows = bool(available_types & {"play-in", "playoffs"})
+
+        should_filter = (
+            requested_types
+            and "all" not in requested_types
+            and not (requested_types == {"regular season"} and has_postseason_rows)
+        )
+
+        if should_filter:
+            df_filtered = df_all[
+                df_all["SEASON_TYPE"]
+                .astype(str)
+                .str.replace("_", " ", regex=False)
+                .str.strip()
+                .str.lower()
+                .isin(requested_types)
+            ].copy()
+            if not df_filtered.empty:
+                df_all = df_filtered
+
+    if analyzer.col_game_date and analyzer.col_game_date in df_all.columns and df_all[analyzer.col_game_date].notna().any():
         df_all[analyzer.col_game_date] = module._coerce_date(df_all[analyzer.col_game_date])
+
+        cutoff_date = pd.to_datetime(series_game_date, errors="coerce")
+        if pd.notna(cutoff_date):
+            cutoff_date = cutoff_date.date()
+            df_all = df_all[
+                df_all[analyzer.col_game_date].isna()
+                | (df_all[analyzer.col_game_date] <= cutoff_date)
+            ].copy()
+
         df_all = df_all.sort_values(analyzer.col_game_date, na_position="first").copy()
         xcol = analyzer.col_game_date
     else:
         df_all = df_all.sort_values("GAME_SEQ").copy()
         xcol = "GAME_SEQ"
 
+    if df_all.empty:
+        raise ValueError(f"No historical games available for {player_name} {stat} before {series_game_date}")
+
     up_row = analyzer._get_upcoming_row(pid, player_name)
     opp_team_id = None
     target_metric = None
     metric_col_up = None
+
     if up_row is not None:
         if "OPP_TEAM_ID" in up_row.index:
             opp_team_id = clean_str(up_row.get("OPP_TEAM_ID"))
         metric_col_up = analyzer._pick_metric_col(analyzer.upcoming_df, stat) if analyzer.upcoming_df is not None else None
         if metric_col_up and metric_col_up in up_row.index:
-            target_metric = module._safe_float(up_row[metric_col_up])
+            target_metric = module._safe_float(up_row.get(metric_col_up))
 
     metric_col_hist = analyzer._pick_metric_col(df_all, stat)
-    sim_metric_cols = analyzer._metric_cols_for_stat_in_both(stat, df_all, up_row, max_cols=3)
+    sim_metric_cols = (
+        analyzer._metric_cols_for_stat_in_both(stat, df_all, up_row, max_cols=3)
+        if up_row is not None else []
+    )
 
     df_display = df_all.copy()
     similar_block = None
     similarity_mode = "none"
 
-    if sim_metric_cols:
+    if sim_metric_cols and up_row is not None:
         df_all_sim = df_all.copy()
         score_parts = []
+        usable_sim_metric_cols = []
+
         for c in sim_metric_cols:
+            if c not in df_all_sim.columns or c not in up_row.index:
+                continue
+
             hv = pd.to_numeric(df_all_sim[c], errors="coerce")
-            tv = module._safe_float(up_row[c])
+            tv = module._safe_float(up_row.get(c))
+            if tv is None or not np.isfinite(tv):
+                continue
+
             scale = float(hv.std(ddof=0))
             if not np.isfinite(scale) or scale <= 1e-9:
                 q75, q25 = hv.quantile(0.75), hv.quantile(0.25)
                 iqr = float(q75 - q25) if pd.notna(q75) and pd.notna(q25) else np.nan
                 scale = (iqr / 1.349) if np.isfinite(iqr) and iqr > 1e-9 else 1.0
+
             part = ((hv - tv).abs() / scale).clip(lower=0, upper=8)
-            df_all_sim[f"_sim_{c}"] = part
-            score_parts.append(f"_sim_{c}")
+            sim_col = f"_sim_{c}"
+            df_all_sim[sim_col] = part
+            score_parts.append(sim_col)
+            usable_sim_metric_cols.append(c)
+
+        sim_metric_cols = usable_sim_metric_cols
+
         if score_parts:
             df_all_sim["_sim_score"] = df_all_sim[score_parts].mean(axis=1, skipna=True)
             valid = df_all_sim["_sim_score"].notna()
@@ -337,14 +421,25 @@ def prepare_series(analyzer, module, player_id: str, player_name: str, stat: str
                     labels=["Closest 25%", "Close 25%", "Mid 25%", "Far 25%"],
                     include_lowest=True,
                 ).astype(str)
-                key_cols = [analyzer.col_player_id, analyzer.col_game_id]
+
+                key_cols = [c for c in [analyzer.col_player_id, analyzer.col_game_id] if c in df_all_sim.columns and c in df_display.columns]
                 take_cols = [c for c in key_cols + ["_sim_score", "_sim_pct", "_sim_bin"] if c in df_all_sim.columns]
-                df_display = df_display.drop(columns=[c for c in ["_sim_score", "_sim_pct", "_sim_bin"] if c in df_display.columns], errors="ignore")
-                df_display = df_display.merge(
-                    df_all_sim[take_cols].drop_duplicates(subset=key_cols, keep="last"),
-                    on=key_cols,
-                    how="left",
-                )
+
+                if key_cols:
+                    df_display = df_display.drop(
+                        columns=[c for c in ["_sim_score", "_sim_pct", "_sim_bin"] if c in df_display.columns],
+                        errors="ignore",
+                    )
+                    df_display = df_display.merge(
+                        df_all_sim[take_cols].drop_duplicates(subset=key_cols, keep="last"),
+                        on=key_cols,
+                        how="left",
+                    )
+                else:
+                    df_display["_sim_score"] = df_all_sim["_sim_score"].values
+                    df_display["_sim_pct"] = df_all_sim["_sim_pct"].values
+                    df_display["_sim_bin"] = df_all_sim["_sim_bin"].values
+
                 df_display["_sim_bin"] = df_display["_sim_bin"].fillna("Unknown")
                 similar_block = df_all_sim.loc[valid].sort_values("_sim_score").head(similar_n).copy()
                 similarity_mode = "composite_zscore_quantiles"
@@ -361,7 +456,7 @@ def prepare_series(analyzer, module, player_id: str, player_name: str, stat: str
     if "_sim_bin" not in df_display.columns:
         df_display["_sim_bin"] = "all"
 
-    if analyzer.col_game_date and df_display[analyzer.col_game_date].notna().any():
+    if analyzer.col_game_date and analyzer.col_game_date in df_display.columns and df_display[analyzer.col_game_date].notna().any():
         df_recent = df_display[df_display[analyzer.col_game_date].notna()].tail(25).copy()
         if len(df_recent) < 25:
             df_recent = df_display.tail(25).copy()
@@ -383,12 +478,13 @@ def prepare_series(analyzer, module, player_id: str, player_name: str, stat: str
 
     matchup_percentile = None
     if analyzer.upcoming_df is not None and metric_col_up and target_metric is not None and np.isfinite(target_metric):
-        tmp = analyzer.upcoming_df[["OPP_TEAM_ID", metric_col_up]].dropna().copy()
-        tmp["OPP_TEAM_ID"] = module._norm_id_series(tmp["OPP_TEAM_ID"])
-        tmp[metric_col_up] = pd.to_numeric(tmp[metric_col_up], errors="coerce")
-        team_metric = tmp.groupby("OPP_TEAM_ID")[metric_col_up].mean()
-        if len(team_metric):
-            matchup_percentile = float(module.percentile_rank(target_metric, team_metric.values))
+        if metric_col_up in analyzer.upcoming_df.columns and "OPP_TEAM_ID" in analyzer.upcoming_df.columns:
+            tmp = analyzer.upcoming_df[["OPP_TEAM_ID", metric_col_up]].dropna().copy()
+            tmp["OPP_TEAM_ID"] = module._norm_id_series(tmp["OPP_TEAM_ID"])
+            tmp[metric_col_up] = pd.to_numeric(tmp[metric_col_up], errors="coerce")
+            team_metric = tmp.groupby("OPP_TEAM_ID")[metric_col_up].mean()
+            if len(team_metric):
+                matchup_percentile = float(module.percentile_rank(target_metric, team_metric.values))
 
     series_payload = {
         "playerId": safe_int(player_id) or clean_str(player_id),
