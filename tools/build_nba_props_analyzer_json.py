@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import sys
 import math
@@ -190,8 +189,6 @@ def resolve_artifacts(
     workbook_candidates = find_all_files(["props_all_in_one_*.xlsx", "*props_all_in_one*.xlsx"], search_roots)
     upcoming_candidates = find_all_files(["player_props_upcoming_*.csv"], search_roots)
     player_df_candidates = find_all_files(["player_df.parquet"], search_roots)
-    analyzer_candidates = find_all_files(["nba_props_analyzer*.py"], search_roots)
-
     if workbook_path is None:
         workbook_path = _choose_best_candidate(workbook_candidates, website_repo=website_repo)
     preferred_token = _extract_date_window_token(workbook_path)
@@ -207,7 +204,8 @@ def resolve_artifacts(
         player_df_path = _choose_best_candidate(player_df_candidates, website_repo=website_repo)
 
     if analyzer_script_path is None:
-        analyzer_script_path = _choose_best_candidate(analyzer_candidates, website_repo=website_repo)
+        sibling_exact = website_repo / "tools" / "nba_props_analyzer.py"
+        analyzer_script_path = sibling_exact if sibling_exact.exists() else None
 
     return workbook_path, player_df_path, upcoming_path, analyzer_script_path
 
@@ -280,8 +278,340 @@ def build_injury_lookup(injury_data: dict) -> dict[tuple[str, str], dict]:
     return out
 
 
+
 # ---------- analyzer integration ----------
-def import_analyzer_module(path: Path):
+TEAM_ID_TO_ABBR = {
+    "1610612737": "ATL", "1610612738": "BOS", "1610612739": "CLE", "1610612740": "NOP",
+    "1610612741": "CHI", "1610612742": "DAL", "1610612743": "DEN", "1610612744": "GSW",
+    "1610612745": "HOU", "1610612746": "LAC", "1610612747": "LAL", "1610612748": "MIA",
+    "1610612749": "MIL", "1610612750": "MIN", "1610612751": "BKN", "1610612752": "NYK",
+    "1610612753": "ORL", "1610612754": "IND", "1610612755": "PHI", "1610612756": "PHX",
+    "1610612757": "POR", "1610612758": "SAC", "1610612759": "SAS", "1610612760": "OKC",
+    "1610612761": "TOR", "1610612762": "UTA", "1610612763": "MEM", "1610612764": "WAS",
+    "1610612765": "DET", "1610612766": "CHA",
+}
+
+DATE_CANDIDATES = [
+    "GAME_DATE", "GAME_DATE_EST", "GAME_DATE_LOCAL", "GAME_DATE_DT",
+    "GAME_DT", "DATE", "GAME_START_DATE", "GAME_DAY",
+    "game_date", "gameDate", "start_date", "START_DATE",
+]
+GAME_ID_CANDIDATES = ["GAME_ID", "game_id"]
+
+def _first_existing(cols: list[str], available: pd.Index) -> str | None:
+    for c in cols:
+        if c in available:
+            return c
+    return None
+
+def _norm_name(s: str) -> str:
+    s = (s or "").lower().strip()
+    s = re.sub(r"[^a-z0-9\s]", "", s)
+    s = re.sub(r"\s+", " ", s)
+    return s
+
+def _norm_name_series(series: pd.Series) -> pd.Series:
+    return series.astype(str).map(_norm_name)
+
+def _norm_id_str(val) -> str:
+    if val is None:
+        return ""
+    s = str(val).strip()
+    s = re.sub(r"\.0+$", "", s)
+    return s
+
+def _norm_id_series(series: pd.Series) -> pd.Series:
+    return series.astype(str).str.strip().str.replace(r"\.0+$", "", regex=True)
+
+def _coerce_date(s: pd.Series) -> pd.Series:
+    return pd.to_datetime(s, errors="coerce")
+
+def _team_id_to_abbr(val) -> str:
+    if val is None:
+        return ""
+    s = str(val).strip()
+    s = re.sub(r"\.0+$", "", s)
+    return TEAM_ID_TO_ABBR.get(s, s)
+
+def percentile_rank(x: float, arr: np.ndarray) -> float:
+    arr = arr[np.isfinite(arr)]
+    if arr.size == 0 or not np.isfinite(x):
+        return float("nan")
+    return float((arr <= x).mean())
+
+def parse_date_from_game_id_anywhere(game_id: str) -> pd.Timestamp | None:
+    if game_id is None:
+        return None
+    s = str(game_id).strip()
+    m = re.search(r"(\d{8})", s)
+    if not m:
+        return None
+    try:
+        return pd.to_datetime(m.group(1), format="%Y%m%d", errors="raise")
+    except Exception:
+        return None
+
+class _BuiltinAnalyzerModule:
+    _norm_id_str = staticmethod(_norm_id_str)
+    _safe_float = staticmethod(safe_float)
+    _coerce_date = staticmethod(_coerce_date)
+    percentile_rank = staticmethod(percentile_rank)
+    _team_id_to_abbr = staticmethod(_team_id_to_abbr)
+
+class LocalNBAPropsAnalyzer:
+    def __init__(self, hist_path: Path, upcoming_path: Path | None = None):
+        self.hist_path = Path(hist_path)
+        self.upcoming_path = Path(upcoming_path) if upcoming_path else None
+        self.player_df: pd.DataFrame | None = None
+        self.upcoming_df: pd.DataFrame | None = None
+
+        self.col_player_id = "PLAYER_ID"
+        self.col_player_name = None
+        self.col_game_id = None
+        self.col_game_date = None
+        self.col_team_id = None
+        self.col_team_side = None
+        self.col_opp_team_id = None
+        self.col_is_home = None
+        self.col_min = None
+        self.stat_cols: dict[str, str] = {}
+
+    def _try_read_dataframe(self, path: Path) -> pd.DataFrame:
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {path}")
+        suf = path.suffix.lower()
+        if suf == ".parquet":
+            return pd.read_parquet(path)
+        if suf in (".csv", ".txt"):
+            return pd.read_csv(path)
+        raise ValueError(f"Unsupported file type: {path.suffix}")
+
+    def load(self) -> None:
+        self.player_df = self._try_read_dataframe(self.hist_path).copy()
+        self._detect_columns()
+        self._dedupe_historical()
+        self._ensure_game_date()
+        self._clean_types()
+        self._add_derived_opp_metrics(self.player_df)
+        self._load_upcoming_if_available()
+
+    def _detect_columns(self) -> None:
+        assert self.player_df is not None
+        cols = self.player_df.columns
+        self.col_player_name = _first_existing(["PLAYER_NAME", "PLAYER", "NAME"], cols)
+        self.col_game_id = _first_existing(GAME_ID_CANDIDATES, cols)
+        self.col_game_date = _first_existing(DATE_CANDIDATES, cols)
+        self.col_team_id = _first_existing(["TEAM_ID", "team_id"], cols)
+        self.col_team_side = _first_existing(["TEAM_SIDE", "team_side"], cols)
+        self.col_opp_team_id = _first_existing(["OPP_TEAM_ID", "OPPONENT_TEAM_ID", "opp_team_id"], cols)
+        self.col_is_home = _first_existing(["IS_HOME", "HOME", "is_home"], cols)
+        self.col_min = _first_existing(["MIN", "MINUTES", "minutes"], cols)
+
+        self.stat_cols["PTS"] = _first_existing(["PTS", "POINTS"], cols) or "PTS"
+        self.stat_cols["REB"] = _first_existing(["REB", "REBOUNDS"], cols) or "REB"
+        self.stat_cols["AST"] = _first_existing(["AST", "ASSISTS"], cols) or "AST"
+        self.stat_cols["TPM"] = _first_existing(["TPM", "FG3M", "FG3M_TOTAL", "FG3M_STAT"], cols) or "TPM"
+        pra_col = _first_existing(["PRA"], cols)
+        if pra_col is not None:
+            self.stat_cols["PRA"] = pra_col
+
+        required = [self.col_player_name, self.col_game_id, self.col_team_id, self.col_min]
+        if any(x is None for x in required):
+            raise ValueError(
+                f"Missing required columns in historical player_df: "
+                f"player_name={self.col_player_name}, game_id={self.col_game_id}, "
+                f"team_id={self.col_team_id}, min={self.col_min}"
+            )
+
+    def _dedupe_historical(self) -> None:
+        assert self.player_df is not None
+        keys = [self.col_player_id, self.col_game_id]
+        if self.col_team_side and self.col_team_side in self.player_df.columns:
+            keys.append(self.col_team_side)
+        if self.col_team_id and self.col_team_id in self.player_df.columns:
+            keys.append(self.col_team_id)
+        self.player_df = self.player_df.drop_duplicates(subset=keys, keep="last").copy()
+
+    def _ensure_game_date(self) -> None:
+        assert self.player_df is not None
+        if self.col_game_date is not None:
+            return
+        parsed = self.player_df[self.col_game_id].astype(str).map(parse_date_from_game_id_anywhere)
+        self.player_df["GAME_DATE"] = parsed
+        self.col_game_date = "GAME_DATE"
+
+    def _clean_types(self) -> None:
+        assert self.player_df is not None
+        self.player_df[self.col_player_id] = _norm_id_series(self.player_df[self.col_player_id])
+        self.player_df[self.col_team_id] = _norm_id_series(self.player_df[self.col_team_id])
+        if self.col_opp_team_id and self.col_opp_team_id in self.player_df.columns:
+            self.player_df[self.col_opp_team_id] = _norm_id_series(self.player_df[self.col_opp_team_id])
+
+        self.player_df[self.col_min] = pd.to_numeric(self.player_df[self.col_min], errors="coerce").fillna(0.0)
+        for _, c in self.stat_cols.items():
+            if c in self.player_df.columns:
+                self.player_df[c] = pd.to_numeric(self.player_df[c], errors="coerce")
+
+        if "PRA" not in self.stat_cols or self.stat_cols.get("PRA") not in self.player_df.columns:
+            pts, reb, ast = self.stat_cols["PTS"], self.stat_cols["REB"], self.stat_cols["AST"]
+            if pts in self.player_df.columns and reb in self.player_df.columns and ast in self.player_df.columns:
+                self.player_df["PRA_calc"] = (
+                    self.player_df[pts].fillna(0) + self.player_df[reb].fillna(0) + self.player_df[ast].fillna(0)
+                )
+                self.stat_cols["PRA"] = "PRA_calc"
+
+        if self.col_game_date and self.col_game_date in self.player_df.columns:
+            self.player_df[self.col_game_date] = _coerce_date(self.player_df[self.col_game_date])
+
+        inferred_is_home = False
+        if self.col_is_home and self.col_is_home in self.player_df.columns:
+            s = self.player_df[self.col_is_home]
+            if pd.api.types.is_numeric_dtype(s):
+                v = pd.to_numeric(s, errors="coerce")
+                self.player_df[self.col_is_home] = (v > 0.5).astype(int)
+            else:
+                s2 = s.astype(str).str.upper().str.strip().str.replace(r"\.0+$", "", regex=True)
+                self.player_df[self.col_is_home] = s2.isin(["1", "TRUE", "T", "HOME", "H", "YES", "Y"]).astype(int)
+            inferred_is_home = True
+
+        if self.col_team_side and self.col_team_side in self.player_df.columns:
+            side = self.player_df[self.col_team_side].astype(str).str.upper().str.strip()
+            side_home = side.isin(["HOME", "H", "VS", "V", "HOST"]).astype(int)
+            if not inferred_is_home:
+                self.player_df["IS_HOME"] = side_home
+                self.col_is_home = "IS_HOME"
+                inferred_is_home = True
+            else:
+                cur = self.player_df[self.col_is_home]
+                if cur.nunique(dropna=True) <= 1 and side_home.nunique(dropna=True) > 1:
+                    self.player_df[self.col_is_home] = side_home
+
+        if (not inferred_is_home) and "MATCHUP" in self.player_df.columns:
+            m = self.player_df["MATCHUP"].astype(str)
+            is_home = m.str.contains(r"\bVS\b|VS\.|vs\.|\bHOME\b", regex=True, case=False)
+            is_away = m.str.contains("@", regex=False)
+            self.player_df["IS_HOME"] = np.where(is_home, 1, np.where(is_away, 0, np.nan))
+            self.player_df["IS_HOME"] = pd.to_numeric(self.player_df["IS_HOME"], errors="coerce").fillna(0).astype(int)
+            self.col_is_home = "IS_HOME"
+
+        if self.col_game_date and self.player_df[self.col_game_date].notna().any():
+            self.player_df = self.player_df.sort_values(
+                [self.col_player_id, self.col_game_date, self.col_game_id],
+                na_position="first",
+                kind="mergesort",
+            ).reset_index(drop=True)
+        else:
+            self.player_df = self.player_df.sort_values(
+                [self.col_player_id, self.col_game_id],
+                kind="mergesort",
+            ).reset_index(drop=True)
+
+        self.player_df["GAME_SEQ"] = self.player_df.groupby(self.col_player_id).cumcount() + 1
+
+    def _load_upcoming_if_available(self) -> None:
+        if self.upcoming_path is None or not self.upcoming_path.exists():
+            self.upcoming_df = None
+            return
+        self.upcoming_df = pd.read_csv(self.upcoming_path).copy()
+        self._clean_upcoming()
+
+    def _clean_upcoming(self) -> None:
+        if self.upcoming_df is None:
+            return
+        for c in ["PLAYER_ID", "TEAM_ID", "OPP_TEAM_ID"]:
+            if c in self.upcoming_df.columns:
+                self.upcoming_df[c] = _norm_id_series(self.upcoming_df[c])
+        if "GAME_DATE" in self.upcoming_df.columns:
+            self.upcoming_df["GAME_DATE"] = _coerce_date(self.upcoming_df["GAME_DATE"])
+        self._add_derived_opp_metrics(self.upcoming_df)
+
+    def _add_derived_opp_metrics(self, df: pd.DataFrame | None) -> None:
+        if df is None or df.empty:
+            return
+        for suf in ("_r10", "_r5", "_r3", ""):
+            pts_col = f"OPP_PTS_ALLOWED{suf}"
+            drtg_col = f"OPP_DRtg{suf}"
+            pos_col = f"OPP_POS_EST{suf}"
+            if pts_col in df.columns and drtg_col in df.columns and pos_col not in df.columns:
+                pts = pd.to_numeric(df[pts_col], errors="coerce")
+                dr = pd.to_numeric(df[drtg_col], errors="coerce")
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    df[pos_col] = 100.0 * pts / dr
+
+    def _metric_candidates_for_stat(self, stat: str) -> list[str]:
+        stat = stat.upper()
+        if stat == "PTS":
+            bases = ["OPP_PTS_ALLOWED", "OPP_DRtg", "OPP_POSS_ALLOWED", "OPP_POS_EST"]
+        elif stat == "REB":
+            bases = [
+                "OPP_REB_ALLOWED", "OPP_TRB_ALLOWED", "OPP_REB", "OPP_TRB",
+                "OPP_DREB_ALLOWED", "OPP_OREB_ALLOWED", "OPP_REB_PCT", "OPP_DREB_PCT",
+                "OPP_OREB_PCT", "OPP_POS_EST", "OPP_PTS_ALLOWED", "OPP_DRtg",
+            ]
+        elif stat == "AST":
+            bases = ["OPP_AST_ALLOWED", "OPP_AST", "OPP_DRtg"]
+        elif stat == "TPM":
+            bases = ["OPP_3PM_ALLOWED", "OPP_FG3M_ALLOWED", "OPP_3PA_ALLOWED", "OPP_FG3A_ALLOWED", "OPP_3P_PCT_ALLOWED", "OPP_DRtg"]
+        elif stat == "PRA":
+            bases = ["OPP_PTS_ALLOWED", "OPP_DRtg", "OPP_POSS_ALLOWED", "OPP_POS_EST"]
+        else:
+            bases = ["OPP_DRtg"]
+        out = []
+        for base in bases:
+            out.extend([f"{base}_r10", f"{base}_r5", f"{base}_r3", base])
+        return out
+
+    def _pick_metric_col(self, df: pd.DataFrame, stat: str) -> str | None:
+        for c in self._metric_candidates_for_stat(stat):
+            if c in df.columns:
+                return c
+        return None
+
+    def _metric_cols_for_stat_in_both(self, stat: str, hist_df: pd.DataFrame, up_row: pd.Series | None, max_cols: int = 3) -> list[str]:
+        if up_row is None:
+            return []
+        cols = []
+        for c in self._metric_candidates_for_stat(stat):
+            if c in hist_df.columns and c in up_row.index:
+                hv = pd.to_numeric(hist_df[c], errors="coerce")
+                uv = safe_float(up_row[c])
+                if hv.notna().sum() >= 8 and uv is not None and np.isfinite(uv):
+                    cols.append(c)
+            if len(cols) >= max_cols:
+                break
+        return cols
+
+    def _get_upcoming_row(self, player_id: str, player_name: str | None = None) -> pd.Series | None:
+        if self.upcoming_df is None or self.upcoming_df.empty:
+            return None
+        up_cols = self.upcoming_df.columns
+        id_col = _first_existing(["PLAYER_ID", "player_id", "PLAYERID", "playerid"], up_cols)
+        name_col = _first_existing(["PLAYER_NAME", "PLAYER", "NAME", "player_name", "player", "name"], up_cols)
+        pid = _norm_id_str(player_id)
+        sub = pd.DataFrame()
+        if id_col is not None:
+            sub = self.upcoming_df[_norm_id_series(self.upcoming_df[id_col]) == pid].copy()
+        if sub.empty and player_name and name_col is not None:
+            pn = _norm_name(str(player_name))
+            sub = self.upcoming_df[_norm_name_series(self.upcoming_df[name_col]) == pn].copy()
+        if sub.empty:
+            return None
+        if "GAME_DATE" in sub.columns:
+            sub["GAME_DATE"] = _coerce_date(sub["GAME_DATE"])
+            if sub["GAME_DATE"].notna().any():
+                today = pd.Timestamp.now().normalize()
+                future = sub[sub["GAME_DATE"].dt.normalize() >= today].copy()
+                if not future.empty:
+                    sub = future
+                sub = sub.sort_values("GAME_DATE", kind="mergesort")
+        non_null_counts = sub.notna().sum(axis=1)
+        sub = sub.assign(_nn=non_null_counts).sort_values("_nn", ascending=False, kind="mergesort")
+        return sub.iloc[0].drop(labels=["_nn"], errors="ignore")
+
+def import_analyzer_module(path: Path | None):
+    if path is None:
+        return _BuiltinAnalyzerModule()
+    import importlib.util
     spec = importlib.util.spec_from_file_location("nba_props_analyzer_module", str(path))
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not load analyzer script from {path}")
@@ -289,8 +619,6 @@ def import_analyzer_module(path: Path):
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
-
-
 def stats_block(df: pd.DataFrame, stat_col: str) -> dict[str, Any]:
     y = pd.to_numeric(df[stat_col], errors="coerce").dropna() if stat_col in df.columns else pd.Series(dtype=float)
     if y.empty:
@@ -663,7 +991,7 @@ def entry_from_row(row: pd.Series, games_map: dict[str, dict], series_key: str) 
     }
 
 
-def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, upcoming_path: Path, analyzer_script: Path, injuries_path: Path | None = None) -> dict[str, Any]:
+def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, upcoming_path: Path, analyzer_script: Path | None, injuries_path: Path | None = None) -> dict[str, Any]:
     games_map = load_games_map(games_path)
     xls = pd.ExcelFile(workbook_path)
     all_sheet = "all_candidates" if "all_candidates" in xls.sheet_names else xls.sheet_names[0]
@@ -683,8 +1011,12 @@ def build_payload(workbook_path: Path, games_path: Path, player_df_path: Path, u
     all_df["__pid"] = all_df["PLAYER_ID"].astype(str).str.replace(r"\.0+$", "", regex=True)
     all_df["__stat"] = all_df["stat"].astype(str).str.upper().str.strip()
 
-    module = import_analyzer_module(analyzer_script)
-    analyzer = module.NBAPropsAnalyzer(hist_path=player_df_path, upcoming_path=upcoming_path)
+    if analyzer_script is not None and Path(analyzer_script).exists():
+        module = import_analyzer_module(analyzer_script)
+        analyzer = module.NBAPropsAnalyzer(hist_path=player_df_path, upcoming_path=upcoming_path)
+    else:
+        module = _BuiltinAnalyzerModule()
+        analyzer = LocalNBAPropsAnalyzer(hist_path=player_df_path, upcoming_path=upcoming_path)
     analyzer.load()
 
     injuries_lookup = {}
@@ -795,23 +1127,26 @@ def main() -> None:
     print(f"[INFO] Using workbook: {workbook_path}")
     print(f"[INFO] Using player_df: {player_df_path}")
     print(f"[INFO] Using upcoming CSV: {upcoming_path}")
-    print(f"[INFO] Using analyzer script: {analyzer_script}")
+    print(f"[INFO] Using analyzer script: {analyzer_script if analyzer_script is not None else 'builtin LocalNBAPropsAnalyzer'}")
 
     wb_token = _extract_date_window_token(Path(workbook_path)) if workbook_path else ""
     up_token = _extract_date_window_token(Path(upcoming_path)) if upcoming_path else ""
     if wb_token and up_token and wb_token != up_token:
         print(f"[WARN] Workbook/upcoming date-window mismatch: workbook={wb_token} upcoming={up_token}")
 
-    for label, path in [("games.json", games_path), ("workbook", workbook_path), ("player_df.parquet", player_df_path), ("upcoming CSV", upcoming_path), ("analyzer script", analyzer_script)]:
+    required_paths = [("games.json", games_path), ("workbook", workbook_path), ("player_df.parquet", player_df_path), ("upcoming CSV", upcoming_path)]
+    for label, path in required_paths:
         if path is None or not Path(path).exists():
             raise FileNotFoundError(f"Could not find required {label}. Pass it explicitly.")
+    if analyzer_script is not None and not Path(analyzer_script).exists():
+        raise FileNotFoundError(f"Could not find analyzer script: {analyzer_script}")
 
     payload = build_payload(
         workbook_path=Path(workbook_path),
         games_path=Path(games_path),
         player_df_path=Path(player_df_path),
         upcoming_path=Path(upcoming_path),
-        analyzer_script=Path(analyzer_script),
+        analyzer_script=Path(analyzer_script) if analyzer_script is not None else None,
         injuries_path=Path(injuries_path) if injuries_path and Path(injuries_path).exists() else None,
     )
 

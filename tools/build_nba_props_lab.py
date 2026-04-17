@@ -5,7 +5,7 @@ import argparse
 import json
 import math
 import re
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 
 import pandas as pd
@@ -85,6 +85,120 @@ def find_latest_file(patterns, roots):
     if not candidates:
         return None
     return max(candidates, key=lambda p: p.stat().st_mtime)
+
+
+def extract_window_token(path: Path | None) -> str:
+    if path is None:
+        return ""
+    m = re.search(r"(20\d{6}_20\d{6})", path.name)
+    return m.group(1) if m else ""
+
+
+def extract_window_bounds(path: Path | None) -> tuple[date | None, date | None]:
+    token = extract_window_token(path)
+    if not token:
+        return None, None
+    try:
+        start_s, end_s = token.split("_", 1)
+        start_d = datetime.strptime(start_s, "%Y%m%d").date()
+        end_d = datetime.strptime(end_s, "%Y%m%d").date()
+        return start_d, end_d
+    except Exception:
+        return None, None
+
+
+def choose_best_file(patterns, roots, *, today: date | None = None, preferred_tokens: list[str] | None = None) -> Path | None:
+    candidates = []
+    for root in roots:
+        if not root.exists():
+            continue
+        for pattern in patterns:
+            candidates.extend(root.rglob(pattern))
+    candidates = [p for p in candidates if p.is_file()]
+    if not candidates:
+        return None
+
+    today = today or datetime.now().date()
+    preferred_tokens = [t for t in (preferred_tokens or []) if t]
+
+    def score(path: Path):
+        token = extract_window_token(path)
+        start_d, end_d = extract_window_bounds(path)
+
+        contains_today = 1 if (start_d and end_d and start_d <= today <= end_d) else 0
+        token_preferred = 1 if token and token in preferred_tokens else 0
+
+        root_pref = 0
+        pstr = str(path).lower()
+        if "data_nba\\models_v1" in pstr:
+            root_pref = 4
+        elif "letsparlayml.github.io" in pstr:
+            root_pref = 3
+        elif "data_nba" in pstr:
+            root_pref = 2
+        elif pstr.startswith("c:\\python"):
+            root_pref = 1
+
+        token_sort = token or ""
+        try:
+            mtime = path.stat().st_mtime
+        except Exception:
+            mtime = 0.0
+
+        return (token_preferred, contains_today, token_sort, root_pref, mtime)
+
+    return max(candidates, key=score)
+
+
+def choose_target_date(dates: list[str]) -> str:
+    dates = sorted([d for d in dates if d])
+    if not dates:
+        return ""
+    today_iso = datetime.now().date().isoformat()
+    if today_iso in dates:
+        return today_iso
+    future_dates = [d for d in dates if d >= today_iso]
+    if future_dates:
+        return future_dates[0]
+    return dates[-1]
+
+
+def coalesce_named_column(df: pd.DataFrame, target: str, candidates: list[str]) -> pd.DataFrame:
+    df = df.copy()
+    existing = [c for c in candidates if c in df.columns]
+    if not existing:
+        return df
+
+    if target not in df.columns:
+        df[target] = pd.NA
+
+    out = df[target]
+    for c in existing:
+        s = df[c]
+        if getattr(s, "dtype", None) == object:
+            s = s.replace("", pd.NA)
+        out = out.where(out.notna(), s)
+
+    df[target] = out
+
+    drop_cols = [c for c in existing if c != target]
+    if drop_cols:
+        df = df.drop(columns=drop_cols, errors="ignore")
+    return df
+
+
+def normalize_props_df(df: pd.DataFrame) -> pd.DataFrame:
+    if df is None or df.empty:
+        return df
+    out = df.copy()
+    out = coalesce_named_column(out, "PLAYER_NAME", ["PLAYER_NAME", "PLAYER_NAME_x", "PLAYER_NAME_y"])
+    out = coalesce_named_column(out, "PLAYER_ID", ["PLAYER_ID", "PLAYER_ID_x", "PLAYER_ID_y"])
+    out = coalesce_named_column(out, "GAME_ID", ["GAME_ID", "GAME_ID_x", "GAME_ID_y"])
+    out = coalesce_named_column(out, "GAME_DATE", ["GAME_DATE", "GAME_DATE_x", "GAME_DATE_y"])
+    out = coalesce_named_column(out, "TEAM_SIDE", ["TEAM_SIDE", "TEAM_SIDE_x", "TEAM_SIDE_y"])
+    out = coalesce_named_column(out, "TEAM_ABBR", ["TEAM_ABBR", "TEAM_ABBR_x", "TEAM_ABBR_y"])
+    out = coalesce_named_column(out, "OPP_ABBR", ["OPP_ABBR", "OPP_ABBR_x", "OPP_ABBR_y"])
+    return out
 
 
 def load_games_map(games_path: Path) -> dict[str, dict]:
@@ -296,13 +410,13 @@ def build_payload(workbook_path: Path, games_path: Path) -> dict:
     games_map = load_games_map(games_path)
 
     all_sheet = "all_candidates" if "all_candidates" in xls.sheet_names else xls.sheet_names[0]
-    all_df = pd.read_excel(workbook_path, sheet_name=all_sheet)
+    all_df = normalize_props_df(pd.read_excel(workbook_path, sheet_name=all_sheet))
 
     sections_by_sheet = {}
     for section, candidates in SHEET_MAP.items():
         sheet_name = pick_sheet(xls, candidates)
         if sheet_name:
-            sections_by_sheet[section] = board_rows_from_sheet(pd.read_excel(workbook_path, sheet_name=sheet_name), games_map)
+            sections_by_sheet[section] = board_rows_from_sheet(normalize_props_df(pd.read_excel(workbook_path, sheet_name=sheet_name)), games_map)
         else:
             sections_by_sheet[section] = []
 
@@ -331,8 +445,7 @@ def build_payload(workbook_path: Path, games_path: Path) -> dict:
             },
         }
 
-    today_iso = datetime.now().date().isoformat()
-    target_date = today_iso if today_iso in dates else (dates[0] if dates else "")
+    target_date = choose_target_date(dates)
 
     return {
         "targetDate": target_date,
@@ -358,7 +471,7 @@ def main():
 
     workbook_path = args.workbook
     if workbook_path is None:
-        workbook_path = find_latest_file(
+        workbook_path = choose_best_file(
             ["props_all_in_one_*.xlsx", "*props_all_in_one*.xlsx"],
             [website_repo, *DEFAULT_SEARCH_ROOTS],
         )

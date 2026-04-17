@@ -5,6 +5,8 @@ set "REPO=C:\python\letsparlayml.github.io"
 set "TOOLS=%REPO%\tools"
 set "MLB_OUT=%ROOT%\mlb_model_outputs"
 set "NBA_MODELS=%ROOT%\data_nba\models_v1"
+set "NBA_ANALYZER_BUILD=%TOOLS%\build_nba_props_analyzer_json_builtin_fix.py"
+if not exist "%NBA_ANALYZER_BUILD%" set "NBA_ANALYZER_BUILD=%TOOLS%\build_nba_props_analyzer_json.py"
 set "PY=C:\Users\andre\miniconda3\python.exe"
 if defined CONDA_PREFIX if exist "%CONDA_PREFIX%\python.exe" set "PY=%CONDA_PREFIX%\python.exe"
 set "SYNC_SCRIPT="
@@ -54,7 +56,7 @@ echo [5/12] Build NBA props lab JSON...
 if errorlevel 1 goto :fail
 echo.
 echo [6/12] Build NBA props analyzer JSON...
-"%PY%" "%TOOLS%\build_nba_props_analyzer_json.py" --website-repo "%REPO%" --player-df "%NBA_MODELS%\player_df.parquet"
+"%PY%" "%NBA_ANALYZER_BUILD%" --website-repo "%REPO%" --player-df "%NBA_MODELS%\player_df.parquet"
 if errorlevel 1 goto :fail
 echo.
 echo [7/12] Refresh market lines (NBA/NHL/MLB API only)...
