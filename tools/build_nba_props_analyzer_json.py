@@ -353,6 +353,7 @@ def parse_date_from_game_id_anywhere(game_id: str) -> pd.Timestamp | None:
 
 class _BuiltinAnalyzerModule:
     _norm_id_str = staticmethod(_norm_id_str)
+    _norm_id_series = staticmethod(_norm_id_series)
     _safe_float = staticmethod(safe_float)
     _coerce_date = staticmethod(_coerce_date)
     percentile_rank = staticmethod(percentile_rank)
