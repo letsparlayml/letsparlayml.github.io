@@ -1524,10 +1524,18 @@ function edgeBoardCard(title, items, kind) {
 }
 
 
-function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10, uniqueByPlayer = false }) {
+function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10, uniqueByPlayer = false, line = null }) {
   const pool = (entries || []).filter(e => String(e?.gameDate || '') === String(date || '') && String(e?.stat || '').toUpperCase() === String(stat).toUpperCase());
   const typed = playerType ? pool.filter(e => String(e?.playerType || '').toLowerCase() === String(playerType).toLowerCase()) : pool;
   let base = typed.length ? typed : pool;
+
+  if (line !== null && line !== undefined) {
+    const wantedLine = Number(line);
+    base = base.filter(e => {
+      const rowLine = Number(e?.line);
+      return Number.isFinite(rowLine) && Number.isFinite(wantedLine) && Math.abs(rowLine - wantedLine) < 1e-9;
+    });
+  }
   if (String(playerType).toLowerCase() === 'pitcher') {
     base = base.filter(e => !/(^|\b)(tbd|to be determined|probable starter tbd)(\b|$)/i.test(String(e?.player || '')));
   }
@@ -1608,7 +1616,7 @@ function renderMlbHomeBoards(mlbAnalyzer, meta) {
   const entries = mlbAnalyzer?.entries || [];
   root.innerHTML = [
     mlbBoardTable('Best hits', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'H', playerType: 'batter', limit: 10 })),
-    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', limit: 10 })),
+    mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', line: 1.5, limit: 10 })),
     mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10, uniqueByPlayer: true }), { showLine: false, showAvg: true })
   ].join('');
 }
