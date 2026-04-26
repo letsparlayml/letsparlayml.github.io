@@ -1282,6 +1282,45 @@ function summarizePropResultRows(rows) {
   };
 }
 
+function isMlbTrackedHomeBoardResultRow(row) {
+  const stat = String(row?.stat || '').toUpperCase().trim();
+  const board = String(row?.board || '').toLowerCase();
+  const line = Number(row?.line);
+
+  // The homepage "Best two-plus total bases" board is strictly a 1.5 TB board.
+  // Results should track that same board, not higher alternate TB lines that may
+  // exist in the analyzer payload.
+  if (stat === 'TB' || board.includes('two-plus total bases')) {
+    return Number.isFinite(line) && Math.abs(line - 1.5) < 1e-9;
+  }
+
+  return true;
+}
+
+function filterMlbTrackedHomeBoardRows(rows) {
+  return Array.isArray(rows) ? rows.filter(isMlbTrackedHomeBoardResultRow) : [];
+}
+
+function buildMlbPropSummaryFromRows(rows, fallback = {}) {
+  const settledRows = filterMlbTrackedHomeBoardRows(rows).filter(row => {
+    const label = normalizeResultOutcome(row?.result);
+    return label === 'Win' || label === 'Loss' || label === 'Push';
+  });
+
+  const byStat = {};
+  Array.from(new Set(settledRows.map(row => String(row?.stat || '').toUpperCase().trim()).filter(Boolean))).forEach(stat => {
+    byStat[stat] = summarizePropResultRows(settledRows.filter(row => String(row?.stat || '').toUpperCase().trim() === stat));
+  });
+
+  const dates = settledRows.map(row => String(row?.date || '').trim()).filter(Boolean).sort();
+  return {
+    ...fallback,
+    latestSettledDate: dates.length ? dates[dates.length - 1] : (fallback?.latestSettledDate || ''),
+    overall: summarizePropResultRows(settledRows),
+    byStat,
+  };
+}
+
 function propResultSearchText(row) {
   return normalizeSearchText([
     row?.date,
@@ -1528,7 +1567,6 @@ function chooseMlbBoardRows(entries, { date, stat, playerType = '', limit = 10, 
   const pool = (entries || []).filter(e => String(e?.gameDate || '') === String(date || '') && String(e?.stat || '').toUpperCase() === String(stat).toUpperCase());
   const typed = playerType ? pool.filter(e => String(e?.playerType || '').toLowerCase() === String(playerType).toLowerCase()) : pool;
   let base = typed.length ? typed : pool;
-
   if (line !== null && line !== undefined) {
     const wantedLine = Number(line);
     base = base.filter(e => {
@@ -1750,8 +1788,11 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     renderResultsSummary(effectiveSummary);
     setupResultsExplorer(filteredResults, filteredHistory, meta?.resultsDate || '');
 
-    renderMlbPropResultsSummary(mlbPropSummary, mlbPropPending);
-    setupMlbPropResultsExplorer(mlbPropResults, mlbPropSummary, mlbPropPending);
+    const trackedMlbPropResults = filterMlbTrackedHomeBoardRows(mlbPropResults);
+    const trackedMlbPropPending = filterMlbTrackedHomeBoardRows(mlbPropPending);
+    const trackedMlbPropSummary = buildMlbPropSummaryFromRows(trackedMlbPropResults, mlbPropSummary);
+    renderMlbPropResultsSummary(trackedMlbPropSummary, trackedMlbPropPending);
+    setupMlbPropResultsExplorer(trackedMlbPropResults, trackedMlbPropSummary, trackedMlbPropPending);
   } catch (err) {
     console.error(err);
     if (root) root.innerHTML = `<div class="empty-state">Failed to load site data: ${escapeHtml(err.message || err)}</div>`;
