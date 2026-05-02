@@ -46,6 +46,56 @@ def is_tracked_home_board_row(row: dict[str, Any]) -> bool:
     return True
 
 
+def is_directional_pitcher_average_row(row: dict[str, Any]) -> bool:
+    stat_norm = normalize_stat(row.get('stat') or row.get('stat_display'))
+    board = clean_str(row.get('board')).lower()
+    player_type = clean_str(row.get('playerType')).lower()
+    role = clean_str(row.get('role')).lower()
+
+    # The homepage pitcher-K card is graded against the pitcher's own average,
+    # not against a sportsbook-style over-only line. If the model is below
+    # the average, the correct result is actual K below the average.
+    return (
+        stat_norm == 'K'
+        and (
+            player_type == 'pitcher'
+            or role == 'pitcher'
+            or is_pitcher_board(board)
+        )
+    )
+
+
+def direction_aware_outcome_label(actual: float | None, line: float | None, model: float | None) -> str:
+    actual_num = safe_float(actual)
+    line_num = safe_float(line)
+    model_num = safe_float(model)
+    if actual_num is None or line_num is None or model_num is None:
+        return 'Pending'
+    if abs(actual_num - line_num) < 1e-9 or abs(model_num - line_num) < 1e-9:
+        return 'Push'
+    predicted_over = model_num > line_num
+    actual_over = actual_num > line_num
+    return 'Win' if predicted_over == actual_over else 'Loss'
+
+
+def prop_result_label(prop: dict[str, Any], actual: float | None, line: float | None) -> str:
+    if is_directional_pitcher_average_row(prop):
+        return direction_aware_outcome_label(actual, line, safe_float(prop.get('model')))
+    return outcome_label(actual, line)
+
+
+def regrade_result_row(row: dict[str, Any]) -> dict[str, Any]:
+    if clean_str(row.get('result')) not in {'Win', 'Loss', 'Push'}:
+        return row
+    actual = safe_float(row.get('actual'))
+    line = safe_float(row.get('line'))
+    if actual is None or line is None:
+        return row
+    fixed = dict(row)
+    fixed['result'] = prop_result_label(fixed, actual, line)
+    return fixed
+
+
 def prop_identity_key(row: dict[str, Any]) -> tuple[Any, ...]:
     stat = normalize_stat(row.get('stat'))
     board = clean_str(row.get('board'))
@@ -607,7 +657,7 @@ def main() -> int:
         print('[INFO] MLB prop results tracking is paused until data/mlb_results_launch_date.txt is set.')
         return 0
 
-    history = [row for row in load_json(history_path, []) if is_tracked_home_board_row(row)]
+    history = [regrade_result_row(row) for row in load_json(history_path, []) if is_tracked_home_board_row(row)]
     pending = [row for row in load_json(pending_path, []) if is_tracked_home_board_row(row)]
 
     yesterday = (datetime.fromisoformat(local_today_iso()).date() - timedelta(days=1)).isoformat()
@@ -691,11 +741,11 @@ def main() -> int:
             **prop,
             'role': role,
             'actual': actual_value,
-            'result': outcome_label(actual_value, line),
+            'result': prop_result_label(prop, actual_value, line),
             'gamePk': safe_int(actual_row.get('gamePk') or prop.get('gameId')),
         })
 
-    history = merge_unique(history, settled_rows)
+    history = [regrade_result_row(row) for row in merge_unique(history, settled_rows)]
     write_json(history_path, history)
     write_json(pending_path, unresolved)
     write_json(summary_path, summarize(history))

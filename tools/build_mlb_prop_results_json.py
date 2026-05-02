@@ -29,6 +29,73 @@ def tracked_line_value(*, stat: Any, board: Any = '', player_type: Any = '', avg
         return avg_num if avg_num is not None else line_num
     return line_num
 
+def line_matches(value: Any, target: float, tol: float = 1e-9) -> bool:
+    val = safe_float(value)
+    return val is not None and abs(val - target) < tol
+
+
+def is_tracked_home_board_row(row: dict[str, Any]) -> bool:
+    stat_norm = normalize_stat(row.get('stat') or row.get('stat_display'))
+    board = clean_str(row.get('board')).lower()
+
+    # Keep the Total Bases results aligned with the homepage board:
+    # "Best two-plus total bases" means 1.5 TB only.
+    if stat_norm == 'TB' or 'two-plus total bases' in board:
+        return line_matches(row.get('line'), 1.5)
+
+    return True
+
+
+def is_directional_pitcher_average_row(row: dict[str, Any]) -> bool:
+    stat_norm = normalize_stat(row.get('stat') or row.get('stat_display'))
+    board = clean_str(row.get('board')).lower()
+    player_type = clean_str(row.get('playerType')).lower()
+    role = clean_str(row.get('role')).lower()
+
+    # The homepage pitcher-K card is graded against the pitcher's own average,
+    # not against a sportsbook-style over-only line. If the model is below
+    # the average, the correct result is actual K below the average.
+    return (
+        stat_norm == 'K'
+        and (
+            player_type == 'pitcher'
+            or role == 'pitcher'
+            or is_pitcher_board(board)
+        )
+    )
+
+
+def direction_aware_outcome_label(actual: float | None, line: float | None, model: float | None) -> str:
+    actual_num = safe_float(actual)
+    line_num = safe_float(line)
+    model_num = safe_float(model)
+    if actual_num is None or line_num is None or model_num is None:
+        return 'Pending'
+    if abs(actual_num - line_num) < 1e-9 or abs(model_num - line_num) < 1e-9:
+        return 'Push'
+    predicted_over = model_num > line_num
+    actual_over = actual_num > line_num
+    return 'Win' if predicted_over == actual_over else 'Loss'
+
+
+def prop_result_label(prop: dict[str, Any], actual: float | None, line: float | None) -> str:
+    if is_directional_pitcher_average_row(prop):
+        return direction_aware_outcome_label(actual, line, safe_float(prop.get('model')))
+    return outcome_label(actual, line)
+
+
+def regrade_result_row(row: dict[str, Any]) -> dict[str, Any]:
+    if clean_str(row.get('result')) not in {'Win', 'Loss', 'Push'}:
+        return row
+    actual = safe_float(row.get('actual'))
+    line = safe_float(row.get('line'))
+    if actual is None or line is None:
+        return row
+    fixed = dict(row)
+    fixed['result'] = prop_result_label(fixed, actual, line)
+    return fixed
+
+
 def prop_identity_key(row: dict[str, Any]) -> tuple[Any, ...]:
     stat = normalize_stat(row.get('stat'))
     board = clean_str(row.get('board'))
@@ -92,7 +159,7 @@ def write_json(path: Path, payload: Any) -> None:
 def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date: str) -> list[dict[str, Any]]:
     entries = payload.get('entries') or []
 
-    def choose_rows(stat: str, player_type: str = 'batter', limit: int = 10, unique_by_player: bool = False) -> list[dict[str, Any]]:
+    def choose_rows(stat: str, player_type: str = 'batter', limit: int = 10, unique_by_player: bool = False, line: float | None = None) -> list[dict[str, Any]]:
         pool = [
             e for e in entries
             if clean_str(e.get('gameDate')) == clean_str(target_date)
@@ -103,6 +170,9 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
             base = typed if typed else pool
         else:
             base = pool
+
+        if line is not None:
+            base = [e for e in base if line_matches(e.get('line'), line)]
 
         if clean_str(player_type).lower() == 'pitcher':
             base = [
@@ -137,13 +207,13 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
         return chosen
 
     board_specs = [
-        ('Best hits', 'H', 'batter', 10, False),
-        ('Best two-plus total bases', 'TB', 'batter', 10, False),
-        ('Top pitcher strikeouts', 'K', 'pitcher', 10, True),
+        ('Best hits', 'H', 'batter', 10, False, None),
+        ('Best two-plus total bases', 'TB', 'batter', 10, False, 1.5),
+        ('Top pitcher strikeouts', 'K', 'pitcher', 10, True, None),
     ]
     rows: list[dict[str, Any]] = []
-    for board_title, stat, player_type, limit, unique_by_player in board_specs:
-        for entry in choose_rows(stat, player_type=player_type, limit=limit, unique_by_player=unique_by_player):
+    for board_title, stat, player_type, limit, unique_by_player, line in board_specs:
+        for entry in choose_rows(stat, player_type=player_type, limit=limit, unique_by_player=unique_by_player, line=line):
             team = clean_str(entry.get('team'))
             opp = clean_str(entry.get('opp'))
             prob = safe_float(entry.get('prob_cons'))
@@ -189,7 +259,7 @@ def load_board_snapshot_rows(snapshot_path: Path, launch_date: str = '') -> list
         date = clean_str(row.get('date') or row.get('gameDate'))
         if launch_date and date and date < launch_date:
             continue
-        out.append({
+        normalized = {
             'date': date,
             'league': 'MLB',
             'player': clean_str(row.get('player')),
@@ -210,7 +280,9 @@ def load_board_snapshot_rows(snapshot_path: Path, launch_date: str = '') -> list
             'note': clean_str(row.get('note')),
             'gameId': safe_int(row.get('gameId') or row.get('gamePk')),
             'board': clean_str(row.get('board')),
-        })
+        }
+        if is_tracked_home_board_row(normalized):
+            out.append(normalized)
     return out
 
 
@@ -585,8 +657,8 @@ def main() -> int:
         print('[INFO] MLB prop results tracking is paused until data/mlb_results_launch_date.txt is set.')
         return 0
 
-    history = load_json(history_path, [])
-    pending = load_json(pending_path, [])
+    history = [regrade_result_row(row) for row in load_json(history_path, []) if is_tracked_home_board_row(row)]
+    pending = [row for row in load_json(pending_path, []) if is_tracked_home_board_row(row)]
 
     yesterday = (datetime.fromisoformat(local_today_iso()).date() - timedelta(days=1)).isoformat()
     pending = [
@@ -644,7 +716,7 @@ def main() -> int:
             continue
         git_backfill.extend(load_git_board_rows(repo, missing_date))
 
-    current = merge_unique(current, git_backfill)
+    current = [row for row in merge_unique(current, git_backfill) if is_tracked_home_board_row(row)]
     pending = merge_unique(pending, current)
 
     batter_df = prep_batter_logs(load_table_latest(args.mlb_data_dir, 'batter_game_logs'))
@@ -669,11 +741,11 @@ def main() -> int:
             **prop,
             'role': role,
             'actual': actual_value,
-            'result': outcome_label(actual_value, line),
+            'result': prop_result_label(prop, actual_value, line),
             'gamePk': safe_int(actual_row.get('gamePk') or prop.get('gameId')),
         })
 
-    history = merge_unique(history, settled_rows)
+    history = [regrade_result_row(row) for row in merge_unique(history, settled_rows)]
     write_json(history_path, history)
     write_json(pending_path, unresolved)
     write_json(summary_path, summarize(history))
