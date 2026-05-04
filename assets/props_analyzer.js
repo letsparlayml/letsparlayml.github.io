@@ -185,10 +185,65 @@ function simColor(bin) {
   }
 }
 
+function statDisplayLabel(entry, series) {
+  const stat = normalizeStatToken(entry?.stat || series?.stat);
+  const supplied = entry?.stat_display || entry?.statDisplay || series?.statDisplay || series?.stat_display;
+  if (supplied) return String(supplied);
+  const labels = {
+    PTS: 'Points',
+    REB: 'Rebounds',
+    AST: 'Assists',
+    PRA: 'PRA',
+    PR: 'Points + Rebounds',
+    PA: 'Points + Assists',
+    RA: 'Rebounds + Assists',
+    THREEPM: '3PM',
+    '3PM': '3PM',
+    H: 'Hits',
+    HRR: 'Hits + Runs + RBI',
+    TB: 'Total Bases',
+    K: 'Strikeouts',
+    HA: 'Hits Allowed',
+    ER: 'Earned Runs',
+    BB: 'Walks'
+  };
+  return labels[stat] || stat || 'Prop';
+}
+
+function playerRole(entry, series) {
+  return String(entry?.playerType || series?.playerType || entry?.role || series?.role || '').toLowerCase();
+}
+
+function contextColumnLabel(entry, series) {
+  const role = playerRole(entry, series);
+  if (role === 'pitcher') return 'IP';
+  if (role === 'batter') return 'AB';
+  const league = String(entry?.league || series?.league || '').toUpperCase();
+  if (league === 'MLB') return 'AB';
+  return 'Min';
+}
+
+function updateAnalyzerTableLabels(entry, series) {
+  const statLabel = statDisplayLabel(entry, series);
+  const contextLabel = contextColumnLabel(entry, series);
+  ['analyzer-games-col-4', 'analyzer-similar-col-4'].forEach(id => {
+    const node = byId(id);
+    if (node) node.textContent = statLabel;
+  });
+  ['analyzer-games-col-5', 'analyzer-similar-col-5'].forEach(id => {
+    const node = byId(id);
+    if (node) node.textContent = contextLabel;
+  });
+  const trendCopy = byId('analyzer-trend-copy');
+  if (trendCopy && entry) {
+    trendCopy.textContent = `Chart shows ${statLabel} by game for the selected overall/home/away view. The dashed line is the selected comparison line.`;
+  }
+}
+
 function updateHero(entry, series) {
   byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
   byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
-  byId('analyzer-hero-line').textContent = entry ? `${entry.stat_display || entry.stat} ${fmt(entry.line, 1)}` : '—';
+  byId('analyzer-hero-line').textContent = entry ? `${statDisplayLabel(entry, series)} ${fmt(entry.line, 1)}` : '—';
   byId('analyzer-hero-model').textContent = entry ? `${fmt(entry.pred_anchor ?? entry.mu_cons ?? series?.modelPred, 1)} (${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series?.modelPred ?? 0) - (entry.line ?? 0), 1)})` : '—';
   byId('analyzer-hero-prob').textContent = entry ? fmtPct(entry.prob_cons) : '—';
 }
@@ -304,7 +359,7 @@ function renderSummary(entry, series, view) {
   `).join('');
 }
 
-function renderTableRows(rootId, games, line) {
+function renderTableRows(rootId, games, line, entry = null, series = null) {
   const body = byId(rootId);
   if (!body) return;
   if (!(games || []).length) {
@@ -323,7 +378,7 @@ function renderTableRows(rootId, games, line) {
       <td>${escapeHtml(g.opp || '')}</td>
       <td>${escapeHtml(g.location || '')}</td>
       <td>${fmt(g.value, 1)}</td>
-      <td>${fmt(g.minutes, 1)}</td>
+      <td>${fmt(g.minutes ?? g.contextValue, 1)}</td>
       <td>${hasNumericValue(g.value) ? (g.value >= line ? 'Hit' : 'Miss') : '—'}</td>
       <td><span class="sim-pill" style="--sim-color:${simColor(g.simBin)}">${escapeHtml(g.simBin || 'all')}</span></td>
     </tr>
@@ -383,7 +438,7 @@ function renderChart(entry, series, view) {
     const cy = y(Number(g.value));
     return `<g>
       <circle cx="${cx}" cy="${cy}" r="5" fill="${simColor(g.simBin)}" stroke="#0b1220" stroke-width="1.5">
-        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes) ? ` in ${fmt(g.minutes, 1)} min` : ''} (${g.simBin || 'all'})`)}</title>
+        <title>${escapeHtml(`${g.label || g.gameDate || ''} ${g.opp || ''} ${g.location || ''} — ${fmt(g.value, 1)}${hasNumericValue(g.minutes ?? g.contextValue) ? ` in ${fmt(g.minutes ?? g.contextValue, 1)} ${contextColumnLabel(entry, series)}` : ''} (${g.simBin || 'all'})`)}</title>
       </circle>
       <text x="${cx}" y="${height - 18}" fill="#9db0d0" font-size="10" text-anchor="middle">${escapeHtml(analyzerDisplayLabel(g))}</text>
     </g>`;
@@ -616,8 +671,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       renderKpis(null, null, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], null);
-      renderTableRows('analyzer-similar-body', [], null);
+      updateAnalyzerTableLabels(null, null);
+      renderTableRows('analyzer-games-body', [], null, null, null);
+      renderTableRows('analyzer-similar-body', [], null, null, null);
       updateUrl(null, state.selection, state.config.league);
       return;
     }
@@ -626,8 +682,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, null, state.view);
     renderChart(null, null, state.view);
     renderSummary(null, null, state.view);
-    renderTableRows('analyzer-games-body', [], entry?.line);
-    renderTableRows('analyzer-similar-body', [], entry?.line);
+    updateAnalyzerTableLabels(entry, null);
+    renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
+    renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
 
     const series = await selectedSeries(entry);
     if (token !== renderToken) return;
@@ -646,8 +703,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
       }, state.view);
       renderChart(null, null, state.view);
       renderSummary(null, null, state.view);
-      renderTableRows('analyzer-games-body', [], entry?.line);
-      renderTableRows('analyzer-similar-body', [], entry?.line);
+      updateAnalyzerTableLabels(entry, null);
+    renderTableRows('analyzer-games-body', [], entry?.line, entry, null);
+      renderTableRows('analyzer-similar-body', [], entry?.line, entry, null);
       updateUrl(entry, state.selection, state.config.league);
       return;
     }
@@ -655,8 +713,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     renderKpis(entry, series, state.view);
     renderChart(entry, series, state.view);
     renderSummary(entry, series, state.view);
-    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line);
-    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line);
+    updateAnalyzerTableLabels(entry, series);
+    renderTableRows('analyzer-games-body', recentWindowGames(series || { games: [] }, state.view).slice().reverse(), entry?.line, entry, series);
+    renderTableRows('analyzer-similar-body', (series?.similarGames || []).slice().reverse(), entry?.line, entry, series);
     updateUrl(entry, state.selection, state.config.league);
   }
 

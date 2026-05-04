@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results | Lets Parlay ML</title>
+  <link rel="stylesheet" href="assets/style.css?v=10" />
+</head>
+<body>
+  <header class="site-header compact-header">
+    <div class="wrap">
+      <div class="brand-row">
+        <div>
+          <p class="eyebrow">Model accountability</p>
+          <h1>Results</h1>
+          <p class="subhead">Track game results, MLB prop settlement, and category performance without cluttering the daily top-picks homepage.</p>
+        </div>
+        <nav class="top-nav">
+          <a href="index.html">Top picks</a>
+          <a href="index.html#builder">Build a card</a>
+          <a href="props_analyzer.html">Prop analyzer</a>
+          <a href="line_tracker.html">Line tracker</a>
+          <a href="props_lab.html">Props lab</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap page-grid">
+    <section class="panel" id="results">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Game results</p>
+          <h2>Results explorer</h2>
+          <p class="muted">Viewing <span id="results-date-label"></span>. Use the filters below to move day by day or search across all graded dates.</p>
+        </div>
+      </div>
+
+      <div id="results-summary-grid" class="results-summary-grid"></div>
+
+      <div class="results-controls-grid">
+        <label>
+          Date
+          <select id="results-date-filter"></select>
+        </label>
+        <label>
+          Search
+          <input id="results-search-input" type="search" placeholder="Team, matchup, league, result" />
+        </label>
+      </div>
+      <p id="results-view-meta" class="muted results-view-meta">0 games shown</p>
+      <div id="results-view-summary-grid" class="results-summary-grid"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>League</th>
+              <th>Matchup</th>
+              <th>Predicted score</th>
+              <th>Actual score</th>
+              <th>ML</th>
+              <th>Spread</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="mlb-prop-results">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">MLB props</p>
+          <h2>Settled prop results explorer</h2>
+          <p class="muted">Viewing <span id="mlb-prop-results-date-label">—</span> • Pending props: <span id="mlb-prop-results-pending-count">0</span></p>
+        </div>
+      </div>
+
+      <div id="mlb-prop-results-summary-grid" class="results-summary-grid"></div>
+
+      <div class="results-controls-grid results-controls-grid-props">
+        <label>
+          Date
+          <select id="mlb-prop-results-date-filter"></select>
+        </label>
+        <label>
+          Stat
+          <select id="mlb-prop-results-stat-filter"></select>
+        </label>
+        <label>
+          Search
+          <input id="mlb-prop-results-search-input" type="search" placeholder="Player, team, matchup, board" />
+        </label>
+      </div>
+      <p id="mlb-prop-results-view-meta" class="muted results-view-meta">0 props shown</p>
+      <div id="mlb-prop-results-view-summary-grid" class="results-summary-grid"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Player</th>
+              <th>Matchup</th>
+              <th>Stat</th>
+              <th>Line</th>
+              <th>Model</th>
+              <th>Actual</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="mlb-prop-results-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js?v=10"></script>
+</body>
+</html>

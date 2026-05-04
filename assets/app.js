@@ -1621,26 +1621,31 @@ function mlbBoardDisplayLine(row) {
   return '—';
 }
 
-function mlbBoardTable(title, rows, { showLine = true, showAvg = false } = {}) {
+function mlbBoardTable(title, rows, { showLine = true, showAvg = false, primaryMetric = 'line', primaryLabel = 'Line' } = {}) {
   if (!rows.length) {
     return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No entries available yet.</div></article>`;
   }
-  const body = rows.map(row => `
+  const body = rows.map(row => {
+    const primaryValue = primaryMetric === 'average'
+      ? (hasNumericValue(row.avg_anchor) ? fmt(row.avg_anchor, 1) : '—')
+      : mlbBoardDisplayLine(row);
+    return `
     <tr>
       <td><a class="table-link" href="${propAnalyzerHref({ ...row, league: 'MLB', player: row.player, playerId: row.playerId, line: row.line, stat: row.stat })}">${escapeHtml(row.player || '')}</a></td>
-      ${showLine ? `<td>${escapeHtml(mlbBoardDisplayLine(row))}</td>` : ''}
+      ${showLine ? `<td>${escapeHtml(primaryValue)}</td>` : ''}
       <td>${escapeHtml(hasNumericValue(row.pred_anchor ?? row.mu_cons) ? fmt(row.pred_anchor ?? row.mu_cons, 1) : '—')}</td>
       ${showAvg ? `<td>${escapeHtml(hasNumericValue(row.avg_anchor) ? fmt(row.avg_anchor, 1) : '—')}</td>` : ''}
       <td>${escapeHtml(Number.isFinite(Number(row.prob_cons)) ? `${(Number(row.prob_cons) * 100).toFixed(1)}%` : '—')}</td>
       <td>${escapeHtml(propMatchupText(row))}</td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
   return `
     <article class="insight-board">
       <h4>${escapeHtml(title)}</h4>
       <div class="table-wrap compact-table-wrap">
         <table class="compact-table">
-          <thead><tr><th>Player</th>${showLine ? '<th>Line</th>' : ''}<th>Model</th>${showAvg ? '<th>Avg.</th>' : ''}<th>Prob.</th><th>Matchup</th></tr></thead>
+          <thead><tr><th>Player</th>${showLine ? `<th>${escapeHtml(primaryLabel)}</th>` : ''}<th>Model</th>${showAvg ? '<th>Avg.</th>' : ''}<th>Prob.</th><th>Matchup</th></tr></thead>
           <tbody>${body}</tbody>
         </table>
       </div>
@@ -1655,7 +1660,7 @@ function renderMlbHomeBoards(mlbAnalyzer, meta) {
   root.innerHTML = [
     mlbBoardTable('Best hits', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'H', playerType: 'batter', limit: 10 })),
     mlbBoardTable('Best two-plus total bases', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'TB', playerType: 'batter', line: 1.5, limit: 10 })),
-    mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10, uniqueByPlayer: true }), { showLine: false, showAvg: true })
+    mlbBoardTable('Top pitcher strikeouts', chooseMlbBoardRows(entries, { date: meta?.targetDate, stat: 'K', playerType: 'pitcher', limit: 10, uniqueByPlayer: true }), { showLine: true, showAvg: false, primaryMetric: 'average', primaryLabel: 'Avg.' })
   ].join('');
 }
 
@@ -1698,14 +1703,442 @@ function renderHomeInsights(homeInsights, meta) {
   renderInsightGrid('home-role-down-grid', day.roleDown, true);
 }
 
+
+function trackingToneClass(tracking) {
+  const tone = String(tracking?.tone || tracking?.trend || '').toLowerCase();
+  if (tone.includes('hot')) return 'trend-hot';
+  if (tone.includes('cold')) return 'trend-cold';
+  return 'trend-neutral';
+}
+
+function trackingLabel(tracking) {
+  if (!tracking) return 'No tracking yet';
+  return tracking.label || `${tracking.record || '0-0'} ${tracking.pctText || ''}`.trim() || 'No tracking yet';
+}
+
+function trackingTrendText(tracking) {
+  if (!tracking) return 'Limited';
+  return tracking.trend || 'Limited';
+}
+
+function cardProbabilityHtml(card) {
+  const prob = coerceProbability(card?.probability);
+  if (!Number.isFinite(prob)) {
+    if (hasNumericValue(card?.model)) return `<span class="pick-prob-label">Model</span><strong>${escapeHtml(fmt(card.model, 1))}</strong>`;
+    return `<span class="pick-prob-label">Signal</span><strong>Model</strong>`;
+  }
+  return `<span class="pick-prob-label">Probability</span><strong>${escapeHtml(fmtPct(prob, 0))}</strong>`;
+}
+
+function isTopPitcherProp(card) {
+  const stat = String(card?.stat || '').toUpperCase();
+  const category = String(card?.category || card?.title || '').toLowerCase();
+  return stat === 'HA' || stat === 'ER' || (stat === 'K' && (category.includes('pitcher') || category.includes('sp')));
+}
+
+function topPickPrimaryBaseline(card) {
+  if (!isTopPitcherProp(card)) return null;
+  return hasNumericValue(card?.average) ? `Avg ${fmt(card.average, 1)}` : null;
+}
+
+function topPickCardHtml(card) {
+  const tracking = card?.tracking || {};
+  const toneClass = trackingToneClass(tracking);
+  const matchup = card?.matchup || [card?.team, card?.opp ? `vs ${card.opp}` : ''].filter(Boolean).join(' ');
+  const detailBits = [];
+  const baseline = topPickPrimaryBaseline(card);
+  if (baseline) detailBits.push(baseline);
+  else if (hasNumericValue(card?.line)) detailBits.push(`Line ${fmt(card.line, 1)}`);
+  if (hasNumericValue(card?.model)) detailBits.push(`Model ${fmt(card.model, 1)}`);
+  if (!baseline && hasNumericValue(card?.average)) detailBits.push(`Avg ${fmt(card.average, 1)}`);
+  if (hasNumericValue(card?.modelTotal)) detailBits.push(`Model total ${fmt(card.modelTotal, 1)}`);
+  const detailHtml = detailBits.length
+    ? `<div class="mini-chip-row">${detailBits.map(bit => `<span class="mini-chip">${escapeHtml(bit)}</span>`).join('')}</div>`
+    : '';
+  const href = card?.href || '#';
+  return `
+    <article class="top-pick-card ${toneClass}">
+      <div class="top-pick-head">
+        <span class="tag">${escapeHtml(card?.league || '')}</span>
+        <span class="trend-pill ${toneClass}">${escapeHtml(trackingTrendText(tracking))}</span>
+      </div>
+      <p class="top-pick-category">${escapeHtml(card?.category || card?.title || 'Model pick')}</p>
+      <h3>${escapeHtml(card?.pick || card?.title || 'Model signal')}</h3>
+      <p class="muted top-pick-matchup">${escapeHtml(matchup || 'Today')}</p>
+      <div class="top-pick-metric">${cardProbabilityHtml(card)}</div>
+      ${detailHtml}
+      <div class="tracking-strip ${toneClass}">
+        <span>${escapeHtml(tracking?.scope || 'Recent category')}</span>
+        <strong>${escapeHtml(trackingLabel(tracking))}</strong>
+      </div>
+      <p class="insight-copy">${escapeHtml(card?.reason || 'Model signal from today’s slate.')}</p>
+      <a class="button-link button-link-subtle top-pick-link" href="${escapeHtml(href)}">Analyze</a>
+    </article>
+  `;
+}
+
+function renderTopPickPulse(homeTopPicks) {
+  const root = byId('home-top-picks-pulse');
+  if (!root) return;
+  const tracking = homeTopPicks?.trackingSummary || {};
+  const propTrackers = Object.entries(tracking?.props || {}).map(([key, value]) => ({ key, ...value }));
+  const gameTrackers = Object.entries(tracking?.games || {}).map(([key, value]) => ({ key, ...value }));
+  const rows = [...propTrackers, ...gameTrackers]
+    .filter(row => row && (row.sample || row.record))
+    .slice(0, 7);
+  if (!rows.length) {
+    root.innerHTML = '<div class="empty-state">No recent top-pick tracking available yet.</div>';
+    return;
+  }
+  root.innerHTML = rows.map(row => `
+    <article class="pulse-card ${trackingToneClass(row)}">
+      <span>${escapeHtml(row.scope || row.key || 'Category')}</span>
+      <strong>${escapeHtml(row.record || '0-0')}</strong>
+      <small>${escapeHtml(row.pctText || '—')} • ${escapeHtml(row.trend || 'Limited')}</small>
+    </article>
+  `).join('');
+}
+
+function renderHomeTopPicks(homeTopPicks) {
+  const root = byId('home-top-picks-grid');
+  if (!root) return;
+  const cards = Array.isArray(homeTopPicks?.topCards) ? homeTopPicks.topCards : [];
+  setText('hero-top-pick-count', String(cards.length));
+  if (!cards.length) {
+    root.innerHTML = '<div class="empty-state">No featured top picks are available yet. Run tools/build_home_top_picks_json.py after today’s data is generated.</div>';
+    return;
+  }
+  root.innerHTML = cards.map(topPickCardHtml).join('');
+}
+
+function compactPickRowHtml(card, options = {}) {
+  const prob = coerceProbability(card?.probability);
+  const probText = Number.isFinite(prob) ? fmtPct(prob, 0) : (hasNumericValue(card?.model) ? `Model ${fmt(card.model, 1)}` : 'Model');
+  const metricValue = options.metric === 'average'
+    ? (hasNumericValue(card?.average) ? fmt(card.average, 1) : '—')
+    : (card?.line !== null && card?.line !== undefined && card?.line !== '' ? fmt(card.line, 1) : '—');
+  return `
+    <tr>
+      <td><a class="table-link" href="${escapeHtml(card?.href || '#')}">${escapeHtml(card?.player || card?.pick || '')}</a></td>
+      <td>${escapeHtml(metricValue)}</td>
+      <td>${escapeHtml(hasNumericValue(card?.model) ? fmt(card.model, 1) : '—')}</td>
+      ${options.showSeparateAverage ? `<td>${escapeHtml(hasNumericValue(card?.average) ? fmt(card.average, 1) : '—')}</td>` : ''}
+      <td>${escapeHtml(probText)}</td>
+      <td>${escapeHtml(card?.matchup || '')}</td>
+    </tr>
+  `;
+}
+
+function mlbBoardSnapshotTable(title, rows, options = {}) {
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const metric = options.metric || 'line';
+  const metricLabel = options.metricLabel || (metric === 'average' ? 'Avg.' : 'Line');
+  const showSeparateAverage = Boolean(options.showSeparateAverage);
+  if (!safeRows.length) {
+    return `<article class="insight-board"><h4>${escapeHtml(title)}</h4><div class="empty-state">No entries available yet.</div></article>`;
+  }
+  return `
+    <article class="insight-board">
+      <h4>${escapeHtml(title)}</h4>
+      <div class="table-wrap compact-table-wrap">
+        <table class="compact-table">
+          <thead><tr><th>Player</th><th>${escapeHtml(metricLabel)}</th><th>Model</th>${showSeparateAverage ? '<th>Avg.</th>' : ''}<th>Prob.</th><th>Matchup</th></tr></thead>
+          <tbody>${safeRows.map(card => compactPickRowHtml(card, { metric, showSeparateAverage })).join('')}</tbody>
+        </table>
+      </div>
+    </article>
+  `;
+}
+
+function renderMlbHomeBoardsSnapshot(homeTopPicks) {
+  const root = byId('mlb-home-props-grid');
+  const tabs = byId('mlb-board-tabs');
+  if (!root) return;
+  const boards = homeTopPicks?.mlbBoards || {};
+  const config = [
+    { key: 'hits', label: 'Hits', options: { metric: 'line', metricLabel: 'Line', showSeparateAverage: true } },
+    { key: 'hrr', label: 'HRR', options: { metric: 'line', metricLabel: 'Line', showSeparateAverage: true } },
+    { key: 'totalBases', label: '1.5+ Total Bases', options: { metric: 'line', metricLabel: 'Line', showSeparateAverage: true } },
+    { key: 'pitcherKs', label: 'Pitcher Ks', options: { metric: 'average', metricLabel: 'Avg.' } },
+    { key: 'pitcherHA', label: 'Pitcher Hits Allowed', options: { metric: 'average', metricLabel: 'Avg.' } },
+    { key: 'pitcherERLow', label: 'Lowest SP ER', options: { metric: 'average', metricLabel: 'Avg.' } },
+    { key: 'pitcherERHigh', label: 'Highest SP ER', options: { metric: 'average', metricLabel: 'Avg.' } }
+  ];
+  const available = config.filter(item => Array.isArray(boards[item.key]) && boards[item.key].length);
+  if (!available.length) {
+    root.innerHTML = '<div class="empty-state">No MLB quick boards available yet.</div>';
+    if (tabs) tabs.innerHTML = '';
+    return;
+  }
+
+  const renderBoard = key => {
+    const item = config.find(entry => entry.key === key) || available[0];
+    root.innerHTML = mlbBoardSnapshotTable(item.label, boards[item.key] || [], item.options || {});
+    if (tabs) {
+      [...tabs.querySelectorAll('button')].forEach(btn => btn.classList.toggle('active', btn.dataset.board === item.key));
+    }
+  };
+
+  if (tabs && !tabs.dataset.bound) {
+    tabs.innerHTML = available.map(item => `<button type="button" data-board="${escapeHtml(item.key)}">${escapeHtml(item.label)}</button>`).join('');
+    tabs.addEventListener('click', event => {
+      const button = event.target.closest('button[data-board]');
+      if (!button) return;
+      renderBoard(button.dataset.board);
+    });
+    tabs.dataset.bound = '1';
+  }
+  renderBoard(available[0].key);
+}
+
+function quickGameCardHtml(item) {
+  const prob = coerceProbability(item?.probability);
+  return `
+    <article class="quick-game-card">
+      <div class="quick-game-top">
+        <span class="tag">${escapeHtml(item?.league || '')}</span>
+        <strong>${escapeHtml(Number.isFinite(prob) ? fmtPct(prob, 0) : 'Model')}</strong>
+      </div>
+      <h3>${escapeHtml(item?.pick || 'Game signal')}</h3>
+      <p class="muted">${escapeHtml(item?.matchup || '')}</p>
+      <p>${escapeHtml(item?.modelScore || item?.reason || '')}</p>
+      <a class="table-link" href="${escapeHtml(item?.href || '#')}">Open game detail</a>
+    </article>
+  `;
+}
+
+function renderHighConfidenceGames(homeTopPicks, fallbackGames, meta) {
+  const root = byId('high-confidence-games-grid');
+  if (!root) return;
+  const cards = Array.isArray(homeTopPicks?.highConfidenceGames) ? homeTopPicks.highConfidenceGames : [];
+  if (cards.length) {
+    root.innerHTML = cards.slice(0, 8).map(quickGameCardHtml).join('');
+    return;
+  }
+  const today = (fallbackGames || []).filter(g => g.gameDate === meta?.targetDate)
+    .map(g => ({
+      league: g.league,
+      matchup: `${g.awayTeam} @ ${g.homeTeam}`,
+      pick: g.favoriteWinLabel || 'Game lean',
+      probability: g.favoriteWinProb,
+      modelScore: `${fmt(g.modelAwayScore, 1)} - ${fmt(g.modelHomeScore, 1)}`,
+      href: `game.html?id=${encodeURIComponent(g.id)}`,
+      reason: g.summary || ''
+    }))
+    .sort((a, b) => coerceProbability(b.probability) - coerceProbability(a.probability))
+    .slice(0, 8);
+  root.innerHTML = today.length ? today.map(quickGameCardHtml).join('') : '<div class="empty-state">No high-confidence games available yet.</div>';
+}
+
+function parlayItemKey(item) {
+  return [item?.gameId || item?.id || item?.matchup || '', item?.player || '', item?.stat || item?.pick || ''].join('|');
+}
+
+function parlayGameKey(item) {
+  return String(item?.gameId || item?.matchup || item?.id || '').trim();
+}
+
+function parlayConflict(a, b) {
+  const samePlayer = normalizeLookupToken(a?.player || '') && normalizeLookupToken(a?.player || '') === normalizeLookupToken(b?.player || '');
+  if (!samePlayer) return false;
+  const statA = String(a?.stat || '').toUpperCase();
+  const statB = String(b?.stat || '').toUpperCase();
+  return statA && statB && statA === statB;
+}
+
+function parlayBaseThreshold(style) {
+  if (style === 'safe') return 0.62;
+  if (style === 'upside') return 0.52;
+  return 0.56;
+}
+
+function parlayCandidateWeight(item, style, minProb) {
+  const probability = coerceProbability(item?.probability);
+  if (!Number.isFinite(probability)) return 0;
+  const lift = Math.max(0.015, probability - minProb + 0.04);
+  const exponent = style === 'safe' ? 3.25 : style === 'upside' ? 1.45 : 2.2;
+  const categoryBonus = String(item?.type || '').toLowerCase() === 'game' ? 0.92 : 1;
+  const trackingRate = coerceProbability(item?.tracking?.winRate);
+  const trackingBonus = Number.isFinite(trackingRate) ? Math.max(0.82, Math.min(1.18, 0.92 + trackingRate * 0.35)) : 1;
+  return Math.pow(lift, exponent) * categoryBonus * trackingBonus;
+}
+
+function weightedPick(items, style, minProb) {
+  if (!items.length) return null;
+  const weights = items.map(item => parlayCandidateWeight(item, style, minProb));
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (!Number.isFinite(total) || total <= 0) return items[Math.floor(Math.random() * items.length)];
+  let draw = Math.random() * total;
+  for (let i = 0; i < items.length; i += 1) {
+    draw -= weights[i];
+    if (draw <= 0) return items[i];
+  }
+  return items[items.length - 1];
+}
+
+function filterParlayCandidates(pool, { sport, style, minProb }) {
+  let candidates = (pool || [])
+    .map(item => ({ ...item, probability: coerceProbability(item?.probability) }))
+    .filter(item => Number.isFinite(item.probability) && item.probability >= minProb);
+  if (sport && sport !== 'ALL') candidates = candidates.filter(item => String(item.league || '').toUpperCase() === sport);
+  candidates.sort((a, b) => b.probability - a.probability);
+  return candidates;
+}
+
+function sameGameParlayCandidates(candidates, count) {
+  const groups = new Map();
+  candidates.forEach(item => {
+    const key = parlayGameKey(item);
+    if (!key) return;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+  const eligible = Array.from(groups.values()).filter(group => group.length >= Math.min(count, 2));
+  if (!eligible.length) return [];
+  eligible.sort((a, b) => {
+    const avgB = b.reduce((sum, item) => sum + item.probability, 0) / b.length;
+    const avgA = a.reduce((sum, item) => sum + item.probability, 0) / a.length;
+    return avgB - avgA;
+  });
+  const topGroups = eligible.slice(0, Math.min(8, eligible.length));
+  return topGroups[Math.floor(Math.random() * topGroups.length)] || [];
+}
+
+function selectParlayLegs(pool, { count, sport, style, correlationMode }) {
+  const baseMinProb = parlayBaseThreshold(style);
+  const thresholds = [baseMinProb, Math.max(0.50, baseMinProb - 0.04), Math.max(0.48, baseMinProb - 0.08)];
+  let bestSelection = [];
+
+  for (const minProb of thresholds) {
+    const candidates = filterParlayCandidates(pool, { sport, style, minProb });
+    const workingPool = correlationMode === 'same-game' ? sameGameParlayCandidates(candidates, count) : candidates;
+    if (!workingPool.length) continue;
+
+    for (let attempt = 0; attempt < 45; attempt += 1) {
+      const selected = [];
+      const seen = new Set();
+      const usedGames = new Map();
+      const usedCategories = new Map();
+      let available = workingPool.slice();
+
+      while (available.length && selected.length < count) {
+        const valid = available.filter(item => {
+          const key = parlayItemKey(item);
+          if (seen.has(key)) return false;
+          if (selected.some(existing => parlayConflict(existing, item))) return false;
+          const gameKey = parlayGameKey(item);
+          const category = String(item.category || item.stat || item.type || '').toUpperCase();
+          if (correlationMode === 'avoid' && gameKey && usedGames.has(gameKey)) return false;
+          if (correlationMode === 'allow' && gameKey && (usedGames.get(gameKey) || 0) >= 2) return false;
+          if (correlationMode !== 'same-game' && category && (usedCategories.get(category) || 0) >= 2) return false;
+          return true;
+        });
+        if (!valid.length) break;
+        const choice = weightedPick(valid, style, minProb);
+        if (!choice) break;
+        selected.push(choice);
+        seen.add(parlayItemKey(choice));
+        const gameKey = parlayGameKey(choice);
+        if (gameKey) usedGames.set(gameKey, (usedGames.get(gameKey) || 0) + 1);
+        const category = String(choice.category || choice.stat || choice.type || '').toUpperCase();
+        if (category) usedCategories.set(category, (usedCategories.get(category) || 0) + 1);
+        available = available.filter(item => parlayItemKey(item) !== parlayItemKey(choice));
+      }
+
+      if (selected.length > bestSelection.length) bestSelection = selected;
+      if (selected.length >= count) return selected;
+    }
+  }
+
+  return bestSelection;
+}
+
+function adjustedParlayProbability(legs, correlationMode) {
+  if (!legs.length) return NaN;
+  const raw = legs.reduce((acc, leg) => acc * coerceProbability(leg.probability), 1);
+  const gameCounts = new Map();
+  legs.forEach(leg => {
+    const key = parlayGameKey(leg);
+    if (!key) return;
+    gameCounts.set(key, (gameCounts.get(key) || 0) + 1);
+  });
+  let penalty = correlationMode === 'same-game' ? 0.80 : 0.96;
+  gameCounts.forEach(count => {
+    if (count > 1) penalty *= Math.pow(0.86, count - 1);
+  });
+  return raw * penalty;
+}
+
+function renderParlayBuilder(homeTopPicks) {
+  const output = byId('parlay-builder-output');
+  if (!output) return;
+  const pool = Array.isArray(homeTopPicks?.parlayPool) ? homeTopPicks.parlayPool : [];
+  const controls = {
+    count: byId('parlay-leg-count'),
+    sport: byId('parlay-sport-filter'),
+    style: byId('parlay-risk-style'),
+    correlationMode: byId('parlay-correlation-mode'),
+    reroll: byId('parlay-reroll'),
+  };
+
+  const rerender = () => {
+    const count = Number(controls.count?.value || 3);
+    const sport = controls.sport?.value || 'ALL';
+    const style = controls.style?.value || 'balanced';
+    const correlationMode = controls.correlationMode?.value || 'avoid';
+    const minProb = parlayBaseThreshold(style);
+    const matchingCandidates = filterParlayCandidates(pool, { sport, style, minProb });
+    const legs = selectParlayLegs(pool, { count, sport, style, correlationMode });
+    if (!legs.length) {
+      output.innerHTML = '<div class="empty-state">No parlay candidates match those filters yet.</div>';
+      return;
+    }
+    const estimate = adjustedParlayProbability(legs, correlationMode);
+    const sportLabel = sport === 'ALL' ? 'mixed-sport' : sport;
+    output.innerHTML = `
+      <article class="parlay-card">
+        <div class="parlay-card-head">
+          <div>
+            <p class="eyebrow">Generated card</p>
+            <h3>${legs.length}-pick ${style === 'safe' ? 'safer' : style === 'upside' ? 'upside' : 'balanced'} ${sportLabel} card</h3>
+            <p class="muted">Pool: ${escapeHtml(String(matchingCandidates.length))} candidates. Generate again for a new weighted combination.</p>
+          </div>
+          <div class="parlay-prob"><span>Est. probability</span><strong>${escapeHtml(Number.isFinite(estimate) ? fmtPct(estimate, 1) : 'N/A')}</strong></div>
+        </div>
+        <ol class="parlay-leg-list">
+          ${legs.map(leg => `
+            <li>
+              <div>
+                <strong>${escapeHtml(leg.pick || leg.title || '')}</strong>
+                <span>${escapeHtml([leg.league, leg.matchup || leg.category].filter(Boolean).join(' • '))}</span>
+              </div>
+              <a href="${escapeHtml(leg.href || '#')}">${escapeHtml(fmtPct(leg.probability, 0))}</a>
+            </li>
+          `).join('')}
+        </ol>
+        <p class="muted">This uses weighted random selection from higher-probability model picks, then excludes duplicate/conflicting legs and applies a conservative correlation penalty.</p>
+      </article>
+    `;
+  };
+
+  Object.values(controls).forEach(control => {
+    if (control && !control.dataset.bound) {
+      control.addEventListener(control.tagName === 'BUTTON' ? 'click' : 'change', rerender);
+      control.dataset.bound = '1';
+    }
+  });
+  rerender();
+}
+
 function fillHeader(meta, todayGames, tomorrowGames, props) {
-  setText('site-title', meta?.siteTitle || 'Lets Parlay ML');
-  setText('hero-leagues', Array.isArray(meta?.leagues) ? meta.leagues.join(' • ') : 'NBA • NHL • CBB');
+  setText('site-title', meta?.siteTitle && meta.siteTitle !== 'Sports Predictions Showcase' ? meta.siteTitle : 'Lets Parlay ML');
+  setText('hero-leagues', Array.isArray(meta?.leagues) ? meta.leagues.join(' • ') : 'NBA • MLB • NHL');
   setText('hero-game-count', String((todayGames || []).length));
   setText('hero-next-game-count', String((tomorrowGames || []).length));
   setText('hero-prop-count', String((props || []).length));
   setText('hero-updated', meta?.lastUpdated || '—');
   setText('today-date-label', meta?.targetDate || '');
+  setText('today-date-label-full', meta?.targetDate || '');
   setText('tomorrow-date-label', meta?.nextDate || '');
   setText('results-date-label', meta?.resultsDate || meta?.targetDate || '');
 }
@@ -1733,7 +2166,7 @@ function setupLeagueFilter(allGames, meta) {
 (async function init() {
   const root = byId('today-games-grid') || byId('games-grid');
   try {
-    const [meta, games, rawProps, rawPropsLab, results, resultsSummary, resultsHistory, rawHomeInsights, injuries, mlbPropResults, mlbPropSummary, mlbPropPending, mlbAnalyzer, mlbResultsLaunchText] = await Promise.all([
+    const [meta, games, rawProps, rawPropsLab, results, resultsSummary, resultsHistory, rawHomeInsights, injuries, mlbPropResults, mlbPropSummary, mlbPropPending, homeTopPicks, mlbResultsLaunchText] = await Promise.all([
       loadJson('data/site.json'),
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
@@ -1746,7 +2179,7 @@ function setupLeagueFilter(allGames, meta) {
       loadJson('data/mlb_prop_results_history.json', []),
       loadJson('data/mlb_prop_results_summary.json', {}),
       loadJson('data/mlb_prop_results_pending.json', []),
-      loadJson('data/mlb_props_analyzer.json', { entries: [] }),
+      loadJson('data/home_top_picks.json', {}),
       loadText('data/mlb_results_launch_date.txt', '')
     ]);
     const injuryLookup = buildInjuryLookup(injuries);
@@ -1777,7 +2210,11 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     setupLeagueFilter(games, meta);
     renderProps(todayProps, 'props-body');
     renderProps(nextProps, 'props-next-body');
-    renderMlbHomeBoards(mlbAnalyzer, meta);
+    renderTopPickPulse(homeTopPicks);
+    renderHomeTopPicks(homeTopPicks);
+    renderParlayBuilder(homeTopPicks);
+    renderMlbHomeBoardsSnapshot(homeTopPicks);
+    renderHighConfidenceGames(homeTopPicks, games, meta);
     renderNbaGameEdges(games, meta);
     renderHomeInsights(homeInsights, meta);
     const mlbResultsLaunchDate = String(mlbResultsLaunchText || '').trim();

@@ -86,6 +86,10 @@ echo [12/12] Refresh results rollup again after MLB board write...
 "%PY%" "%ROLLUP_SCRIPT%" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
 echo.
+echo [13/13] Build compact homepage top picks / parlay pool...
+"%PY%" "%TOOLS%\build_home_top_picks_json.py"
+if errorlevel 1 goto :fail
+echo.
 echo Commit and push if changed...
 git add -A
 git diff --cached --quiet

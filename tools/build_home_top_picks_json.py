@@ -1,0 +1,1015 @@
+#!/usr/bin/env python3
+"""Build a compact homepage snapshot for LetsParlayML.
+
+This keeps the public homepage fast and beginner-friendly by extracting only the
+featured cards, quick boards, parlay candidates, and recent accountability
+records from the larger model/result payloads.
+"""
+from __future__ import annotations
+
+import json
+import math
+import re
+from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable, Iterable
+
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data"
+OUT = DATA / "home_top_picks.json"
+
+
+def read_json(path: Path, fallback: Any) -> Any:
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return fallback
+    except json.JSONDecodeError:
+        return fallback
+
+
+def num(value: Any, default: float | None = None) -> float | None:
+    try:
+        if value in (None, ""):
+            return default
+        n = float(value)
+        return n if math.isfinite(n) else default
+    except (TypeError, ValueError):
+        return default
+
+
+def pct(value: Any) -> float | None:
+    n = num(value)
+    if n is None:
+        return None
+    return n / 100.0 if n > 1 else n
+
+
+def fmt_num(value: Any, digits: int = 1) -> str:
+    n = num(value)
+    if n is None:
+        return "—"
+    return f"{n:.{digits}f}"
+
+
+def normalize_result(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if "win" in raw:
+        return "Win"
+    if "loss" in raw or "lose" in raw:
+        return "Loss"
+    if "push" in raw:
+        return "Push"
+    return ""
+
+
+def safe_date(value: Any) -> str:
+    return str(value or "").strip()[:10]
+
+
+def is_tbd_player(row: dict[str, Any]) -> bool:
+    player = str(row.get("player") or "").lower()
+    return any(token in player for token in ("tbd", "to be determined", "probable starter"))
+
+
+def is_hidden_injury(row: dict[str, Any]) -> bool:
+    status = str(row.get("injuryStatus") or row.get("status") or "").strip().lower()
+    return status in {"out", "doubtful", "o", "d"}
+
+
+def line_matches(row: dict[str, Any], wanted: float | None) -> bool:
+    if wanted is None:
+        return True
+    line = num(row.get("line"))
+    return line is not None and abs(line - wanted) < 1e-9
+
+
+def canonical_nba_stat(stat: Any) -> str:
+    raw = str(stat or "").upper().strip()
+    return {"TPM": "3PM", "THREES": "3PM", "3P": "3PM"}.get(raw, raw)
+
+
+def stat_label(stat: str) -> str:
+    key = canonical_nba_stat(stat)
+    labels = {
+        "H": "Hits",
+        "HRR": "Hits + Runs + RBI",
+        "TB": "Total Bases",
+        "K": "Pitcher Ks",
+        "HA": "Pitcher Hits Allowed",
+        "ER": "Pitcher Earned Runs",
+        "NRFI": "NRFI",
+        "YRFI": "YRFI",
+        "ML": "Moneyline",
+        "TOTAL": "Game Total",
+        "SPREAD": "Spread",
+        "PTS": "Points",
+        "REB": "Rebounds",
+        "AST": "Assists",
+        "PRA": "Points + Rebounds + Assists",
+        "PR": "Points + Rebounds",
+        "PA": "Points + Assists",
+        "RA": "Rebounds + Assists",
+        "3PM": "Made 3s",
+        "BLK": "Blocks",
+        "STL": "Steals",
+        "TO": "Turnovers",
+    }
+    return labels.get(key, key)
+
+
+def summarize_rows(rows: Iterable[dict[str, Any]], result_field: str = "result", limit: int = 30) -> dict[str, Any]:
+    ordered = sorted(list(rows), key=lambda r: safe_date(r.get("date")), reverse=True)[:limit]
+    wins = losses = pushes = 0
+    for row in ordered:
+        outcome = normalize_result(row.get(result_field))
+        if outcome == "Win":
+            wins += 1
+        elif outcome == "Loss":
+            losses += 1
+        elif outcome == "Push":
+            pushes += 1
+    decisions = wins + losses
+    total = wins + losses + pushes
+    rate = (wins / decisions) if decisions else None
+    if decisions < 5:
+        trend = "Limited"
+        tone = "neutral"
+    elif rate is not None and rate >= 0.60:
+        trend = "Hot"
+        tone = "hot"
+    elif rate is not None and rate <= 0.45:
+        trend = "Cold"
+        tone = "cold"
+    else:
+        trend = "Neutral"
+        tone = "neutral"
+    pct_text = f"{rate * 100:.0f}%" if rate is not None else "—"
+    record = f"{wins}-{losses}" + (f"-{pushes}" if pushes else "")
+    return {
+        "sample": total,
+        "wins": wins,
+        "losses": losses,
+        "pushes": pushes,
+        "record": record,
+        "winRate": rate,
+        "pctText": pct_text,
+        "trend": trend,
+        "tone": tone,
+        "label": f"Last {total}: {record} ({pct_text})" if total else "No settled history yet",
+    }
+
+
+def prop_tracker(prop_results: list[dict[str, Any]], stat: str, *, line: float | None = None, limit: int = 30) -> dict[str, Any]:
+    stat = stat.upper()
+    rows = [
+        r for r in prop_results
+        if str(r.get("stat") or "").upper() == stat
+        and (line is None or line_matches(r, line))
+        and normalize_result(r.get("result"))
+    ]
+    summary = summarize_rows(rows, "result", limit=limit)
+    summary["scope"] = f"{stat_label(stat)} category"
+    return summary
+
+
+def game_tracker(results: list[dict[str, Any]], field: str, league: str | None = None, limit: int = 40) -> dict[str, Any]:
+    rows = [r for r in results if normalize_result(r.get(field))]
+    if league:
+        rows = [r for r in rows if str(r.get("league") or "").upper() == league.upper()]
+    summary = summarize_rows(rows, field, limit=limit)
+    label_map = {"mlResult": "Game winner", "spreadResult": "Spread", "totalResult": "Total"}
+    summary["scope"] = f"{league.upper() + ' ' if league else ''}{label_map.get(field, field)} results"
+    return summary
+
+
+def nrfi_yrfi_tracker(results: list[dict[str, Any]], pick: str | None = None, limit: int = 40) -> dict[str, Any]:
+    """Track first-inning model picks, not full-game totals.
+
+    MLB result rows store labels such as "NRFI Win" or "YRFI Loss" in
+    nrfiResult. Homepage NRFI/YRFI cards should use that field instead of
+    totalResult, otherwise the hot/cold badge is really grading full-game
+    overs/unders.
+    """
+    wanted = str(pick or "").upper().strip()
+    rows = []
+    for row in results:
+        if str(row.get("league") or "").upper() != "MLB":
+            continue
+        label = str(row.get("nrfiResult") or row.get("firstInningResult") or "").strip()
+        if not normalize_result(label):
+            continue
+        if wanted in {"NRFI", "YRFI"} and not label.upper().startswith(wanted):
+            continue
+        enriched = dict(row)
+        enriched["_nrfiYrfiResult"] = label
+        rows.append(enriched)
+
+    summary = summarize_rows(rows, "_nrfiYrfiResult", limit=limit)
+    summary["scope"] = f"MLB {wanted} results" if wanted in {"NRFI", "YRFI"} else "MLB NRFI/YRFI results"
+    return summary
+
+
+def row_score(row: dict[str, Any], *, prefer_model_gap: bool = False) -> float:
+    prob = pct(row.get("prob_cons")) or 0.0
+    pred = num(row.get("pred_anchor") if row.get("pred_anchor") is not None else row.get("mu_cons"), 0.0) or 0.0
+    avg = num(row.get("avg_anchor"), 0.0) or 0.0
+    line = num(row.get("line"), 0.0) or 0.0
+    hit_score = num(row.get("hit_score"), 0.0) or 0.0
+    gap = pred - max(line, 0.0)
+    avg_gap = pred - avg
+    if prefer_model_gap:
+        return avg_gap * 1.25 + pred * 0.15 + prob * 0.20
+    return prob * 0.60 + hit_score * 0.15 + max(gap, -2.0) * 0.10 + max(pred, 0.0) * 0.02
+
+
+def choose_prop_rows(entries: list[dict[str, Any]], date: str, stat: str, *, role: str | None = None,
+                     line: float | None = None, limit: int = 8, unique_player: bool = True,
+                     reverse: bool = True, prefer_model_gap: bool = False) -> list[dict[str, Any]]:
+    rows = []
+    for row in entries:
+        if safe_date(row.get("gameDate") or row.get("date")) != date:
+            continue
+        if str(row.get("stat") or "").upper() != stat.upper():
+            continue
+        if role and str(row.get("playerType") or row.get("role") or "").lower() != role.lower():
+            continue
+        if line is not None and not line_matches(row, line):
+            continue
+        if is_tbd_player(row) or is_hidden_injury(row):
+            continue
+        rows.append(row)
+
+    rows.sort(key=lambda r: row_score(r, prefer_model_gap=prefer_model_gap), reverse=reverse)
+    if not unique_player:
+        return rows[:limit]
+    seen = set()
+    out = []
+    for row in rows:
+        key = (str(row.get("playerId") or row.get("player") or "").lower(), canonical_nba_stat(row.get("stat")))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def prop_url(row: dict[str, Any]) -> str:
+    from urllib.parse import urlencode
+
+    params = {
+        "league": "MLB",
+        "date": safe_date(row.get("gameDate") or row.get("date")),
+        "stat": str(row.get("stat") or "").upper(),
+    }
+    if row.get("playerId"):
+        params["playerId"] = str(row.get("playerId"))
+    elif row.get("player"):
+        params["player"] = str(row.get("player"))
+    if row.get("line") not in (None, ""):
+        params["line"] = str(row.get("line"))
+    return "props_analyzer.html?" + urlencode(params)
+
+
+def compact_prop(row: dict[str, Any], tracker: dict[str, Any] | None = None, *, card_type: str = "prop") -> dict[str, Any]:
+    stat = str(row.get("stat") or "").upper()
+    prob = pct(row.get("prob_cons"))
+    model = num(row.get("pred_anchor") if row.get("pred_anchor") is not None else row.get("mu_cons"))
+    avg = num(row.get("avg_anchor"))
+    line = num(row.get("line"))
+    title = stat_label(stat)
+    is_pitcher = str(row.get("playerType") or row.get("role") or "").lower() == "pitcher" or stat in {"HA", "ER"}
+    if is_pitcher and stat in {"K", "HA", "ER"}:
+        # Homepage pitcher boards should compare model projection to pitcher average, not
+        # display analyzer placeholder/alternate lines. True book lines can be added later
+        # after a pitcher-line scraper is wired in.
+        line = None
+    if stat == "ER" and card_type == "pitcher-low-er":
+        title = "Lowest SP ER Projection"
+        prob = None
+    elif stat == "ER" and card_type == "pitcher-high-er":
+        title = "Highest SP ER Projection"
+        prob = None
+    if stat == "H":
+        pick = f"{row.get('player', '')} 0.5+ hit"
+    elif stat == "TB" and line == 1.5:
+        pick = f"{row.get('player', '')} 1.5+ total bases"
+    elif stat == "HRR":
+        pick = f"{row.get('player', '')} over {fmt_num(line, 1)} HRR"
+    elif stat == "K" and str(row.get("playerType") or "").lower() == "pitcher":
+        pick = f"{row.get('player', '')} Ks: model {fmt_num(model)} vs avg {fmt_num(avg)}"
+    elif stat == "ER" and card_type == "pitcher-low-er":
+        pick = f"{row.get('player', '')} low ER signal: {fmt_num(model)}"
+    elif stat == "ER" and card_type == "pitcher-high-er":
+        pick = f"{row.get('player', '')} high ER risk: {fmt_num(model)}"
+    elif stat == "ER":
+        pick = f"{row.get('player', '')} ER projection: {fmt_num(model)}"
+    elif stat == "HA":
+        pick = f"{row.get('player', '')} hits allowed: model {fmt_num(model)} vs avg {fmt_num(avg)}"
+    else:
+        pick = f"{row.get('player', '')} {stat_label(stat)}"
+
+    return {
+        "id": str(row.get("id") or f"{stat}|{row.get('player')}|{row.get('line')}")[:120],
+        "type": card_type,
+        "league": "MLB",
+        "category": title,
+        "stat": stat,
+        "player": row.get("player") or "",
+        "team": row.get("team") or "",
+        "opp": row.get("opp") or "",
+        "matchup": row.get("matchup") or "",
+        "line": line,
+        "model": model,
+        "average": avg,
+        "probability": prob,
+        "confidence": "High" if prob is not None and prob >= 0.68 else ("Medium" if prob is not None and prob >= 0.58 else "Lean"),
+        "title": title,
+        "pick": pick,
+        "reason": row.get("boardDriver") or row.get("summary") or row.get("driver_summary") or "Model and recent-form signal.",
+        "href": prop_url(row),
+        "tracking": tracker or {},
+        "gameId": row.get("gameId"),
+    }
+
+
+def nba_prop_url(row: dict[str, Any]) -> str:
+    from urllib.parse import urlencode
+
+    params = {
+        "league": "NBA",
+        "date": safe_date(row.get("gameDate") or row.get("date")),
+        "stat": str(row.get("stat") or "").upper(),
+    }
+    if row.get("playerId"):
+        params["playerId"] = str(row.get("playerId"))
+    elif row.get("player"):
+        params["player"] = str(row.get("player"))
+    if row.get("line") not in (None, ""):
+        params["line"] = str(row.get("line"))
+    return "props_analyzer.html?" + urlencode(params)
+
+
+def compact_nba_prop(row: dict[str, Any], tracker: dict[str, Any] | None = None) -> dict[str, Any]:
+    stat = canonical_nba_stat(row.get("stat"))
+    prob = pct(row.get("prob_cons") if row.get("prob_cons") is not None else row.get("probability"))
+    model = num(row.get("pred_anchor") if row.get("pred_anchor") is not None else row.get("mu_cons"))
+    avg = num(row.get("avg_anchor"))
+    line = num(row.get("line"))
+    player = row.get("player") or ""
+    matchup = row.get("matchup") or ""
+    if not matchup:
+        matchup = "NBA matchup"
+    direction = "over" if model is None or line is None or model >= line else "under"
+    return {
+        "id": str(row.get("id") or f"NBA|{stat}|{player}|{line}")[:120],
+        "type": "prop",
+        "league": "NBA",
+        "category": stat_label(stat),
+        "stat": stat,
+        "player": player,
+        "team": row.get("team") or "",
+        "opp": row.get("opp") or "",
+        "matchup": matchup,
+        "line": line,
+        "model": model,
+        "average": avg,
+        "probability": prob,
+        "confidence": "High" if prob is not None and prob >= 0.68 else ("Medium" if prob is not None and prob >= 0.58 else "Lean"),
+        "title": stat_label(stat),
+        "pick": f"{player} {direction} {fmt_num(line, 1)} {stat}" if line is not None else f"{player} {stat}",
+        "reason": row.get("boardDriver") or row.get("summary") or row.get("driver_summary") or "NBA model prop signal.",
+        "href": nba_prop_url(row),
+        "tracking": tracker or {},
+        "gameId": row.get("gameId") or row.get("matchup") or row.get("id"),
+    }
+
+
+def nba_playable_line(row: dict[str, Any]) -> bool:
+    """Keep the parlay builder on realistic sportsbook-style NBA lines.
+
+    The analyzer often contains alternate lines. Some are technically high
+    probability but not useful for users, such as a star scorer at 15 points or
+    an elite rebounder at 5 boards. Those can stay in the analyzer, but the
+    homepage builder should use lines close enough to the player's normal range
+    to be playable.
+    """
+    stat = canonical_nba_stat(row.get("stat"))
+    line = num(row.get("line"))
+    if line is None:
+        return False
+
+    avg = num(row.get("avg_anchor"))
+    pred = num(row.get("pred_anchor") if row.get("pred_anchor") is not None else row.get("mu_cons"))
+
+    # Absolute floors remove very low alternate lines before ratio checks.
+    absolute_floor = {
+        "PTS": 8.0,
+        "REB": 3.0,
+        "AST": 2.0,
+        "PRA": 14.0,
+        "PR": 10.0,
+        "PA": 10.0,
+        "RA": 8.0,
+        "3PM": 1.5,
+        "BLK": 0.5,
+        "STL": 0.5,
+        "TO": 1.5,
+    }
+    if line < absolute_floor.get(stat, 0.0):
+        return False
+
+    # Ratio floors remove alt lines that are far under recent production.
+    # Example: Gobert 5 rebounds with a 10+ average, Edwards 15 points with a
+    # 23+ average. The better playable versions remain available.
+    ratio_floor = {
+        "PTS": 0.78,
+        "REB": 0.78,
+        "AST": 0.72,
+        "PRA": 0.74,
+        "PR": 0.74,
+        "PA": 0.74,
+        "RA": 0.74,
+        "3PM": 0.62,
+        "BLK": 0.45,
+        "STL": 0.45,
+        "TO": 0.60,
+    }
+    floor = ratio_floor.get(stat)
+    if floor is not None and avg is not None and avg > 0 and (line / avg) < floor:
+        return False
+
+    # Also reject extreme discounts to the model projection, but use a softer
+    # cutoff so genuinely good edges are not removed solely for being favorable.
+    if floor is not None and pred is not None and pred > 0 and (line / pred) < max(0.55, floor - 0.12):
+        return False
+
+    return True
+
+
+def choose_nba_prop_rows(entries: list[dict[str, Any]], date: str, *, limit: int = 36) -> list[dict[str, Any]]:
+    rows = []
+    for row in entries:
+        if safe_date(row.get("gameDate") or row.get("date")) != date:
+            continue
+        if is_tbd_player(row) or is_hidden_injury(row):
+            continue
+        prob = pct(row.get("prob_cons") if row.get("prob_cons") is not None else row.get("probability"))
+        if prob is None or prob < 0.54:
+            continue
+        stat = canonical_nba_stat(row.get("stat"))
+        if stat not in {"PTS", "REB", "AST", "PRA", "PR", "PA", "RA", "3PM", "BLK", "STL", "TO"}:
+            continue
+        if not nba_playable_line(row):
+            continue
+        pred = num(row.get("pred_anchor") if row.get("pred_anchor") is not None else row.get("mu_cons"))
+        line = num(row.get("line"))
+        if pred is not None and line is not None and abs(pred - line) < 0.35:
+            continue
+        rows.append(row)
+    rows.sort(key=lambda r: (
+        pct(r.get("prob_cons") if r.get("prob_cons") is not None else r.get("probability")) or 0,
+        num(r.get("hit_score"), 0) or 0,
+    ), reverse=True)
+    seen: set[tuple[str, str]] = set()
+    out = []
+    for row in rows:
+        key = (str(row.get("playerId") or row.get("player") or "").lower(), canonical_nba_stat(row.get("stat")))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def game_url(game: dict[str, Any]) -> str:
+    return "game.html?id=" + str(game.get("id") or "")
+
+
+def compact_game(game: dict[str, Any], tracker: dict[str, Any], *, kind: str, title: str, pick: str,
+                 probability: float | None, reason: str) -> dict[str, Any]:
+    return {
+        "id": str(game.get("id") or f"{game.get('awayTeam')}@{game.get('homeTeam')}|{kind}"),
+        "type": "game",
+        "league": game.get("league") or "",
+        "category": title,
+        "stat": kind,
+        "matchup": f"{game.get('awayTeam', '')} @ {game.get('homeTeam', '')}",
+        "title": title,
+        "pick": pick,
+        "probability": probability,
+        "modelAwayScore": num(game.get("modelAwayScore")),
+        "modelHomeScore": num(game.get("modelHomeScore")),
+        "modelTotal": num(game.get("modelTotal")),
+        "marketTotal": num(game.get("marketTotal")),
+        "confidence": ("High" if probability is not None and probability >= 0.68 else ("Medium" if probability is not None and probability >= 0.58 else "Lean")) if probability is not None else (game.get("confidence") or ""),
+        "reason": reason,
+        "href": game_url(game),
+        "tracking": tracker,
+    }
+
+
+def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    today = [g for g in games if safe_date(g.get("gameDate")) == date]
+    high_conf = []
+    cards = []
+    for g in today:
+        favorite_prob = pct(g.get("favoriteWinProb"))
+        over_prob = pct(g.get("marketOverProb") if g.get("marketOverProb") is not None else g.get("fallbackOverProb"))
+        nrfi_prob = pct(g.get("nrfiProb"))
+        yrfi_prob = pct(g.get("yrfiProb"))
+        close_prob = pct(g.get("oneRunGameProb"))
+        league = str(g.get("league") or "").upper()
+        if favorite_prob is not None and favorite_prob >= 0.60:
+            high_conf.append({
+                "id": g.get("id"), "league": league,
+                "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
+                "pick": g.get("favoriteWinLabel") or "Favorite win",
+                "probability": favorite_prob,
+                "modelScore": f"{fmt_num(g.get('awayTeam') and g.get('modelAwayScore'))} - {fmt_num(g.get('modelHomeScore'))}",
+                "href": game_url(g),
+                "reason": g.get("summary") or "Win-probability edge from model score projection.",
+            })
+        if over_prob is not None and over_prob >= 0.58:
+            high_conf.append({
+                "id": g.get("id"), "league": league,
+                "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
+                "pick": g.get("marketTotalLabel") or g.get("fallbackTotalLabel") or "Over signal",
+                "probability": over_prob,
+                "modelScore": f"Total {fmt_num(g.get('modelTotal'))}",
+                "href": game_url(g),
+                "reason": g.get("summary") or "Total probability edge from model total projection.",
+            })
+        if league == "MLB":
+            nrfi_pick = "NRFI" if (nrfi_prob or 0) >= (yrfi_prob or 0) else "YRFI"
+            nrfi_pick_prob = max(nrfi_prob or 0, yrfi_prob or 0)
+            if nrfi_pick_prob >= 0.54:
+                high_conf.append({
+                    "id": g.get("id"), "league": league,
+                    "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
+                    "pick": nrfi_pick,
+                    "probability": nrfi_pick_prob,
+                    "modelScore": f"NRFI {fmt_num((nrfi_prob or 0)*100,0)}% / YRFI {fmt_num((yrfi_prob or 0)*100,0)}%",
+                    "href": game_url(g),
+                    "reason": g.get("summary") or "First-inning probability signal.",
+                })
+        if close_prob is not None and close_prob >= 0.22:
+            high_conf.append({
+                "id": g.get("id"), "league": league,
+                "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
+                "pick": "Close-game watch",
+                "probability": close_prob,
+                "modelScore": f"One-run probability {fmt_num(close_prob*100,0)}%",
+                "href": game_url(g),
+                "reason": "Model sees a higher-than-usual chance this lands tight.",
+            })
+
+    high_conf.sort(key=lambda x: x.get("probability") or 0, reverse=True)
+
+    top_ml = next((g for g in sorted(today, key=lambda x: pct(x.get("favoriteWinProb")) or 0, reverse=True) if (pct(g.get("favoriteWinProb")) or 0) >= 0.58), None)
+    if top_ml:
+        cards.append(compact_game(
+            top_ml, game_tracker(results_history, "mlResult", str(top_ml.get("league") or ""), 40),
+            kind="ML", title="Strongest Game Lean", pick=top_ml.get("favoriteWinLabel") or "Favorite win",
+            probability=pct(top_ml.get("favoriteWinProb")), reason=top_ml.get("summary") or "Top win-probability signal on today’s board."
+        ))
+
+    total_candidates = []
+    for g in today:
+        p = pct(g.get("marketOverProb") if g.get("marketOverProb") is not None else g.get("fallbackOverProb"))
+        under_p = pct(g.get("marketUnderProb") if g.get("marketUnderProb") is not None else g.get("fallbackUnderProb"))
+        best_p = max(p or 0, under_p or 0)
+        total_candidates.append((best_p, g, "Over" if (p or 0) >= (under_p or 0) else "Under"))
+    total_candidates.sort(key=lambda x: x[0], reverse=True)
+    if total_candidates and total_candidates[0][0] >= 0.56:
+        prob, g, side = total_candidates[0]
+        line = g.get("marketTotal") if g.get("marketTotal") not in (None, "") else ""
+        cards.append(compact_game(
+            g, game_tracker(results_history, "totalResult", str(g.get("league") or ""), 40),
+            kind="TOTAL", title="Best Game Total Signal", pick=f"{side} {line}".strip(),
+            probability=prob, reason=g.get("summary") or "Top total probability signal on today’s board."
+        ))
+
+    nrfi_candidates = []
+    for g in today:
+        if str(g.get("league") or "").upper() != "MLB":
+            continue
+        n = pct(g.get("nrfiProb")) or 0
+        y = pct(g.get("yrfiProb")) or 0
+        nrfi_candidates.append((max(n, y), g, "NRFI" if n >= y else "YRFI"))
+    nrfi_candidates.sort(key=lambda x: x[0], reverse=True)
+    if nrfi_candidates and nrfi_candidates[0][0] >= 0.52:
+        prob, g, side = nrfi_candidates[0]
+        cards.append(compact_game(
+            g, nrfi_yrfi_tracker(results_history, side, 40),
+            kind=side, title="Best NRFI/YRFI Signal", pick=side,
+            probability=prob, reason=g.get("summary") or "Top first-inning probability signal."
+        ))
+
+    return cards, high_conf[:12]
+
+
+def parse_summary_probability(summary: str, pattern: str) -> float | None:
+    match = re.search(pattern, summary or "", flags=re.IGNORECASE)
+    if not match:
+        return None
+    return pct(match.group(1))
+
+
+def format_spread_pick(team: str, spread: Any) -> str:
+    line = num(spread)
+    if line is None:
+        return f"{team} cover"
+    sign = "+" if line > 0 else ""
+    return f"{team} {sign}{fmt_num(line, 1)}"
+
+
+def american_favorite(home_ml: Any, away_ml: Any) -> str | None:
+    home = num(home_ml)
+    away = num(away_ml)
+    if home is None or away is None:
+        return None
+    # Negative American odds are favorites. If both signs match, the smaller
+    # numeric value is the stronger favorite (-150 over -120, +110 over +140).
+    return "home" if home < away else "away"
+
+
+def signed_spread_for_team(game: dict[str, Any], team: str | None, summary_says_home: bool | None = None) -> float | None:
+    spread = num(game.get("marketSpread"))
+    if spread is None:
+        return None
+
+    home = str(game.get("homeTeam") or "")
+    away = str(game.get("awayTeam") or "")
+    team_raw = str(team or "")
+
+    home_line = num(game.get("homeSpread"))
+    away_line = num(game.get("awaySpread"))
+    if team_raw == home and home_line is not None:
+        return home_line
+    if team_raw == away and away_line is not None:
+        return away_line
+
+    fav = american_favorite(game.get("marketHomeML"), game.get("marketAwayML"))
+    if fav is None:
+        model_home_margin = num(game.get("modelHomeSpread"))
+        if model_home_margin is not None:
+            fav = "home" if model_home_margin > 0 else "away"
+
+    magnitude = abs(spread)
+    if fav == "home":
+        inferred_home_line = -magnitude
+    elif fav == "away":
+        inferred_home_line = magnitude
+    else:
+        inferred_home_line = spread
+
+    if team_raw == home or (summary_says_home is True and not team_raw):
+        return inferred_home_line
+    if team_raw == away or (summary_says_home is False and not team_raw):
+        return -inferred_home_line
+    return inferred_home_line
+
+
+def format_game_spread_pick(game: dict[str, Any], team: str, summary_says_home: bool | None = None) -> str:
+    return format_spread_pick(team, signed_spread_for_team(game, team, summary_says_home))
+
+
+
+def model_home_margin(game: dict[str, Any]) -> float | None:
+    margin = num(game.get("modelHomeSpread"))
+    if margin is not None:
+        return margin
+    home_score = num(game.get("modelHomeScore"))
+    away_score = num(game.get("modelAwayScore"))
+    if home_score is None or away_score is None:
+        return None
+    return home_score - away_score
+
+
+def derived_spread_probability(league: str, edge_points: float) -> float:
+    """Conservative spread probability from model-vs-market edge.
+
+    This is intentionally capped well below the raw game win probabilities. A
+    team covering a spread is a different event from winning the game, so stale
+    summary text such as "Home cover 87%" should not be carried forward after
+    a real sportsbook line is attached.
+    """
+    league = league.upper()
+    scale = 0.018 if league == "NBA" else 0.075 if league == "NHL" else 0.060
+    cap = 0.67 if league == "NBA" else 0.68
+    return min(cap, 0.50 + abs(edge_points) * scale)
+
+
+def spread_edge_threshold(league: str) -> float:
+    league = league.upper()
+    if league == "NBA":
+        return 1.5
+    if league == "NHL":
+        return 0.25
+    return 0.35
+
+
+def derived_spread_pick(game: dict[str, Any]) -> tuple[str, float, float, str] | None:
+    """Return (team, signed_line, probability, reason) from actual market spread.
+
+    The games payload may contain stale cover probabilities created before the
+    market line was available. This function uses the current market spread and
+    the model margin directly so the builder never says a favorite is likely to
+    cover a line the model does not actually project it to cover.
+    """
+    league = str(game.get("league") or "").upper()
+    home = str(game.get("homeTeam") or "")
+    away = str(game.get("awayTeam") or "")
+    if not home or not away:
+        return None
+    margin = model_home_margin(game)
+    home_line = signed_spread_for_team(game, home, True)
+    away_line = signed_spread_for_team(game, away, False)
+    if margin is None or home_line is None or away_line is None:
+        return None
+
+    home_edge = margin + home_line
+    edge = abs(home_edge)
+    if edge < spread_edge_threshold(league):
+        return None
+
+    if home_edge >= 0:
+        team = home
+        signed_line = home_line
+        team_margin_text = f"{home} by {fmt_num(margin, 1)}" if margin >= 0 else f"{away} by {fmt_num(abs(margin), 1)}"
+    else:
+        team = away
+        signed_line = away_line
+        team_margin_text = f"{home} by {fmt_num(margin, 1)}" if margin >= 0 else f"{away} by {fmt_num(abs(margin), 1)}"
+    prob = derived_spread_probability(league, edge)
+    reason = f"Model margin {team_margin_text} vs market {format_spread_pick(home, home_line)} / {format_spread_pick(away, away_line)}."
+    return team, signed_line, prob, reason
+
+def derived_total_probability(league: str, gap: float) -> float:
+    league = league.upper()
+    scale = 0.012 if league == "NBA" else 0.055 if league == "NHL" else 0.035
+    cap = 0.70 if league == "NBA" else 0.67
+    return min(cap, 0.52 + abs(gap) * scale)
+
+
+def build_game_parlay_candidates(games: list[dict[str, Any]], date: str, results_history: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for g in games:
+        if safe_date(g.get("gameDate")) != date:
+            continue
+        league = str(g.get("league") or "").upper()
+        matchup = f"{g.get('awayTeam', '')} @ {g.get('homeTeam', '')}"
+        summary = str(g.get("summary") or "")
+
+        # Existing model probabilities when available.
+        fav_prob = pct(g.get("favoriteWinProb"))
+        if fav_prob is not None and fav_prob >= 0.55:
+            candidates.append(compact_game(
+                g, game_tracker(results_history, "mlResult", league, 40),
+                kind="ML", title="Game Winner", pick=g.get("favoriteWinLabel") or "Game winner",
+                probability=fav_prob, reason=g.get("summary") or "Model win-probability signal."
+            ))
+
+        spread_pick = derived_spread_pick(g)
+        if spread_pick is not None:
+            team, signed_line, cover_prob, spread_reason = spread_pick
+            candidates.append(compact_game(
+                g, game_tracker(results_history, "spreadResult", league, 40),
+                kind="SPREAD", title="Spread Signal", pick=format_spread_pick(team, signed_line),
+                probability=cover_prob, reason=spread_reason
+            ))
+        else:
+            cover_prob = pct(g.get("marketCoverProb") if g.get("marketCoverProb") is not None else g.get("favoriteCoverProb"))
+            # Ignore stale cover probabilities from summaries generated before
+            # real lines were attached. Those summaries can say things like
+            # "Home cover 87% • Spread line pending" and should not feed the
+            # parlay builder once marketSpread exists.
+            pending_summary = "line pending" in summary.lower()
+            if cover_prob is None and not pending_summary:
+                cover_prob = parse_summary_probability(summary, r"(?:home|away)\s+cover\s+([0-9]+(?:\.[0-9]+)?)%")
+            if cover_prob is not None and cover_prob >= 0.54:
+                home_match = re.search(r"home\s+cover", summary, flags=re.IGNORECASE)
+                away_match = re.search(r"away\s+cover", summary, flags=re.IGNORECASE)
+                summary_says_home = True if home_match else (False if away_match else None)
+                team = g.get("homeTeam") if summary_says_home is True else g.get("awayTeam") if summary_says_home is False else (g.get("favoriteWinLabel") or "Team")
+                candidates.append(compact_game(
+                    g, game_tracker(results_history, "spreadResult", league, 40),
+                    kind="SPREAD", title="Spread Signal", pick=g.get("marketCoverLabel") or format_game_spread_pick(g, team or "Team", summary_says_home),
+                    probability=cover_prob, reason=g.get("summary") or "Model spread-cover signal."
+                ))
+
+        # NHL/non-MLB summaries sometimes carry the only win-probability text.
+        summary_win = parse_summary_probability(summary, r"\b[A-Z]{2,4}\s+([0-9]+(?:\.[0-9]+)?)%\s+win")
+        if summary_win is not None and summary_win >= 0.54:
+            team_match = re.search(r"\b([A-Z]{2,4})\s+[0-9]+(?:\.[0-9]+)?%\s+win", summary)
+            team = team_match.group(1) if team_match else (g.get("homeTeam") or "Team")
+            candidates.append(compact_game(
+                g, game_tracker(results_history, "mlResult", league, 40),
+                kind="ML", title="Game Winner", pick=f"{team} win signal",
+                probability=summary_win, reason=g.get("summary") or "Model win signal from game summary."
+            ))
+
+        over_prob = pct(g.get("marketOverProb") if g.get("marketOverProb") is not None else g.get("fallbackOverProb"))
+        under_prob = pct(g.get("marketUnderProb") if g.get("marketUnderProb") is not None else g.get("fallbackUnderProb"))
+        if over_prob is not None or under_prob is not None:
+            side = "Over" if (over_prob or 0) >= (under_prob or 0) else "Under"
+            prob = max(over_prob or 0, under_prob or 0)
+            if prob >= 0.54:
+                candidates.append(compact_game(
+                    g, game_tracker(results_history, "totalResult", league, 40),
+                    kind="TOTAL", title="Game Total", pick=f"{side} {g.get('marketTotal') or ''}".strip(),
+                    probability=prob, reason=g.get("summary") or "Model total probability signal."
+                ))
+        else:
+            model_total = num(g.get("modelTotal"))
+            market_total = num(g.get("marketTotal"))
+            if model_total is not None and market_total is not None:
+                gap = model_total - market_total
+                min_gap = 3.0 if league == "NBA" else 0.45 if league == "NHL" else 0.55
+                if abs(gap) >= min_gap:
+                    side = "Over" if gap > 0 else "Under"
+                    candidates.append(compact_game(
+                        g, game_tracker(results_history, "totalResult", league, 40),
+                        kind="TOTAL", title="Game Total", pick=f"{side} {fmt_num(market_total, 1)}",
+                        probability=derived_total_probability(league, gap),
+                        reason=f"Model total {fmt_num(model_total, 1)} vs market {fmt_num(market_total, 1)}."
+                    ))
+
+        if league == "MLB":
+            n = pct(g.get("nrfiProb")) or 0
+            y = pct(g.get("yrfiProb")) or 0
+            if max(n, y) >= 0.52:
+                side = "NRFI" if n >= y else "YRFI"
+                candidates.append(compact_game(
+                    g, nrfi_yrfi_tracker(results_history, side, 40),
+                    kind=side, title="NRFI/YRFI", pick=side,
+                    probability=max(n, y), reason=g.get("summary") or "First-inning model signal."
+                ))
+    return candidates
+
+
+def balanced_pool(items: list[dict[str, Any]], *, per_league: int = 32, total_limit: int = 120) -> list[dict[str, Any]]:
+    by_league: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in items:
+        by_league[str(item.get("league") or "OTHER").upper()].append(item)
+    output: list[dict[str, Any]] = []
+    for league, league_items in sorted(by_league.items()):
+        league_items.sort(key=lambda c: c.get("probability") or 0, reverse=True)
+        output.extend(league_items[:per_league])
+    output.sort(key=lambda c: c.get("probability") or 0, reverse=True)
+    return output[:total_limit]
+
+
+def board_payload(rows: list[dict[str, Any]], tracker: dict[str, Any], *, card_type: str = "prop") -> list[dict[str, Any]]:
+    return [compact_prop(r, tracker, card_type=card_type) for r in rows]
+
+
+def main() -> None:
+    meta = read_json(DATA / "site.json", {})
+    target = meta.get("targetDate") or datetime.now(timezone.utc).date().isoformat()
+    next_date = meta.get("nextDate") or ""
+    games = read_json(DATA / "games.json", [])
+    analyzer = read_json(DATA / "mlb_props_analyzer.json", {"entries": []})
+    entries = analyzer.get("entries", []) if isinstance(analyzer, dict) else []
+    nba_analyzer = read_json(DATA / "nba_props_analyzer.json", {"entries": []})
+    nba_entries = nba_analyzer.get("entries", []) if isinstance(nba_analyzer, dict) else []
+    prop_results = read_json(DATA / "mlb_prop_results_history.json", [])
+    results_history = read_json(DATA / "results_history.json", [])
+
+    trackers = {
+        "H": prop_tracker(prop_results, "H", line=0.5, limit=30),
+        "HRR": prop_tracker(prop_results, "HRR", line=1.5, limit=30),
+        "TB": prop_tracker(prop_results, "TB", line=1.5, limit=30),
+        "K": prop_tracker(prop_results, "K", limit=30),
+        "HA": prop_tracker(prop_results, "HA", limit=30),
+        "ER": prop_tracker(prop_results, "ER", limit=30),
+    }
+
+    hits = choose_prop_rows(entries, target, "H", role="batter", line=0.5, limit=8)
+    hrr = choose_prop_rows(entries, target, "HRR", role="batter", line=1.5, limit=8)
+    tb15 = choose_prop_rows(entries, target, "TB", role="batter", line=1.5, limit=8)
+    pitcher_k = choose_prop_rows(entries, target, "K", role="pitcher", limit=8, prefer_model_gap=True)
+    pitcher_ha = choose_prop_rows(entries, target, "HA", role="pitcher", limit=8)
+    pitcher_er_low = choose_prop_rows(entries, target, "ER", role="pitcher", limit=5, reverse=False, prefer_model_gap=False)
+    pitcher_er_high = sorted(
+        [r for r in choose_prop_rows(entries, target, "ER", role="pitcher", limit=40, unique_player=True) if not is_tbd_player(r)],
+        key=lambda r: num(r.get("pred_anchor") if r.get("pred_anchor") is not None else r.get("mu_cons"), 0) or 0,
+        reverse=True,
+    )[:5]
+
+    game_cards, high_conf_games = choose_game_cards(games, target, results_history)
+    game_parlay_candidates = build_game_parlay_candidates(games, target, results_history)
+    nba_prop_rows = choose_nba_prop_rows(nba_entries, target, limit=40)
+    game_matchups = {}
+    for g in games:
+        matchup = f"{g.get('awayTeam', '')} @ {g.get('homeTeam', '')}".strip()
+        for raw_key in (g.get("id"), g.get("gamePk")):
+            if raw_key not in (None, ""):
+                game_matchups[str(raw_key)] = matchup
+                if "-" in str(raw_key):
+                    game_matchups[str(raw_key).split("-")[-1]] = matchup
+
+    top_cards: list[dict[str, Any]] = []
+    if game_cards:
+        top_cards.extend(game_cards[:3])
+    if hits:
+        top_cards.append(compact_prop(hits[0], trackers["H"]))
+    if hrr:
+        top_cards.append(compact_prop(hrr[0], trackers["HRR"]))
+    if tb15:
+        top_cards.append(compact_prop(tb15[0], trackers["TB"]))
+    if pitcher_k:
+        top_cards.append(compact_prop(pitcher_k[0], trackers["K"]))
+    if pitcher_ha:
+        top_cards.append(compact_prop(pitcher_ha[0], trackers["HA"]))
+    if pitcher_er_low:
+        top_cards.append(compact_prop(pitcher_er_low[0], trackers["ER"], card_type="pitcher-low-er"))
+    if pitcher_er_high:
+        top_cards.append(compact_prop(pitcher_er_high[0], trackers["ER"], card_type="pitcher-high-er"))
+
+    # Put probability-backed cards first, while keeping model-signal cards visible.
+    top_cards = sorted(top_cards, key=lambda c: (c.get("probability") is not None, c.get("probability") or 0), reverse=True)[:10]
+
+    parlay_pool = []
+    # MLB props: include more than just the top table rows so the frontend has room
+    # to reshuffle while still staying inside stronger model candidates.
+    for group in (hits[:10], hrr[:10], tb15[:10], pitcher_ha[:8], pitcher_k[:8]):
+        for row in group:
+            card = compact_prop(row, trackers.get(str(row.get("stat") or "").upper(), {}), card_type="parlay")
+            if card.get("probability") is not None and card["probability"] >= 0.53:
+                parlay_pool.append(card)
+
+    # NBA props: the site already has analyzer entries, so expose a compact slice
+    # to the parlay builder instead of making the builder look MLB-only.
+    for row in nba_prop_rows:
+        card = compact_nba_prop(row, {})
+        if card.get("matchup") == "NBA matchup":
+            gid = str(row.get("gameId") or "")
+            if gid in game_matchups:
+                card["matchup"] = game_matchups[gid]
+                card["gameId"] = gid
+        if card.get("probability") is not None and card["probability"] >= 0.53:
+            parlay_pool.append(card)
+
+    # Game signals across MLB/NBA/NHL: these add spread, total, winner, and NRFI/YRFI
+    # options without requiring player-prop lines for every league.
+    for card in game_parlay_candidates:
+        if card.get("probability") is not None and card["probability"] >= 0.52:
+            parlay_pool.append({
+                **card,
+                "type": "game",
+                "category": card.get("category") or "Game Signal",
+                "title": card.get("pick") or "Game Signal",
+                "gameId": card.get("id") or card.get("gameId"),
+            })
+
+    seen_pool = set()
+    deduped_pool = []
+    for item in sorted(parlay_pool, key=lambda c: c.get("probability") or 0, reverse=True):
+        key = (item.get("league"), item.get("player") or item.get("matchup"), item.get("stat") or item.get("pick"), item.get("gameId") or item.get("id"))
+        if key in seen_pool:
+            continue
+        seen_pool.add(key)
+        deduped_pool.append(item)
+    deduped_pool = balanced_pool(deduped_pool, per_league=40, total_limit=120)
+
+    output = {
+        "targetDate": target,
+        "nextDate": next_date,
+        "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "trackingSummary": {
+            "props": trackers,
+            "games": {
+                "ml": game_tracker(results_history, "mlResult", None, 60),
+                "spread": game_tracker(results_history, "spreadResult", None, 60),
+                "total": game_tracker(results_history, "totalResult", None, 60),
+                "nrfiYrfi": nrfi_yrfi_tracker(results_history, None, 60),
+            },
+        },
+        "topCards": top_cards,
+        "mlbBoards": {
+            "hits": board_payload(hits, trackers["H"]),
+            "hrr": board_payload(hrr, trackers["HRR"]),
+            "totalBases": board_payload(tb15, trackers["TB"]),
+            "pitcherKs": board_payload(pitcher_k, trackers["K"]),
+            "pitcherHA": board_payload(pitcher_ha, trackers["HA"]),
+            "pitcherERLow": board_payload(pitcher_er_low, trackers["ER"], card_type="pitcher-low-er"),
+            "pitcherERHigh": board_payload(pitcher_er_high, trackers["ER"], card_type="pitcher-high-er"),
+        },
+        "highConfidenceGames": high_conf_games,
+        "parlayPool": deduped_pool,
+    }
+
+    OUT.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Wrote {OUT.relative_to(ROOT)} with {len(top_cards)} top cards and {len(deduped_pool)} parlay candidates")
+
+
+if __name__ == "__main__":
+    main()

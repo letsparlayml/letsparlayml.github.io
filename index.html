@@ -4,103 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lets Parlay ML</title>
-  <link rel="stylesheet" href="assets/style.css?v=7" />
-
-  <style>
-    .support-callout {
-      margin-top: 1rem;
-      padding: 1rem 1.1rem;
-      border: 1px solid rgba(96, 165, 250, 0.28);
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(96, 165, 250, 0.08), rgba(96, 165, 250, 0.03));
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-
-    .support-callout-copy {
-      min-width: 0;
-    }
-
-    .support-callout-copy h3 {
-      margin: 0 0 0.35rem;
-      font-size: 1rem;
-    }
-
-    .support-callout-copy p {
-      margin: 0;
-      color: #b7c4d8;
-      font-size: 0.96rem;
-      line-height: 1.55;
-    }
-
-    .support-callout-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.72rem 1rem;
-      border-radius: 10px;
-      border: 1px solid rgba(96, 165, 250, 0.42);
-      background: rgba(96, 165, 250, 0.12);
-      color: #dbeafe;
-      font-weight: 700;
-      text-decoration: none;
-      white-space: nowrap;
-      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-    }
-
-    .support-callout-link:hover {
-      background: rgba(96, 165, 250, 0.18);
-      border-color: rgba(147, 197, 253, 0.6);
-      transform: translateY(-1px);
-    }
-
-    @media (max-width: 760px) {
-      .support-callout {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .support-callout-link {
-        width: 100%;
-      }
-    }
-  </style>
-
+  <link rel="stylesheet" href="assets/style.css?v=10" />
 </head>
 <body>
   <header class="site-header">
     <div class="wrap">
       <div class="brand-row">
         <div>
-          <p class="eyebrow">Daily model updates</p>
+          <p class="eyebrow">Daily model dashboard</p>
           <h1 id="site-title">Lets Parlay ML</h1>
-          <p class="subhead">Daily game predictions, top NBA props, league-by-league grading, and a deeper NBA props lab built from the daily outputs.</p>
+          <p class="subhead">Start with the strongest model spots for today, check whether each category has been running hot or cold, then dig into props, game details, line movement, and results.</p>
         </div>
         <nav class="top-nav">
+          <a href="#start-here">Top picks</a>
+          <a href="#builder">Build a card</a>
+          <a href="#mlb-home-props">MLB boards</a>
           <a href="#games">Games</a>
-          <a href="#props">Props</a>
-          <a href="#nba-quick-looks">NBA quick looks</a>
-          <a href="props_lab.html">Props lab</a>
-          <a href="props_analyzer.html">Props analyzer</a>
+          <a href="props_analyzer.html">Prop analyzer</a>
           <a href="line_tracker.html">Line tracker</a>
-          <a href="#results">Results</a>
+          <a href="results.html">Results</a>
           <a href="#about">About</a>
         </nav>
       </div>
+
+      <div class="hero-actions">
+        <a class="button-link button-link-primary" href="#start-here">View today’s top picks</a>
+        <a class="button-link" href="#builder">Build a card</a>
+        <a class="button-link button-link-subtle" href="props_analyzer.html">Open prop analyzer</a>
+        <a class="button-link button-link-subtle" href="results.html">View results</a>
+      </div>
+
       <div class="hero-grid hero-grid-five">
         <div class="hero-card">
           <span class="stat-label">Leagues</span>
-          <strong id="hero-leagues">NBA • NHL • CBB</strong>
+          <strong id="hero-leagues">NBA • MLB • NHL</strong>
         </div>
         <div class="hero-card">
           <span class="stat-label">Today’s games</span>
           <strong id="hero-game-count">0</strong>
         </div>
         <div class="hero-card">
-          <span class="stat-label">Next-day games</span>
-          <strong id="hero-next-game-count">0</strong>
+          <span class="stat-label">Featured picks</span>
+          <strong id="hero-top-pick-count">0</strong>
         </div>
         <div class="hero-card">
           <span class="stat-label">Top props</span>
@@ -115,11 +60,99 @@
   </header>
 
   <main class="wrap page-grid">
+    <section class="panel featured-panel" id="start-here">
+      <div class="section-heading section-heading-start">
+        <div>
+          <p class="eyebrow">Start here</p>
+          <h2>Best model spots today</h2>
+          <p class="muted">The front page now focuses on the picks the model actually wants to highlight. Each card includes recent category tracking so users can see whether that type of pick has been hot, cold, or neutral.</p>
+        </div>
+        <div class="button-link-row">
+          <a class="button-link button-link-subtle" href="results.html">Full results</a>
+          <a class="button-link button-link-subtle" href="props_analyzer.html">Research props</a>
+        </div>
+      </div>
+
+      <div id="home-top-picks-pulse" class="top-pick-pulse-grid"></div>
+      <div id="home-top-picks-grid" class="top-pick-grid"></div>
+    </section>
+
+    <section class="panel" id="builder">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Build a card</p>
+          <h2>Parlay / watch-card builder</h2>
+          <p class="muted">Choose how many model spots you want. The estimate is probability-based and conservative when legs come from the same game.</p>
+        </div>
+      </div>
+
+      <div class="builder-layout">
+        <div class="builder-controls-card">
+          <div class="control-grid builder-control-grid">
+            <label>
+              Number of picks
+              <select id="parlay-leg-count">
+                <option value="2">2 picks</option>
+                <option value="3" selected>3 picks</option>
+                <option value="4">4 picks</option>
+                <option value="5">5 picks</option>
+                <option value="6">6 picks</option>
+              </select>
+            </label>
+            <label>
+              Sport
+              <select id="parlay-sport-filter">
+                <option value="ALL">All sports</option>
+                <option value="MLB">MLB</option>
+                <option value="NBA">NBA</option>
+                <option value="NHL">NHL</option>
+              </select>
+            </label>
+            <label>
+              Style
+              <select id="parlay-risk-style">
+                <option value="safe">Safer</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="upside">Higher upside</option>
+              </select>
+            </label>
+            <label>
+              Same-game setting
+              <select id="parlay-correlation-mode">
+                <option value="avoid" selected>Avoid same game</option>
+                <option value="allow">Allow same game</option>
+                <option value="same-game">Same game only</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-link-row builder-action-row">
+            <button type="button" id="parlay-reroll" class="button-link">Generate new card</button>
+          </div>
+          <p class="muted builder-note">Estimated probability is not sportsbook odds. Same-game and same-player combinations receive an extra penalty or are excluded when they conflict. Click generate again to reshuffle the highest-probability candidates.</p>
+        </div>
+        <div id="parlay-builder-output" class="builder-output"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="mlb-home-props">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">MLB quick picks</p>
+          <h2>Fast boards by pick type</h2>
+          <p class="muted">Short lists only. Open the analyzer when you want player history, hit rates, home/away splits, and deeper filters.</p>
+        </div>
+        <a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open MLB prop analyzer</a>
+      </div>
+      <div class="board-tabs" id="mlb-board-tabs"></div>
+      <div id="mlb-home-props-grid" class="mlb-home-grid"></div>
+    </section>
+
     <section class="panel" id="games">
       <div class="section-heading">
         <div>
           <p class="eyebrow">Games</p>
-          <h2>Predictions</h2>
+          <h2>High-confidence games</h2>
+          <p class="muted">Condensed view of the strongest game, total, NRFI/YRFI, and close-game signals for <span id="today-date-label"></span>.</p>
         </div>
         <div class="filter-row filter-row-actions">
           <label>
@@ -131,30 +164,34 @@
           <a class="button-link button-link-subtle" href="line_tracker.html">Open line tracker</a>
         </div>
       </div>
+      <div id="high-confidence-games-grid" class="quick-game-grid"></div>
 
-      <div class="section-heading compact-gap">
-        <div>
-          <h3>Today’s board</h3>
-          <p class="muted">Games for <span id="today-date-label"></span></p>
+      <details class="collapsible-board">
+        <summary>Open full game board</summary>
+        <div class="section-heading compact-gap">
+          <div>
+            <h3>Today’s full board</h3>
+            <p class="muted">All games for <span id="today-date-label-full"></span></p>
+          </div>
         </div>
-      </div>
-      <div id="today-games-grid" class="card-grid"></div>
+        <div id="today-games-grid" class="card-grid"></div>
 
-      <div class="section-heading compact-gap">
-        <div>
-          <h3>Next-day early look</h3>
-          <p class="muted">Games for <span id="tomorrow-date-label"></span>. Market lines stay N/A until they are available.</p>
+        <div class="section-heading compact-gap">
+          <div>
+            <h3>Next-day early look</h3>
+            <p class="muted">Games for <span id="tomorrow-date-label"></span>. Market lines stay N/A until available.</p>
+          </div>
         </div>
-      </div>
-      <div id="tomorrow-games-grid" class="card-grid"></div>
+        <div id="tomorrow-games-grid" class="card-grid"></div>
+      </details>
     </section>
 
     <section class="panel" id="props">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Props</p>
-          <h2>Top props for today</h2>
-          <p class="muted">Quick board on the homepage. Use the props lab for filters, drivers, hit rates, and strategy buckets.</p>
+          <p class="eyebrow">Prop table</p>
+          <h2>Today’s top prop rows</h2>
+          <p class="muted">A compact table is still available for scanning. The cards above should be the first stop for newer users.</p>
         </div>
         <div class="button-link-row"><a class="button-link" href="props_lab.html">Open NBA props lab</a><a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open prop analyzer</a></div>
       </div>
@@ -177,59 +214,19 @@
       </div>
     </section>
 
-    <section class="card span-12">
-      <div class="section-head">
-        <div>
-          <h2>Next-day props preview</h2>
-          <p class="muted">Early look at tomorrow’s available props</p>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>League</th>
-              <th>Player</th>
-              <th>Prop</th>
-              <th>Line</th>
-              <th>Model prediction</th>
-              <th>Probability</th>
-              <th>Confidence</th>
-              <th>Matchup</th>
-            </tr>
-          </thead>
-          <tbody id="props-next-body"></tbody>
-        </table>
-      </div>
-    </section>
-
-
-
-    <section class="panel" id="mlb-home-props">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">MLB</p>
-          <h2>Top prop boards</h2>
-          <p class="muted">Quick MLB prop boards from the analyzer index for today’s slate.</p>
-        </div>
-        <a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open MLB prop analyzer</a>
-      </div>
-      <div id="mlb-home-props-grid" class="mlb-home-grid"></div>
-    </section>
-
     <section class="panel" id="nba-quick-looks">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">NBA</p>
-          <h2>Quick looks</h2>
-          <p class="muted">Fast-glance edges from the daily game and prop outputs.</p>
+          <p class="eyebrow">NBA / NHL edges</p>
+          <h2>Secondary quick looks</h2>
+          <p class="muted">These are research aids, not the primary homepage flow.</p>
         </div>
         <a class="button-link button-link-subtle" href="props_lab.html">See full props lab</a>
       </div>
 
       <div class="subsection-stack">
         <div>
-          <h3 class="subsection-title">Game edge board</h3>
+          <h3 class="subsection-title">Biggest game gaps</h3>
           <div id="nba-game-edges-grid" class="insight-pair-grid"></div>
         </div>
 
@@ -240,11 +237,11 @@
 
         <div class="insight-pair-grid">
           <div>
-            <h3 class="subsection-title">Floor spots</h3>
+            <h3 class="subsection-title">Safer stat targets</h3>
             <div id="home-floor-grid" class="insight-card-grid compact-cards"></div>
           </div>
           <div>
-            <h3 class="subsection-title">Ceiling and ladder ideas</h3>
+            <h3 class="subsection-title">Higher-upside stat targets</h3>
             <div id="home-ceiling-grid" class="insight-card-grid compact-cards"></div>
           </div>
         </div>
@@ -262,91 +259,19 @@
       </div>
     </section>
 
-    <section class="panel" id="results">
+    <section class="panel" id="research-tools">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Results</p>
-          <h2>Results explorer</h2>
-          <p class="muted">Viewing <span id="results-date-label"></span>. Use the filters below to move day by day or search across all graded dates.</p>
+          <p class="eyebrow">Research tools</p>
+          <h2>Go deeper</h2>
+          <p class="muted">Use these pages when you want the full data instead of the curated homepage view.</p>
         </div>
       </div>
-
-      <div id="results-summary-grid" class="results-summary-grid"></div>
-
-      <div class="results-controls-grid">
-        <label>
-          Date
-          <select id="results-date-filter"></select>
-        </label>
-        <label>
-          Search
-          <input id="results-search-input" type="search" placeholder="Team, matchup, league, result" />
-        </label>
-      </div>
-      <p id="results-view-meta" class="muted results-view-meta">0 games shown</p>
-      <div id="results-view-summary-grid" class="results-summary-grid"></div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>League</th>
-              <th>Matchup</th>
-              <th>Predicted score</th>
-              <th>Actual score</th>
-              <th>ML</th>
-              <th>Spread</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody id="results-body"></tbody>
-        </table>
-      </div>
-
-      <div class="section-heading" style="margin-top:1.2rem;">
-        <div>
-          <p class="eyebrow">MLB props</p>
-          <h3 class="subsection-title" style="margin-bottom:.2rem;">Settled prop results explorer</h3>
-          <p class="muted">Viewing <span id="mlb-prop-results-date-label">—</span> • Pending props: <span id="mlb-prop-results-pending-count">0</span></p>
-        </div>
-      </div>
-
-      <div id="mlb-prop-results-summary-grid" class="results-summary-grid"></div>
-
-      <div class="results-controls-grid results-controls-grid-props">
-        <label>
-          Date
-          <select id="mlb-prop-results-date-filter"></select>
-        </label>
-        <label>
-          Stat
-          <select id="mlb-prop-results-stat-filter"></select>
-        </label>
-        <label>
-          Search
-          <input id="mlb-prop-results-search-input" type="search" placeholder="Player, team, matchup, board" />
-        </label>
-      </div>
-      <p id="mlb-prop-results-view-meta" class="muted results-view-meta">0 props shown</p>
-      <div id="mlb-prop-results-view-summary-grid" class="results-summary-grid"></div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Player</th>
-              <th>Matchup</th>
-              <th>Stat</th>
-              <th>Line</th>
-              <th>Model</th>
-              <th>Actual</th>
-              <th>Result</th>
-            </tr>
-          </thead>
-          <tbody id="mlb-prop-results-body"></tbody>
-        </table>
+      <div class="tool-grid">
+        <a class="tool-card" href="props_analyzer.html"><strong>Prop analyzer</strong><span>Player-level histories, lines, hit rates, splits, and supporting context.</span></a>
+        <a class="tool-card" href="props_lab.html"><strong>NBA props lab</strong><span>NBA prop filters, strategy buckets, and role/baseline quick looks.</span></a>
+        <a class="tool-card" href="line_tracker.html"><strong>Line tracker</strong><span>Market movement, open/current/close snapshots, and line history.</span></a>
+        <a class="tool-card" href="results.html"><strong>Results</strong><span>Game results, MLB prop tracking, historical filters, and hot/cold review.</span></a>
       </div>
     </section>
 
@@ -359,20 +284,20 @@
       </div>
       <div class="about-grid">
         <div class="info-card">
-          <h3>Start with the projected score</h3>
-          <p>The model is built to predict individual team final scores first. Moneyline, spread, and total leans are all derived from that score projection rather than picked independently.</p>
+          <h3>Start with top picks</h3>
+          <p>The homepage is now curated around the strongest model spots instead of making every visitor scan one long board.</p>
         </div>
         <div class="info-card">
-          <h3>Use the quick looks for a fast scan</h3>
-          <p>The NBA quick looks section highlights spread and total edges, stronger floor-style prop spots, higher-variance ceiling ideas, and props that sit far above or below a player’s recent baseline.</p>
+          <h3>Check the pulse</h3>
+          <p>Each featured pick shows recent category tracking. If a category has been cold, users can see that before deciding whether to follow or fade it.</p>
         </div>
         <div class="info-card">
-          <h3>Open the props lab for deeper analysis</h3>
-          <p>The props lab adds player search, stat filters, L5/L10/L25 hit rates, projected minutes, fair odds, and the main reasons for and against each prop.</p>
+          <h3>Open details for research</h3>
+          <p>Game pages, the prop analyzer, and the line tracker remain the best place to verify why a pick stands out.</p>
         </div>
         <div class="info-card">
-          <h3>How results are graded</h3>
-          <p>The results area tracks moneyline, spread, and total performance for yesterday plus current week, month, and year, both overall and separated by league. MLB prop settlement can also appear here once the prop-results builder has graded finished games.</p>
+          <h3>Results live separately</h3>
+          <p>Full grading is now on the Results page so the homepage stays focused on today’s slate.</p>
         </div>
       </div>
       <div class="support-callout">
@@ -385,6 +310,6 @@
     </section>
   </main>
 
-  <script src="assets/app.js?v=9"></script>
+  <script src="assets/app.js?v=10"></script>
 </body>
 </html>
