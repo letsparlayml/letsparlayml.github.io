@@ -52,11 +52,13 @@ def is_directional_pitcher_average_row(row: dict[str, Any]) -> bool:
     player_type = clean_str(row.get('playerType')).lower()
     role = clean_str(row.get('role')).lower()
 
-    # The homepage pitcher-K card is graded against the pitcher's own average,
-    # not against a sportsbook-style over-only line. If the model is below
-    # the average, the correct result is actual K below the average.
+    # Homepage pitcher cards are displayed against the pitcher's own average,
+    # not sportsbook lines. Grade the direction the model actually suggested:
+    # model above average wins when actual finishes above average, and model
+    # below average wins when actual finishes below average. This applies to
+    # Ks, hits allowed, and earned runs.
     return (
-        stat_norm == 'K'
+        stat_norm in {'K', 'HA', 'ER'}
         and (
             player_type == 'pitcher'
             or role == 'pitcher'
@@ -159,7 +161,14 @@ def write_json(path: Path, payload: Any) -> None:
 def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date: str) -> list[dict[str, Any]]:
     entries = payload.get('entries') or []
 
-    def choose_rows(stat: str, player_type: str = 'batter', limit: int = 10, unique_by_player: bool = False, line: float | None = None) -> list[dict[str, Any]]:
+    def choose_rows(
+        stat: str,
+        player_type: str = 'batter',
+        limit: int = 10,
+        unique_by_player: bool = False,
+        line: float | None = None,
+        sort_mode: str = 'default',
+    ) -> list[dict[str, Any]]:
         pool = [
             e for e in entries
             if clean_str(e.get('gameDate')) == clean_str(target_date)
@@ -180,6 +189,13 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
                 if not __import__('re').search(r'(^|\b)(tbd|to be determined|probable starter tbd)(\b|$)', clean_str(e.get('player')), __import__('re').I)
             ]
 
+        def pitcher_gap(row: dict[str, Any]) -> float:
+            pred = safe_float(row.get('pred_anchor'))
+            if pred is None:
+                pred = safe_float(row.get('mu_cons')) or 0.0
+            avg = safe_float(row.get('avg_anchor')) or 0.0
+            return pred - avg
+
         def sort_key(row: dict[str, Any]):
             pred = safe_float(row.get('pred_anchor'))
             if pred is None:
@@ -187,6 +203,13 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
             avg = safe_float(row.get('avg_anchor')) or 0.0
             prob = safe_float(row.get('prob_cons'))
             prob = -1.0 if prob is None else prob
+            gap = pitcher_gap(row)
+            if sort_mode == 'low_model':
+                return (pred, avg, -prob, clean_str(row.get('player')))
+            if sort_mode == 'high_model':
+                return (-pred, -avg, -prob, clean_str(row.get('player')))
+            if sort_mode == 'pitcher_avg_gap':
+                return (-abs(gap), -pred, -avg, -prob, clean_str(row.get('player')))
             if clean_str(player_type).lower() == 'pitcher':
                 return (-pred, -avg, -prob, clean_str(row.get('player')))
             return (-prob, -pred, clean_str(row.get('player')))
@@ -207,13 +230,20 @@ def board_source_rows_from_analyzer_payload(payload: dict[str, Any], target_date
         return chosen
 
     board_specs = [
-        ('Best hits', 'H', 'batter', 10, False, None),
-        ('Best two-plus total bases', 'TB', 'batter', 10, False, 1.5),
-        ('Top pitcher strikeouts', 'K', 'pitcher', 10, True, None),
+        # These specs must stay aligned with the homepage boards/cards in
+        # build_home_top_picks_json.py. They are the accountability source for
+        # the top-pick tracking chips.
+        ('Best hits', 'H', 'batter', 10, False, 0.5, 'default'),
+        ('Best hits + runs + RBI', 'HRR', 'batter', 10, False, 1.5, 'default'),
+        ('Best two-plus total bases', 'TB', 'batter', 10, False, 1.5, 'default'),
+        ('Top pitcher strikeouts', 'K', 'pitcher', 10, True, None, 'pitcher_avg_gap'),
+        ('Top pitcher hits allowed', 'HA', 'pitcher', 10, True, None, 'pitcher_avg_gap'),
+        ('Lowest SP earned runs', 'ER', 'pitcher', 5, True, None, 'low_model'),
+        ('Highest SP earned runs', 'ER', 'pitcher', 5, True, None, 'high_model'),
     ]
     rows: list[dict[str, Any]] = []
-    for board_title, stat, player_type, limit, unique_by_player, line in board_specs:
-        for entry in choose_rows(stat, player_type=player_type, limit=limit, unique_by_player=unique_by_player, line=line):
+    for board_title, stat, player_type, limit, unique_by_player, line, sort_mode in board_specs:
+        for entry in choose_rows(stat, player_type=player_type, limit=limit, unique_by_player=unique_by_player, line=line, sort_mode=sort_mode):
             team = clean_str(entry.get('team'))
             opp = clean_str(entry.get('opp'))
             prob = safe_float(entry.get('prob_cons'))
@@ -441,6 +471,16 @@ def prep_pitcher_logs(df: pd.DataFrame) -> pd.DataFrame:
             out['outs'] = out['inningsPitched'].map(ip_to_outs)
         except Exception:
             pass
+    if 'hits_allowed' not in out.columns:
+        for alias in ('hitsAllowed', 'hits', 'H'):
+            if alias in out.columns:
+                out['hits_allowed'] = out[alias]
+                break
+    if 'earnedRuns' not in out.columns:
+        for alias in ('earned_runs', 'ER'):
+            if alias in out.columns:
+                out['earnedRuns'] = out[alias]
+                break
     for col in ['outs', 'strikeOuts', 'baseOnBalls', 'hits_allowed', 'earnedRuns', 'inningsPitched']:
         if col in out.columns:
             out[col] = pd.to_numeric(out[col], errors='coerce')
@@ -705,14 +745,22 @@ def main() -> int:
         source_label = str(props_path)
 
     existing_counts: dict[str, int] = defaultdict(int)
+    existing_stats: dict[str, set[str]] = defaultdict(set)
     for row in history + pending:
         row_date = clean_str(row.get('date'))
         if row_date:
             existing_counts[row_date] += 1
+            stat_key = normalize_stat(row.get('stat'))
+            if stat_key:
+                existing_stats[row_date].add(stat_key)
 
     git_backfill = []
+    required_home_tracking_stats = {'H', 'HRR', 'TB', 'K', 'HA', 'ER'}
     for missing_date in date_range_inclusive(launch_date, yesterday):
-        if existing_counts.get(missing_date, 0) >= 30:
+        # Older runs only tracked H/TB/K, so a simple row-count threshold can
+        # falsely mark a date as complete. Backfill any date missing one of the
+        # new homepage accountability categories.
+        if required_home_tracking_stats.issubset(existing_stats.get(missing_date, set())) and existing_counts.get(missing_date, 0) >= 50:
             continue
         git_backfill.extend(load_git_board_rows(repo, missing_date))
 

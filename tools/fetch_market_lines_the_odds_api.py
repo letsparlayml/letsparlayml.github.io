@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -64,6 +65,64 @@ TEAM_MAPS = {
 
 def clean(value: Any) -> str:
     return "" if value is None else str(value).strip()
+
+
+def normalize_team_name(value: Any) -> str:
+    """Return a stable lookup key for sportsbook/team names.
+
+    The Odds API can return accented names for some teams, especially
+    "Montréal Canadiens". The site schedule/model data uses plain
+    abbreviations like MTL, so all team-name matching needs to be accent-
+    insensitive instead of relying only on exact strings.
+    """
+    text = clean(value)
+    if not text:
+        return ""
+    text = unicodedata.normalize('NFKD', text)
+    text = ''.join(ch for ch in text if not unicodedata.combining(ch))
+    for old, repl in {
+        '\u2019': "'",
+        '\u2018': "'",
+        '\u201c': '"',
+        '\u201d': '"',
+        '&': ' and ',
+        '.': ' ',
+    }.items():
+        text = text.replace(old, repl)
+    return ' '.join(text.upper().split())
+
+
+def team_lookup_for(league: str) -> dict[str, str]:
+    mapping = TEAM_MAPS.get(league, {})
+    lookup: dict[str, str] = {}
+    for full_name, abbr in mapping.items():
+        lookup[clean(full_name)] = abbr
+        lookup[normalize_team_name(full_name)] = abbr
+        lookup[abbr.upper()] = abbr
+    # Explicit alias for Odds API NHL payloads that include the accent.
+    if league == 'NHL':
+        lookup[normalize_team_name('Montréal Canadiens')] = 'MTL'
+    return lookup
+
+
+def team_abbrev(league: str, value: Any) -> str:
+    text = clean(value)
+    if not text:
+        return ""
+    lookup = team_lookup_for(league)
+    return lookup.get(text) or lookup.get(normalize_team_name(text)) or text.upper()
+
+
+def outcome_for_team(outcomes: dict[str, dict[str, Any]], team_name: Any) -> dict[str, Any]:
+    """Find a sportsbook outcome even if the event/outcome accenting differs."""
+    exact = outcomes.get(clean(team_name))
+    if exact is not None:
+        return exact
+    wanted = normalize_team_name(team_name)
+    for name, outcome in outcomes.items():
+        if normalize_team_name(name) == wanted:
+            return outcome
+    return {}
 
 
 def to_float(value: Any):
@@ -144,8 +203,8 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
 
         home_full = clean(event.get('home_team'))
         away_full = clean(event.get('away_team'))
-        home = team_map.get(home_full, home_full.upper())
-        away = team_map.get(away_full, away_full.upper())
+        home = team_abbrev(league, home_full)
+        away = team_abbrev(league, away_full)
         local_date = local_date_from_iso(commence)
         if not away or not home or not local_date:
             continue
@@ -175,10 +234,10 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
                 mkey = clean(market.get('key'))
                 outcomes = {clean(o.get('name')): o for o in (market.get('outcomes') or [])}
                 if mkey == 'h2h':
-                    row['awayMoneyline'] = to_float((outcomes.get(away_full) or {}).get('price'))
-                    row['homeMoneyline'] = to_float((outcomes.get(home_full) or {}).get('price'))
+                    row['awayMoneyline'] = to_float(outcome_for_team(outcomes, away_full).get('price'))
+                    row['homeMoneyline'] = to_float(outcome_for_team(outcomes, home_full).get('price'))
                 elif mkey == 'spreads':
-                    row['marketSpread'] = to_float((outcomes.get(away_full) or {}).get('point'))
+                    row['marketSpread'] = to_float(outcome_for_team(outcomes, away_full).get('point'))
                 elif mkey == 'totals':
                     over = outcomes.get('Over') or {}
                     under = outcomes.get('Under') or {}

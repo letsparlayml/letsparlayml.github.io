@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import os
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -178,11 +179,43 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def normalize_team_name(value: Any) -> str:
+    """Return a stable lookup key for sportsbook/team names.
+
+    The Odds API can return accented names for some teams, especially
+    "Montréal Canadiens". The site schedule/model data uses plain
+    abbreviations like MTL, so team matching needs to be accent-insensitive.
+    """
+    text = "" if value is None else str(value).strip()
+    if not text:
+        return ""
+    text = unicodedata.normalize('NFKD', text)
+    text = ''.join(ch for ch in text if not unicodedata.combining(ch))
+    for old, repl in {
+        '\u2019': "'",
+        '\u2018': "'",
+        '\u201c': '"',
+        '\u201d': '"',
+        '&': ' and ',
+        '.': ' ',
+    }.items():
+        text = text.replace(old, repl)
+    return ' '.join(text.upper().split())
+
+
 def team_abbrev(league: str, name: str) -> str:
-    val = TEAM_MAP.get(name)
-    if val and val[0] == league:
-        return val[1]
-    return name
+    raw = "" if name is None else str(name).strip()
+    if not raw:
+        return ""
+    for full_name, val in TEAM_MAP.items():
+        mapped_league, abbr = val
+        if mapped_league != league:
+            continue
+        if raw == full_name or normalize_team_name(raw) == normalize_team_name(full_name) or raw.upper() == abbr:
+            return abbr
+    if league == 'NHL' and normalize_team_name(raw) == normalize_team_name('Montréal Canadiens'):
+        return 'MTL'
+    return raw.upper()
 
 
 def odds_get(api_key: str, sport_key: str, *, bookmakers: str, regions: str, markets: str, odds_format: str, date_format: str, timeout: int) -> tuple[list[dict[str, Any]], dict[str, str]]:
