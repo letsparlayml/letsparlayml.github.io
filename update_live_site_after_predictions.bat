@@ -68,15 +68,15 @@ echo [8/12] Refresh results rollup and line archive...
 if errorlevel 1 goto :fail
 echo.
 echo [9/12] Build MLB site JSON...
-"%PY%" "%TOOLS%\build_mlb_site_json.py" --website-repo "%REPO%" --mlb-output-dir "%MLB_OUT%"
+"%PY%" "%TOOLS%\build_mlb_site_json.py" --website-repo "%REPO%"
 if errorlevel 1 goto :fail
 echo.
 echo [10/12] Build MLB pitcher averages JSON...
-"%PY%" "%TOOLS%\build_mlb_pitcher_averages_json.py" --mlb-output-dir "%MLB_OUT%" --out "%REPO%\data\mlb_pitcher_averages.json"
+"%PY%" "%TOOLS%\build_mlb_pitcher_averages_json.py" --out "%REPO%\data\mlb_pitcher_averages.json"
 if errorlevel 1 goto :fail
 echo.
 echo [11/12] Build MLB props analyzer JSON...
-"%PY%" "%TOOLS%\build_mlb_props_analyzer_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --mlb-output-dir "%MLB_OUT%"
+"%PY%" "%TOOLS%\build_mlb_props_analyzer_json.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data"
 if errorlevel 1 goto :fail
 echo.
 echo [11.5/12] Re-settle MLB prop results after MLB refresh...
@@ -90,6 +90,15 @@ echo [13/13] Build compact homepage top picks / parlay pool...
 "%PY%" "%TOOLS%\build_home_top_picks_json.py"
 if errorlevel 1 goto :fail
 echo.
+echo.
+echo [GAME INTELLIGENCE] Build pitcher first-inning lookup...
+"%PY%" "%TOOLS%\build_pitcher_first_inning_lookup.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data"
+if errorlevel 1 goto :fail
+
+echo.
+echo [GAME INTELLIGENCE] Build MLB Game Intelligence reports...
+"%PY%" "%TOOLS%\build_game_intelligence.py" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data"
+if errorlevel 1 goto :fail
 echo Commit and push if changed...
 git add -A
 git diff --cached --quiet
@@ -108,3 +117,5 @@ echo.
 echo FAILED.
 popd
 exit /b 1
+
+

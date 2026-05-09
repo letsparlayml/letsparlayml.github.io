@@ -1280,3 +1280,79 @@ code {
   .support-callout-link { width: 100%; }
   .top-pick-grid, .quick-game-grid { grid-template-columns: 1fr; }
 }
+
+/* Game Intelligence */
+.game-intel-section { margin-top: 1.25rem; }
+.gi-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: stretch;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.14), rgba(168, 85, 247, 0.07));
+  margin-bottom: 1rem;
+}
+.gi-hero h3 { margin: .15rem 0 .45rem; font-size: 1.25rem; }
+.gi-hero p { margin: 0; color: #cbd5e1; line-height: 1.55; }
+.gi-coverage {
+  min-width: 135px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(15, 23, 42, .55);
+}
+.gi-coverage span { color: #94a3b8; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+.gi-coverage strong { font-size: 1.8rem; color: #e0f2fe; }
+.gi-block { margin-top: 1.1rem; }
+.gi-block-head { display: flex; justify-content: space-between; gap: 1rem; align-items: end; margin-bottom: .75rem; }
+.gi-block-head h3 { margin: 0 0 .25rem; font-size: 1.08rem; }
+.gi-block-head p { margin: 0; color: #94a3b8; line-height: 1.45; }
+.gi-two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+.gi-player-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(275px, 1fr)); gap: .85rem; }
+.gi-card {
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, .72), rgba(15, 23, 42, .82));
+  padding: .95rem;
+  box-shadow: 0 12px 30px rgba(0,0,0,.18);
+}
+.gi-batter-card.is-positive { border-color: rgba(34, 197, 94, .18); }
+.gi-batter-card.is-risk { border-color: rgba(251, 146, 60, .22); }
+.gi-card-title { display: flex; flex-direction: column; gap: .2rem; margin-bottom: .75rem; }
+.gi-card-title strong { color: #f8fafc; font-size: 1rem; }
+.gi-card-title span { color: #94a3b8; font-size: .86rem; line-height: 1.35; }
+.gi-pill { display: inline-flex; width: fit-content; padding: .18rem .5rem; border-radius: 999px; border: 1px solid rgba(125,211,252,.22); background: rgba(14,165,233,.10); color: #bae6fd !important; font-size: .75rem !important; font-weight: 800; }
+.gi-mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: .55rem; margin-bottom: .75rem; }
+.gi-mini-metric { border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.035); border-radius: 12px; padding: .55rem .6rem; min-height: 72px; }
+.gi-mini-metric span { display: block; color: #94a3b8; font-size: .73rem; text-transform: uppercase; letter-spacing: .045em; }
+.gi-mini-metric strong { display: block; color: #e0f2fe; font-size: 1.08rem; margin-top: .2rem; }
+.gi-mini-metric em { display: block; color: #cbd5e1; font-style: normal; font-size: .78rem; margin-top: .05rem; }
+.gi-note-list { margin: .65rem 0 0; padding-left: 1.05rem; color: #cbd5e1; line-height: 1.45; }
+.gi-note-list li { margin: .25rem 0; }
+.gi-note-p { margin-top: .5rem; }
+.gi-last-games { display: grid; gap: .4rem; margin-top: .6rem; }
+.gi-last-games div { display: grid; grid-template-columns: 72px 100px 1fr; gap: .5rem; padding: .45rem .55rem; border-radius: 10px; background: rgba(255,255,255,.035); align-items: center; }
+.gi-last-games span { color: #94a3b8; font-size: .82rem; }
+.gi-last-games strong { color: #e2e8f0; font-size: .84rem; }
+.gi-last-games em { color: #94a3b8; font-style: normal; font-size: .82rem; }
+.gi-table-wrap { margin: .65rem 0; }
+.gi-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.gi-table th, .gi-table td { padding: .45rem .5rem; border-bottom: 1px solid rgba(255,255,255,.07); text-align: left; white-space: nowrap; }
+.gi-table th { color: #bae6fd; font-weight: 800; background: rgba(14, 165, 233, .05); }
+.gi-table td { color: #dbeafe; }
+.gi-inline-note { margin: .6rem 0 0; color: #cbd5e1; line-height: 1.45; font-size: .9rem; }
+@media (max-width: 860px) {
+  .gi-hero, .gi-two-col { grid-template-columns: 1fr; }
+  .gi-last-games div { grid-template-columns: 1fr; gap: .15rem; }
+}
+
+.gi-range {
+  display: inline-block;
+  margin-left: 8px;
+  color: #9cc7ff;
+  font-weight: 700;
+}

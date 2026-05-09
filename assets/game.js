@@ -1204,6 +1204,312 @@ function renderMlbOddsMovement(game, archiveRows) {
   `).join('');
 }
 
+function giValue(value, digits = 1, fallback = '—') {
+  if (!hasNumericValue(value)) return fallback;
+  return Number(value).toFixed(digits);
+}
+
+function giPct(value, digits = 0, fallback = '—') {
+  if (!hasNumericValue(value)) return fallback;
+  return `${(Number(value) * 100).toFixed(digits)}%`;
+}
+
+function giRateText(metric) {
+  if (!metric || !metric.sample) return 'No sample';
+  const made = Math.round(Number(metric.hitRate || 0) * Number(metric.sample || 0));
+  return `${made}/${metric.sample}`;
+}
+
+function giSmallMetric(label, value, sub = '') {
+  return `
+    <div class="gi-mini-metric">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+      ${sub ? `<em>${escapeHtml(sub)}</em>` : ''}
+    </div>
+  `;
+}
+
+function giPlayerNotes(notes) {
+  const list = Array.isArray(notes) ? notes.filter(Boolean).slice(0, 4) : [];
+  if (!list.length) return '<p class="muted">No research notes found for this player.</p>';
+  return `<ul class="gi-note-list">${list.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>`;
+}
+
+function giRenderModelForm(report) {
+  const forms = report?.modelForm || {};
+  const teams = [report?.awayTeam, report?.homeTeam].filter(Boolean);
+  if (!teams.length) return '';
+  return `
+    <div class="gi-block">
+      <div class="gi-block-head">
+        <h3>Model form by team</h3>
+        <p>Stats and rows use the same settled-game sample, so the headline record matches the games shown below.</p>
+      </div>
+      <div class="gi-two-col">
+        ${teams.map(team => {
+          const f = forms[team] || {};
+          // The builder already caps model form at 10 rows. Do not slice it down again.
+          // Reverse only for newest-first display.
+          const rows = Array.isArray(f.games) ? f.games.slice().reverse() : [];
+          const displayLimit = Number(f.displayLimit || rows.length || 5);
+          const sampleLabel = rows.length ? `Showing ${rows.length}/${displayLimit}` : 'No rows';
+          return `
+            <div class="gi-card">
+              <div class="gi-card-title">
+                <strong>${escapeHtml(team)}</strong>
+                <span class="gi-pill">${escapeHtml(f.label || 'Limited sample')}</span>
+              </div>
+              <div class="gi-mini-grid">
+                ${giSmallMetric('Side read', `${f.sideCorrect || 0}/${f.sample || 0}`, giPct(f.sideAccuracy))}
+                ${giSmallMetric('Avg score error', giValue(f.avgScoreError, 1))}
+                ${giSmallMetric('Team ran over', String(f.teamOverCount || 0), 'vs projection')}
+                ${giSmallMetric('Team ran under', String(f.teamUnderCount || 0), 'vs projection')}
+                ${giSmallMetric('Rows shown', sampleLabel, f.availableSettledGames ? `${f.availableSettledGames} found` : '')}
+              </div>
+              ${f.coverageNote ? `<p class="gi-inline-note">${escapeHtml(f.coverageNote)}</p>` : ''}
+              <div class="gi-last-games">
+                ${rows.map(g => `
+                  <div>
+                    <span>${escapeHtml(g.date || '')}</span>
+                    <strong>${escapeHtml(g.correctSide ? 'Correct side' : 'Missed side')}</strong>
+                    <em>${g.matchup ? `${escapeHtml(g.matchup)} • ` : ''}Pred ${giValue(g.predFor,1)}-${giValue(g.predAgainst,1)} • Actual ${giValue(g.actualFor,0)}-${giValue(g.actualAgainst,0)}</em>
+                  </div>
+                `).join('') || '<p class="muted">No settled model form found yet.</p>'}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function giRenderMovement(report) {
+  const mv = report?.predictionMovement || {};
+  const bullets = Array.isArray(mv.bullets) ? mv.bullets : [];
+  const m = mv.movements || {};
+  const title = mv.title || 'Prediction movement';
+  const description = mv.description || 'First saved record vs latest saved record.';
+  const range = mv.firstDate && mv.latestDate ? `${mv.firstDate} → ${mv.latestDate}` : '';
+  return `
+    <div class="gi-block">
+      <div class="gi-block-head">
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(description)}${range ? ` <span class="gi-range">${escapeHtml(range)}</span>` : ''}</p>
+      </div>
+      <div class="gi-card">
+        ${mv.available ? `
+          <div class="gi-mini-grid">
+            ${giSmallMetric('Away runs move', giValue(m.awayScoreDelta, 2))}
+            ${giSmallMetric('Home runs move', giValue(m.homeScoreDelta, 2))}
+            ${giSmallMetric('Total move', giValue(m.totalDelta, 2))}
+            ${m.modelSpreadDelta !== undefined ? giSmallMetric('Spread move', giValue(m.modelSpreadDelta, 2), 'home spread basis') : ''}
+            ${m.favoriteWinProbDelta !== undefined ? giSmallMetric('Fav win prob move', giPct(m.favoriteWinProbDelta, 1)) : ''}
+            ${m.favoriteCoverProbDelta !== undefined ? giSmallMetric('Cover prob move', giPct(m.favoriteCoverProbDelta, 1)) : ''}
+            ${m.nrfiProbDelta !== undefined ? giSmallMetric('NRFI move', giPct(m.nrfiProbDelta, 1)) : ''}
+          </div>
+          ${bullets.length ? `<ul class="gi-note-list">${bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul>` : '<p class="muted">No meaningful model movement found across the saved records.</p>'}
+        ` : `<p class="muted">${escapeHtml(mv.summary || 'Needs saved movement records or at least two builder snapshots.')}</p>`}
+      </div>
+    </div>
+  `;
+}
+
+
+function giRenderPitchers(report) {
+  const pitchers = report?.pitchingMatchup || [];
+  if (!pitchers.length) return '';
+  return `
+    <div class="gi-block">
+      <div class="gi-block-head">
+        <h3>Pitching matchup: last 5 starts</h3>
+        <p>Actual recent box stats from pitcher logs, not the model projection table below.</p>
+      </div>
+      <div class="gi-two-col">
+        ${pitchers.map(p => {
+          const s = p.last5Summary || {};
+          return `
+            <div class="gi-card gi-pitcher-card">
+              <div class="gi-card-title">
+                <strong>${escapeHtml(p.player || '')}</strong>
+                <span>${escapeHtml([p.team, p.location, p.opponent ? `vs ${p.opponent}` : ''].filter(Boolean).join(' • '))}</span>
+              </div>
+              <div class="gi-mini-grid">
+                ${giSmallMetric('Avg IP', giValue(s.avgIP, 1), s.hasStartByStartLogs ? `${s.startsCount || 0} starts` : 'window data')}
+                ${giSmallMetric('Avg K', giValue(s.avgK, 1))}
+                ${giSmallMetric('Avg H allowed', giValue(s.avgHitsAllowed, 1))}
+                ${giSmallMetric('Avg ER', giValue(s.avgER, 1))}
+                ${giSmallMetric('Last 5 1st RA', s.firstInningSamples ? giPct(s.firstInningRunAllowedRate, 0) : 'No local log', s.firstInningSamples ? `${s.firstInningSamples} samples` : 'needs inning data')}
+                ${giSmallMetric('Overall 1st RA', s.firstInningOverallSamples ? giPct(s.firstInningOverallRunAllowedRate, 0) : 'No local log', s.firstInningOverallSamples ? `${s.firstInningOverallSamples} starts` : '')}
+                ${giSmallMetric(`${s.firstInningLocation || p.location || 'Split'} 1st RA`, s.firstInningLocationSamples ? giPct(s.firstInningLocationRunAllowedRate, 0) : 'No split', s.firstInningLocationSamples ? `${s.firstInningLocationSamples} starts` : '')}
+              </div>
+              <div class="table-wrap gi-table-wrap">
+                ${((p.last5Starts || []).length) ? `
+                  <table class="gi-table">
+                    <thead><tr><th>Date</th><th>Opp</th><th>IP</th><th>K</th><th>H</th><th>ER</th><th>BB</th><th>1st</th></tr></thead>
+                    <tbody>
+                      ${(p.last5Starts || []).slice().reverse().map(g => `
+                        <tr>
+                          <td>${escapeHtml(g.date || '')}</td>
+                          <td>${escapeHtml([g.location, g.opponent].filter(Boolean).join(' '))}</td>
+                          <td>${giValue(g.ip, 1)}</td>
+                          <td>${giValue(g.k, 0)}</td>
+                          <td>${giValue(g.hitsAllowed, 0)}</td>
+                          <td>${giValue(g.er, 0)}</td>
+                          <td>${giValue(g.bb, 0)}</td>
+                          <td>${hasNumericValue(g.firstInningRunsAllowed) ? escapeHtml(String(g.firstInningRunsAllowed)) : '—'}</td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                ` : `
+                  <table class="gi-table">
+                    <thead><tr><th>Window</th><th>IP</th><th>K</th><th>H</th><th>ER</th><th>BB</th></tr></thead>
+                    <tbody>
+                      ${(p.aggregateWindows || []).map(w => `
+                        <tr>
+                          <td>${escapeHtml(w.label || '')}</td>
+                          <td>${giValue(w.IP, 1)}</td>
+                          <td>${giValue(w.K, 1)}</td>
+                          <td>${giValue(w.HA, 1)}</td>
+                          <td>${giValue(w.ER, 1)}</td>
+                          <td>${giValue(w.BB, 1)}</td>
+                        </tr>
+                      `).join('') || '<tr><td colspan="6">No recent start logs or analyzer windows found.</td></tr>'}
+                    </tbody>
+                  </table>
+                  <p class="muted gi-note-p">Start-by-start rows were not present for this pitcher in the site data. This table shows analyzer recent windows, not individual starts.</p>
+                `}
+              </div>
+              ${giPlayerNotes(p.flags)}
+              ${(p.sameOpponentStarts || []).length ? `
+                <p class="gi-inline-note"><strong>Vs ${escapeHtml(p.opponent || 'opponent')} in logs:</strong> ${(p.sameOpponentStarts || []).map(g => `${escapeHtml(g.date || '')}: ${giValue(g.ip,1)} IP, ${giValue(g.er,0)} ER, ${giValue(g.hitsAllowed,0)} H, ${giValue(g.k,0)} K`).join(' • ')}</p>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function giRenderFirstInning(report) {
+  const fi = report?.firstInningOutlook || {};
+  return `
+    <div class="gi-block">
+      <div class="gi-block-head">
+        <h3>NRFI / YRFI context</h3>
+        <p>Model probability plus starter first-inning history when raw inning data is available.</p>
+      </div>
+      <div class="gi-card">
+        <div class="gi-mini-grid">
+          ${giSmallMetric('NRFI model', giPct(fi.nrfiProb, 0))}
+          ${giSmallMetric('YRFI model', giPct(fi.yrfiProb, 0))}
+          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} last 5 1st RA`, p.sample ? giPct(p.runAllowedRate, 0) : 'No local log', p.sample ? `${p.sample} samples` : '')) .join('')}
+          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} overall 1st RA`, p.overallSamples ? giPct(p.overallRunAllowedRate, 0) : 'No local log', p.overallSamples ? `${p.overallSamples} starts` : '')) .join('')}
+          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} ${p.location || 'split'} 1st RA`, p.locationSamples ? giPct(p.locationRunAllowedRate, 0) : 'No split', p.locationSamples ? `${p.locationSamples} starts` : '')) .join('')}
+        </div>
+        <p class="muted gi-note-p">${escapeHtml(fi.note || '')}</p>
+      </div>
+    </div>
+  `;
+}
+
+function giRenderBatterList(title, subtitle, players, mode) {
+  const list = Array.isArray(players) ? players : [];
+  if (!list.length) return '';
+  return `
+    <div class="gi-block">
+      <div class="gi-block-head">
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(subtitle)}</p>
+      </div>
+      <div class="gi-player-grid">
+        ${list.map(p => {
+          const m = p.metrics || {};
+          const h10 = m.hitsLast10 || {};
+          const loc = m.locationHits || {};
+          const sim = m.similarHits || {};
+          const tb2 = m.tb2Last10 || {};
+          const hrr2 = m.hrr2Last10 || {};
+          const k10 = m.kLast10 || {};
+          return `
+            <div class="gi-card gi-batter-card ${mode === 'risk' ? 'is-risk' : 'is-positive'}">
+              <div class="gi-card-title">
+                <strong>${escapeHtml(p.player || '')}</strong>
+                <span>${escapeHtml([p.team, p.location, p.pitchHand ? `vs ${p.pitchHand}HP` : '', p.context].filter(Boolean).join(' • '))}</span>
+              </div>
+              <div class="gi-mini-grid">
+                ${giSmallMetric('Hit L10', giRateText(h10), `${giValue(h10.avg,2)} H/g`)}
+                ${giSmallMetric(`${p.location || 'Loc'} hits`, loc.sample ? giRateText(loc) : 'No sample', loc.sample ? `${giValue(loc.avg,2)} H/g` : '')}
+                ${giSmallMetric('Similar hits', sim.sample ? giRateText(sim) : 'No sample', sim.sample ? `${giValue(sim.avg,2)} H/g` : '')}
+                ${giSmallMetric('2+ TB L10', tb2.sample ? giRateText(tb2) : 'No sample')}
+                ${giSmallMetric('2+ HRR L10', hrr2.sample ? giRateText(hrr2) : 'No sample')}
+                ${giSmallMetric('K L10', k10.sample ? giValue(k10.avg,2) : 'No sample', k10.sample ? 'per game' : '')}
+              </div>
+              ${giPlayerNotes(p.notes)}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function giRenderBatters(report) {
+  const br = report?.batterResearch || {};
+  return `
+    ${giRenderBatterList('Hot bats / positive research signals', 'Recent results, matching location/opponent samples, and similar-game production.', br.positiveSignals || [], 'positive')}
+    ${giRenderBatterList('Cold bats / risk flags', 'Actual weak recent hit profiles or strikeout trends — not duplicated model projections.', br.riskFlags || [], 'risk')}
+  `;
+}
+
+async function renderGameIntelligence(game) {
+  const section = byId('game-intelligence-section');
+  const body = byId('game-intelligence-body');
+  if (!section || !body) return;
+  if (String(game?.league || '').toUpperCase() !== 'MLB') {
+    section.style.display = 'none';
+    return;
+  }
+  try {
+    const index = await loadJson('data/game_intelligence/index.json', null);
+    const reports = index?.reports || [];
+    const match = reports.find(r => String(r.gameId || '') === String(game.id || '') || String(r.gamePk || '') === String(game.gamePk || ''));
+    if (!match?.path) {
+      section.style.display = 'none';
+      return;
+    }
+    const report = await loadJson(match.path, null);
+    if (!report) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = '';
+    body.innerHTML = `
+      <div class="gi-hero">
+        <div>
+          <p class="eyebrow">Research read</p>
+          <h3>${escapeHtml(report.headline || 'Game Intelligence')}</h3>
+          <p>${escapeHtml(report.quickWriteup || '')}</p>
+        </div>
+        <div class="gi-coverage">
+          <span>Entries analyzed</span>
+          <strong>${escapeHtml(String(report?.dataCoverage?.propsAnalyzerEntries || 0))}</strong>
+        </div>
+      </div>
+      ${giRenderModelForm(report)}
+      ${giRenderMovement(report)}
+      ${giRenderPitchers(report)}
+      ${giRenderFirstInning(report)}
+      ${giRenderBatters(report)}
+    `;
+  } catch (err) {
+    section.style.display = 'none';
+  }
+}
+
 (async function init() {
   try {
     const id = qs('id');
@@ -1240,6 +1546,7 @@ function renderMlbOddsMovement(game, archiveRows) {
     renderGameProps(game, propsData, injuryLookup, mlbDetail);
     renderMlbGameDetails(game, mlbDetail);
     renderMlbOddsMovement(game, archiveRows);
+    await renderGameIntelligence(game);
     makeTablesSortable('.sortable-table');
   } catch (err) {
     byId('game-title').textContent = 'Unable to load game';
