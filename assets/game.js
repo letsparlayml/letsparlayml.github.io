@@ -1236,46 +1236,208 @@ function giPlayerNotes(notes) {
   return `<ul class="gi-note-list">${list.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>`;
 }
 
+function giEnsureGameIntelligenceStyles() {
+  if (document.getElementById('gi-readable-model-form-style')) return;
+  const style = document.createElement('style');
+  style.id = 'gi-readable-model-form-style';
+  style.textContent = `
+    .gi-form-card-note {
+      margin: .65rem 0 .75rem;
+      color: #b7c9df;
+      font-size: .82rem;
+      line-height: 1.45;
+    }
+    .gi-form-games {
+      display: grid;
+      gap: .65rem;
+      margin-top: .75rem;
+    }
+    .gi-form-game {
+      border: 1px solid rgba(148, 163, 184, .16);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, .42);
+      padding: .7rem .75rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .gi-form-game-head {
+      display: grid;
+      grid-template-columns: minmax(78px, auto) minmax(86px, auto) minmax(0, 1fr);
+      gap: .55rem;
+      align-items: center;
+      margin-bottom: .55rem;
+    }
+    .gi-form-date,
+    .gi-form-result {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: .22rem .52rem;
+      background: rgba(30, 41, 59, .68);
+      color: #bcd2ea;
+      font-size: .76rem;
+      white-space: nowrap;
+    }
+    .gi-form-result.is-good { color: #bbf7d0; background: rgba(22, 101, 52, .18); border: 1px solid rgba(34,197,94,.18); }
+    .gi-form-result.is-bad { color: #fecaca; background: rgba(127, 29, 29, .16); border: 1px solid rgba(248,113,113,.16); }
+    .gi-form-matchup {
+      color: #e0f2fe;
+      font-weight: 850;
+      letter-spacing: .01em;
+      min-width: 0;
+    }
+    .gi-form-game-body {
+      display: grid;
+      grid-template-columns: minmax(145px, .9fr) minmax(145px, .9fr) minmax(240px, 1.25fr);
+      gap: .65rem;
+      align-items: stretch;
+    }
+    .gi-form-scorebox,
+    .gi-form-explain {
+      border: 1px solid rgba(148,163,184,.14);
+      border-radius: 12px;
+      background: rgba(2, 6, 23, .24);
+      padding: .6rem .65rem;
+      min-width: 0;
+    }
+    .gi-form-label {
+      display: block;
+      color: #7dd3fc;
+      font-size: .68rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: .38rem;
+      font-weight: 800;
+    }
+    .gi-form-score-line {
+      display: grid;
+      grid-template-columns: minmax(36px, auto) 1fr;
+      column-gap: .55rem;
+      align-items: baseline;
+      padding: .12rem 0;
+    }
+    .gi-form-score-line b {
+      color: #bae6fd;
+      font-size: .8rem;
+      letter-spacing: .02em;
+    }
+    .gi-form-score-line strong {
+      color: #f8fafc;
+      font-size: .94rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .gi-form-explain p {
+      margin: 0;
+      color: #dbeafe;
+      line-height: 1.45;
+      font-size: .86rem;
+    }
+    .gi-form-explain-list {
+      display: grid;
+      gap: .42rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .gi-form-explain-list li {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: .5rem;
+      color: #dbeafe;
+      line-height: 1.35;
+      font-size: .84rem;
+    }
+    .gi-form-explain-list span {
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: .68rem;
+      font-weight: 850;
+    }
+    @media (max-width: 1050px) {
+      .gi-form-game-body { grid-template-columns: 1fr 1fr; }
+      .gi-form-explain { grid-column: 1 / -1; }
+    }
+    @media (max-width: 680px) {
+      .gi-form-game-head { grid-template-columns: 1fr; gap: .38rem; }
+      .gi-form-date,
+      .gi-form-result { justify-content: flex-start; width: fit-content; }
+      .gi-form-game-body { grid-template-columns: 1fr; }
+      .gi-form-explain { grid-column: auto; }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 function giRenderModelForm(report) {
   const forms = report?.modelForm || {};
   const teams = [report?.awayTeam, report?.homeTeam].filter(Boolean);
   if (!teams.length) return '';
+
+  const scoreBox = (label, awayTeam, awayScore, homeTeam, homeScore, digits) => `
+    <div class="gi-form-scorebox">
+      <span class="gi-form-label">${escapeHtml(label)}</span>
+      <div class="gi-form-score-line"><b>${escapeHtml(awayTeam || 'Away')}</b><strong>${escapeHtml(giValue(awayScore, digits))}</strong></div>
+      <div class="gi-form-score-line"><b>${escapeHtml(homeTeam || 'Home')}</b><strong>${escapeHtml(giValue(homeScore, digits))}</strong></div>
+    </div>
+  `;
+
   return `
     <div class="gi-block">
       <div class="gi-block-head">
         <h3>Model form by team</h3>
-        <p>Stats and rows use the same settled-game sample, so the headline record matches the games shown below.</p>
+        <p>Each card grades that team only. Rows keep the scoreboard in away/home order and then explain that team's scoring error in plain language.</p>
       </div>
       <div class="gi-two-col">
         ${teams.map(team => {
           const f = forms[team] || {};
-          // The builder already caps model form at 10 rows. Do not slice it down again.
-          // Reverse only for newest-first display.
           const rows = Array.isArray(f.games) ? f.games.slice().reverse() : [];
-          const displayLimit = Number(f.displayLimit || rows.length || 5);
-          const sampleLabel = rows.length ? `Showing ${rows.length}/${displayLimit}` : 'No rows';
+          const sample = Number(f.sample || rows.length || 0);
           return `
             <div class="gi-card">
               <div class="gi-card-title">
                 <strong>${escapeHtml(team)}</strong>
-                <span class="gi-pill">${escapeHtml(f.label || 'Limited sample')}</span>
               </div>
               <div class="gi-mini-grid">
-                ${giSmallMetric('Side read', `${f.sideCorrect || 0}/${f.sample || 0}`, giPct(f.sideAccuracy))}
-                ${giSmallMetric('Avg score error', giValue(f.avgScoreError, 1))}
-                ${giSmallMetric('Team ran over', String(f.teamOverCount || 0), 'vs projection')}
-                ${giSmallMetric('Team ran under', String(f.teamUnderCount || 0), 'vs projection')}
-                ${giSmallMetric('Rows shown', sampleLabel, f.availableSettledGames ? `${f.availableSettledGames} found` : '')}
+                ${giSmallMetric('Winner read', `${f.sideCorrect || 0}/${sample}`, 'correct game winner')}
+                ${giSmallMetric('Avg run error', giValue(f.avgTeamRunError ?? f.avgScoreError, 1), 'team runs vs projection')}
+                ${giSmallMetric('Close projection', `${f.withinOneFiveCount || 0}/${sample}`, 'within 1.5 team runs')}
+                ${giSmallMetric('Bigger misses', `${f.bigMissCount || 0}/${sample}`, 'missed by 1.5+ team runs')}
               </div>
-              ${f.coverageNote ? `<p class="gi-inline-note">${escapeHtml(f.coverageNote)}</p>` : ''}
-              <div class="gi-last-games">
-                ${rows.map(g => `
-                  <div>
-                    <span>${escapeHtml(g.date || '')}</span>
-                    <strong>${escapeHtml(g.correctSide ? 'Correct side' : 'Missed side')}</strong>
-                    <em>${g.matchup ? `${escapeHtml(g.matchup)} • ` : ''}Pred ${giValue(g.predFor,1)}-${giValue(g.predAgainst,1)} • Actual ${giValue(g.actualFor,0)}-${giValue(g.actualAgainst,0)}</em>
-                  </div>
-                `).join('') || '<p class="muted">No settled model form found yet.</p>'}
+              ${f.coverageNote ? `<p class="gi-form-card-note">${escapeHtml(f.coverageNote)}</p>` : ''}
+              <div class="gi-form-games">
+                ${rows.map(g => {
+                  const away = g.awayTeam || (String(g.matchup || '').split('@')[0] || '').trim();
+                  const home = g.homeTeam || (String(g.matchup || '').split('@')[1] || '').trim();
+                  const matchup = g.matchup || (away && home ? `${away} @ ${home}` : '');
+                  const scoringText = g.teamDiffText || `${team} finished ${giValue(g.teamError,1)} runs away from its own scoring projection.`;
+                  const allowedText = g.opponentDiffText || `${team} allowed ${giValue(g.opponentError,1)} runs away from the opponent projection.`;
+                  const boardText = g.scoreboardText || `Full scoreboard miss: ${giValue(g.scoreboardError,1)} total runs across both teams.`;
+                  const totalText = g.totalText || (g.totalError != null ? `Projected total missed by ${giValue(g.totalError,1)} runs.` : '');
+                  const resultClass = g.correctSide ? 'is-good' : 'is-bad';
+                  return `
+                    <div class="gi-form-game">
+                      <div class="gi-form-game-head">
+                        <span class="gi-form-date">${escapeHtml(g.date || '')}</span>
+                        <span class="gi-form-result ${resultClass}">${escapeHtml(g.correctSide ? 'Correct winner' : 'Missed winner')}</span>
+                        <div class="gi-form-matchup">${escapeHtml(matchup)}</div>
+                      </div>
+                      <div class="gi-form-game-body">
+                        ${scoreBox('Model', away, g.predAway, home, g.predHome, 1)}
+                        ${scoreBox('Final', away, g.actualAway, home, g.actualHome, 0)}
+                        <div class="gi-form-explain">
+                          <span class="gi-form-label">What it means for ${escapeHtml(team)}</span>
+                          <ul class="gi-form-explain-list">
+                            <li><span>Scoring</span><b>${escapeHtml(scoringText)}</b></li>
+                            <li><span>Allowed</span><b>${escapeHtml(allowedText)}</b></li>
+                            <li><span>Game read</span><b>${escapeHtml(boardText)}</b></li>
+                            ${totalText ? `<li><span>Total</span><b>${escapeHtml(totalText)}</b></li>` : ''}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('') || '<p class="muted">No settled model form found yet.</p>'}
               </div>
             </div>
           `;
@@ -1285,13 +1447,16 @@ function giRenderModelForm(report) {
   `;
 }
 
+
 function giRenderMovement(report) {
   const mv = report?.predictionMovement || {};
   const bullets = Array.isArray(mv.bullets) ? mv.bullets : [];
   const m = mv.movements || {};
-  const title = mv.title || 'Prediction movement';
+  const title = mv.title || 'What the movement means';
   const description = mv.description || 'First saved record vs latest saved record.';
   const range = mv.firstDate && mv.latestDate ? `${mv.firstDate} → ${mv.latestDate}` : '';
+  const away = report?.awayTeam || 'Away';
+  const home = report?.homeTeam || 'Home';
   return `
     <div class="gi-block">
       <div class="gi-block-head">
@@ -1300,16 +1465,15 @@ function giRenderMovement(report) {
       </div>
       <div class="gi-card">
         ${mv.available ? `
+          ${mv.analysis ? `<p class="gi-movement-read">${escapeHtml(mv.analysis)}</p>` : ''}
           <div class="gi-mini-grid">
-            ${giSmallMetric('Away runs move', giValue(m.awayScoreDelta, 2))}
-            ${giSmallMetric('Home runs move', giValue(m.homeScoreDelta, 2))}
+            ${giSmallMetric(`${away} runs move`, giValue(m.awayScoreDelta, 2))}
+            ${giSmallMetric(`${home} runs move`, giValue(m.homeScoreDelta, 2))}
             ${giSmallMetric('Total move', giValue(m.totalDelta, 2))}
-            ${m.modelSpreadDelta !== undefined ? giSmallMetric('Spread move', giValue(m.modelSpreadDelta, 2), 'home spread basis') : ''}
-            ${m.favoriteWinProbDelta !== undefined ? giSmallMetric('Fav win prob move', giPct(m.favoriteWinProbDelta, 1)) : ''}
-            ${m.favoriteCoverProbDelta !== undefined ? giSmallMetric('Cover prob move', giPct(m.favoriteCoverProbDelta, 1)) : ''}
+            ${mv.awayMarginDelta !== undefined ? giSmallMetric('Margin moved toward', mv.movementToward ? escapeHtml(mv.movementToward) : 'No clear side', `${giValue(mv.awayMarginDelta,2)} run margin change`) : ''}
             ${m.nrfiProbDelta !== undefined ? giSmallMetric('NRFI move', giPct(m.nrfiProbDelta, 1)) : ''}
           </div>
-          ${bullets.length ? `<ul class="gi-note-list">${bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul>` : '<p class="muted">No meaningful model movement found across the saved records.</p>'}
+          ${bullets.length ? `<details class="gi-details"><summary>Show movement numbers</summary><ul class="gi-note-list">${bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul></details>` : ''}
         ` : `<p class="muted">${escapeHtml(mv.summary || 'Needs saved movement records or at least two builder snapshots.')}</p>`}
       </div>
     </div>
@@ -1340,9 +1504,9 @@ function giRenderPitchers(report) {
                 ${giSmallMetric('Avg K', giValue(s.avgK, 1))}
                 ${giSmallMetric('Avg H allowed', giValue(s.avgHitsAllowed, 1))}
                 ${giSmallMetric('Avg ER', giValue(s.avgER, 1))}
-                ${giSmallMetric('Last 5 1st RA', s.firstInningSamples ? giPct(s.firstInningRunAllowedRate, 0) : 'No local log', s.firstInningSamples ? `${s.firstInningSamples} samples` : 'needs inning data')}
-                ${giSmallMetric('Overall 1st RA', s.firstInningOverallSamples ? giPct(s.firstInningOverallRunAllowedRate, 0) : 'No local log', s.firstInningOverallSamples ? `${s.firstInningOverallSamples} starts` : '')}
-                ${giSmallMetric(`${s.firstInningLocation || p.location || 'Split'} 1st RA`, s.firstInningLocationSamples ? giPct(s.firstInningLocationRunAllowedRate, 0) : 'No split', s.firstInningLocationSamples ? `${s.firstInningLocationSamples} starts` : '')}
+                ${giSmallMetric('Last 5 1st RA', s.firstInningSamples ? giPct(s.firstInningRunAllowedRate, 0) : (s.firstInningNonStartRows ? 'N/A' : 'No local log'), s.firstInningSamples ? `${s.firstInningSamples} starts` : (s.firstInningNonStartRows ? `${s.firstInningNonStartRows} relief/bulk rows` : 'needs inning data'))}
+                ${s.showOverallFirstInning ? giSmallMetric('Available overall 1st RA', giPct(s.firstInningOverallRunAllowedRate, 0), `${s.firstInningOverallSamples} starts`) : ''}
+                ${s.showLocationFirstInning ? giSmallMetric(`Available ${s.firstInningLocation || p.location || 'split'} 1st RA`, giPct(s.firstInningLocationRunAllowedRate, 0), `${s.firstInningLocationSamples} starts`) : ''}
               </div>
               <div class="table-wrap gi-table-wrap">
                 ${((p.last5Starts || []).length) ? `
@@ -1358,7 +1522,7 @@ function giRenderPitchers(report) {
                           <td>${giValue(g.hitsAllowed, 0)}</td>
                           <td>${giValue(g.er, 0)}</td>
                           <td>${giValue(g.bb, 0)}</td>
-                          <td>${hasNumericValue(g.firstInningRunsAllowed) ? escapeHtml(String(g.firstInningRunsAllowed)) : '—'}</td>
+                          <td>${hasNumericValue(g.firstInningRunsAllowed) ? escapeHtml(String(g.firstInningRunsAllowed)) : escapeHtml(g.firstInningDisplay || (g.firstInningStatus ? 'N/A' : '—'))}</td>
                         </tr>
                       `).join('')}
                     </tbody>
@@ -1406,9 +1570,9 @@ function giRenderFirstInning(report) {
         <div class="gi-mini-grid">
           ${giSmallMetric('NRFI model', giPct(fi.nrfiProb, 0))}
           ${giSmallMetric('YRFI model', giPct(fi.yrfiProb, 0))}
-          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} last 5 1st RA`, p.sample ? giPct(p.runAllowedRate, 0) : 'No local log', p.sample ? `${p.sample} samples` : '')) .join('')}
-          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} overall 1st RA`, p.overallSamples ? giPct(p.overallRunAllowedRate, 0) : 'No local log', p.overallSamples ? `${p.overallSamples} starts` : '')) .join('')}
-          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} ${p.location || 'split'} 1st RA`, p.locationSamples ? giPct(p.locationRunAllowedRate, 0) : 'No split', p.locationSamples ? `${p.locationSamples} starts` : '')) .join('')}
+          ${(fi.pitcherSamples || []).map(p => giSmallMetric(`${p.player || p.team} last 5 1st RA`, p.sample ? giPct(p.runAllowedRate, 0) : (p.nonStartRows ? 'N/A' : 'No local log'), p.sample ? `${p.sample} starts` : (p.nonStartRows ? `${p.nonStartRows} relief/bulk rows` : ''))) .join('')}
+          ${(fi.pitcherSamples || []).filter(p => p.showOverallFirstInning).map(p => giSmallMetric(`${p.player || p.team} available overall 1st RA`, giPct(p.overallRunAllowedRate, 0), `${p.overallSamples} starts`)) .join('')}
+          ${(fi.pitcherSamples || []).filter(p => p.showLocationFirstInning).map(p => giSmallMetric(`${p.player || p.team} available ${p.location || 'split'} 1st RA`, giPct(p.locationRunAllowedRate, 0), `${p.locationSamples} starts`)) .join('')}
         </div>
         <p class="muted gi-note-p">${escapeHtml(fi.note || '')}</p>
       </div>
@@ -1474,6 +1638,7 @@ async function renderGameIntelligence(game) {
     return;
   }
   try {
+    giEnsureGameIntelligenceStyles();
     const index = await loadJson('data/game_intelligence/index.json', null);
     const reports = index?.reports || [];
     const match = reports.find(r => String(r.gameId || '') === String(game.id || '') || String(r.gamePk || '') === String(game.gamePk || ''));

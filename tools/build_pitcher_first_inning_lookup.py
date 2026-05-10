@@ -2,9 +2,13 @@
 r"""
 Build a starter first-inning runs allowed lookup for Game Intelligence.
 
-This script scans local MLB parquet/CSV files, finds each starting pitcher, finds
-how many runs the opposing team scored in the 1st inning, and writes lookup keys
-that tools/build_game_intelligence.py can attach to pitcher last-5-start rows.
+Default mode is incremental: it loads the existing lookup, finds the current slate
+pitchers from the MLB props analyzer, checks the last-start gameIds already stored,
+and only appends missing pitcher-game rows. This avoids rescanning the full local
+MLB data folder every time the after-predictions batch runs.
+
+Use --full-rebuild only when you intentionally want to recreate the lookup from
+all discoverable local parquet/CSV sources.
 
 Primary output:
   <website-repo>/data/derived/pitcher_first_inning_runs.json
@@ -304,6 +308,94 @@ def write_json(path: Path, data: Any) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def load_existing_lookup(json_path: Path) -> Dict[str, Dict[str, Any]]:
+    """Load the existing public lookup and add a low internal priority.
+
+    Existing rows should normally be kept. New rows with a higher source priority
+    can still replace them if a better source is found.
+    """
+    payload = read_json(json_path, {}) or {}
+    raw = payload.get("lookup") if isinstance(payload, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    out: Dict[str, Dict[str, Any]] = {}
+    for k, v in raw.items():
+        if isinstance(v, dict):
+            out[str(k)] = {**v, "priority": int(v.get("priority", 10) or 10)}
+    return out
+
+
+def load_existing_audit(audit_path: Path) -> List[Dict[str, Any]]:
+    if not audit_path.exists():
+        return []
+    rows: List[Dict[str, Any]] = []
+    try:
+        with audit_path.open("r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for r in reader:
+                rows.append(dict(r))
+    except Exception:
+        return []
+    return rows
+
+
+def dedupe_audit(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    seen = set()
+    out: List[Dict[str, Any]] = []
+    for r in rows:
+        key = (
+            str(r.get("date") or ""),
+            clean_id(r.get("gameId") or ""),
+            clean_id(r.get("playerId") or ""),
+            norm_name(r.get("player") or ""),
+            str(r.get("method") or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out
+
+
+NON_START_STATUSES = {
+    "relief_or_bulk_after_opener",
+    "not_first_inning_pitcher",
+    "appeared_after_first_inning",
+    "did_not_start",
+    "not_in_statcast_for_game",
+    "no_statcast_pitch_data",
+}
+
+
+def lookup_row_resolved(value: Any) -> bool:
+    """A lookup row is resolved if it has a numeric 1st-inning RA value
+    or a deliberate non-start / unavailable classification.
+
+    Without this, bullpen/bulk appearances get retried every daily run and keep
+    printing as scary missing rows even though there is no first-inning RA to
+    assign to that pitcher.
+    """
+    if not isinstance(value, dict):
+        return False
+    if num(value.get("runs")) is not None:
+        return True
+    status = str(value.get("status") or "").strip().lower()
+    return status in NON_START_STATUSES
+
+
+def start_has_lookup(lookup: Dict[str, Dict[str, Any]], start: Dict[str, Any]) -> bool:
+    for k in build_keys(start.get("playerId"), start.get("player"), start.get("gameId"), start.get("date")):
+        if lookup_row_resolved(lookup.get(k)):
+            return True
+    return False
+
+
+def missing_current_starts(repo: Path, target_date: str, lookup: Dict[str, Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    starts = current_pitcher_series_starts(repo, target_date)
+    missing = [s for s in starts if not start_has_lookup(lookup, s)]
+    return starts, missing
+
+
 def parse_first_from_cell(value: Any) -> Optional[float]:
     """Parse first-inning runs from list/json/string line-score cells.
 
@@ -515,8 +607,14 @@ def fetch_statsapi_first_inning(repo: Path, game_pk: str, sleep_seconds: float =
     return payload
 
 
-def add_statsapi_current_pitcher_rows(repo: Path, target_date: str, lookup: Dict[str, Dict[str, Any]], audit: List[Dict[str, Any]]) -> int:
-    starts = current_pitcher_series_starts(repo, target_date)
+def add_statsapi_current_pitcher_rows(
+    repo: Path,
+    target_date: str,
+    lookup: Dict[str, Dict[str, Any]],
+    audit: List[Dict[str, Any]],
+    starts_override: Optional[List[Dict[str, Any]]] = None,
+) -> int:
+    starts = starts_override if starts_override is not None else current_pitcher_series_starts(repo, target_date)
     if not starts:
         return 0
     feed_cache: Dict[str, Optional[Dict[str, Any]]] = {}
@@ -663,6 +761,7 @@ def extract_statcast_first_inning_lookup(
     target_date: str,
     lookup: Dict[str, Dict[str, Any]],
     audit: List[Dict[str, Any]],
+    starts_override: Optional[List[Dict[str, Any]]] = None,
 ) -> int:
     """Use statcast pitch-level parquets to identify the actual first-inning pitcher.
 
@@ -672,7 +771,7 @@ def extract_statcast_first_inning_lookup(
     For Top 1, the home pitcher allowed the away team's first-inning runs. For
     Bottom 1, the away pitcher allowed the home team's first-inning runs.
     """
-    starts = current_pitcher_series_starts(repo, target_date)
+    starts = starts_override if starts_override is not None else current_pitcher_series_starts(repo, target_date)
     needed_game_ids = {clean_id(s.get("gameId")) for s in starts if clean_id(s.get("gameId"))}
     needed_dates = {safe_date(s.get("date")) for s in starts if safe_date(s.get("date"))}
     if not needed_game_ids and not needed_dates:
@@ -785,7 +884,182 @@ def extract_statcast_first_inning_lookup(
             add_lookup(lookup, keys, payload, priority=98)
             audit.append(payload)
             count += 1
+
     return count
+
+
+def pitcher_matches_start(row_pitcher_id: Any, row_pitcher_name: Any, start: Dict[str, Any]) -> bool:
+    """Match a statcast pitcher row to the analyzer/start row."""
+    pid = clean_id(start.get("playerId"))
+    if pid and clean_id(row_pitcher_id) == pid:
+        return True
+    st_name = norm_name(start.get("player"))
+    row_name = norm_name(statcast_pitcher_display_name(row_pitcher_name))
+    return bool(st_name and row_name and st_name == row_name)
+
+
+def classify_non_start_current_rows(
+    repo: Path,
+    mlb_data_dir: Path,
+    target_date: str,
+    lookup: Dict[str, Dict[str, Any]],
+    audit: List[Dict[str, Any]],
+    starts_override: Optional[List[Dict[str, Any]]] = None,
+) -> Counter:
+    """Classify unresolved current-slate pitcher/game rows instead of warning forever.
+
+    The analyzer's recent-game series can include relief/bulk appearances. Those
+    rows do not have a pitcher-specific first-inning RA because the pitcher was
+    not on the mound in the 1st inning. This function scans the relevant statcast
+    game rows and stores a deliberate status lookup entry:
+      - relief_or_bulk_after_opener: pitcher appeared, but not as 1st-inning pitcher
+      - not_in_statcast_for_game: statcast has the game, but not that pitcher
+      - no_statcast_pitch_data: no local statcast rows for that game
+
+    That keeps incremental runs fast and makes the Game Intelligence table say
+    "Relief" / "No pitch data" instead of showing blanks or repeating warnings.
+    """
+    starts = starts_override if starts_override is not None else current_pitcher_series_starts(repo, target_date)
+    starts = [s for s in starts if not start_has_lookup(lookup, s)]
+    diag = Counter()
+    if not starts:
+        return diag
+
+    needed_game_ids = {clean_id(s.get("gameId")) for s in starts if clean_id(s.get("gameId"))}
+    needed_dates = {safe_date(s.get("date")) for s in starts if safe_date(s.get("date"))}
+    files = discover_statcast_files(mlb_data_dir, needed_dates)
+    starts_by_game: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for st in starts:
+        gid = clean_id(st.get("gameId"))
+        if gid:
+            starts_by_game[gid].append(st)
+
+    game_info: Dict[str, Dict[str, Any]] = {}
+    for fp in files:
+        df = read_statcast_table(fp)
+        if df is None or df.empty:
+            continue
+        cols = list(df.columns)
+        game_col = find_col(cols, ["game_pk", "gamePk", "game_id", "gameId"])
+        date_col = find_col(cols, ["game_date", "gameDate", "date"])
+        inn_col = find_col(cols, ["inning"])
+        topbot_col = find_col(cols, ["inning_topbot"])
+        pitcher_col = find_col(cols, ["pitcher", "pitcherId", "pitcher_id"])
+        pname_col = find_col(cols, ["player_name", "playerName", "pitcherName", "pitcher_name"])
+        home_team_col = find_col(cols, ["home_team", "homeTeam"])
+        away_team_col = find_col(cols, ["away_team", "awayTeam"])
+        ab_col = find_col(cols, ["at_bat_number", "atBatNumber"])
+        pitch_no_col = find_col(cols, ["pitch_number", "pitchNumber"])
+        if not (game_col and pitcher_col and inn_col and topbot_col):
+            continue
+
+        work = df.copy()
+        work["__game"] = work[game_col].map(clean_id)
+        if needed_game_ids:
+            work = work[work["__game"].isin(needed_game_ids)]
+        if work.empty:
+            continue
+        if date_col:
+            work["__date"] = work[date_col].map(safe_date)
+        else:
+            work["__date"] = ""
+        if not needed_game_ids and needed_dates:
+            work = work[work["__date"].isin(needed_dates)]
+        if work.empty:
+            continue
+        sort_cols = [c for c in ["__game", topbot_col, ab_col, pitch_no_col] if c]
+        try:
+            work = work.sort_values(sort_cols)
+        except Exception:
+            pass
+
+        for gid, g in work.groupby("__game", dropna=True):
+            gid = clean_id(gid)
+            if not gid or gid not in starts_by_game:
+                continue
+            info = game_info.setdefault(gid, {
+                "source": str(fp),
+                "date": safe_date(g.iloc[0].get("__date")),
+                "homeTeam": team_norm(g.iloc[0].get(home_team_col)) if home_team_col else "",
+                "awayTeam": team_norm(g.iloc[0].get(away_team_col)) if away_team_col else "",
+                "pitchers": [],
+                "firstBySide": {},
+            })
+            # all pitchers who appeared in the game
+            for _, r in g[[c for c in [pitcher_col, pname_col] if c]].drop_duplicates().iterrows():
+                info["pitchers"].append({
+                    "playerId": clean_id(r.get(pitcher_col)),
+                    "player": statcast_pitcher_display_name(r.get(pname_col)) if pname_col else "",
+                })
+            # first pitcher in each half of the 1st inning
+            one = g[pd.to_numeric(g[inn_col], errors="coerce") == 1]
+            for topbot, gg in one.groupby(topbot_col, dropna=True):
+                side = str(topbot or "").strip().lower()
+                if side not in {"top", "bottom", "bot"}:
+                    continue
+                first_row = gg.iloc[0]
+                key_side = "top" if side == "top" else "bottom"
+                info["firstBySide"][key_side] = {
+                    "playerId": clean_id(first_row.get(pitcher_col)),
+                    "player": statcast_pitcher_display_name(first_row.get(pname_col)) if pname_col else "",
+                }
+
+    for st in starts:
+        if start_has_lookup(lookup, st):
+            continue
+        gid = clean_id(st.get("gameId"))
+        info = game_info.get(gid)
+        status = "no_statcast_pitch_data"
+        note = "No local statcast pitch rows were found for this game, so first-inning starter status could not be verified."
+        first_pitcher = {}
+        expected_side = ""
+        if info:
+            st_team = team_norm(st.get("team"))
+            is_home = st.get("isHome")
+            if is_home is True or (is_home is None and st_team and st_team == team_norm(info.get("homeTeam"))):
+                expected_side = "top"      # home pitcher throws top 1
+            elif is_home is False or (is_home is None and st_team and st_team == team_norm(info.get("awayTeam"))):
+                expected_side = "bottom"   # away pitcher throws bottom 1
+            first_pitcher = (info.get("firstBySide") or {}).get(expected_side) or {}
+            appeared = any(pitcher_matches_start(p.get("playerId"), p.get("player"), st) for p in info.get("pitchers") or [])
+            was_first = pitcher_matches_start(first_pitcher.get("playerId"), first_pitcher.get("player"), st) if first_pitcher else False
+            if was_first:
+                # This should normally have been captured by extract_statcast_first_inning_lookup.
+                status = "unresolved_first_pitcher_no_runs"
+                note = "Pitcher appears to be the first-inning pitcher, but a valid first-inning run total was not available."
+            elif appeared:
+                status = "relief_or_bulk_after_opener"
+                fp_name = first_pitcher.get("player") or first_pitcher.get("playerId") or "another pitcher"
+                note = f"Pitcher appeared in this game but was not the first pitcher for his team; {fp_name} handled the 1st inning."
+            else:
+                status = "not_in_statcast_for_game"
+                fp_name = first_pitcher.get("player") or first_pitcher.get("playerId") or "the listed first pitcher"
+                note = f"Local statcast has the game, but this pitcher was not found in the pitch rows; first-inning pitcher was {fp_name}."
+
+        payload = {
+            "runs": None,
+            "status": status,
+            "display": "Relief" if status == "relief_or_bulk_after_opener" else "No pitch data" if status == "no_statcast_pitch_data" else "Did not start",
+            "source": (info or {}).get("source") or "statcast classification",
+            "method": "statcast_non_start_classification",
+            "confidence": "high_non_start" if status == "relief_or_bulk_after_opener" else "medium_unresolved",
+            "starterMethod": st.get("starterMethod"),
+            "playerId": st.get("playerId") or "",
+            "player": st.get("player") or "",
+            "team": team_norm(st.get("team")),
+            "opponent": team_norm(st.get("opponent")),
+            "isHome": st.get("isHome"),
+            "location": "Home" if st.get("isHome") is True else "Away" if st.get("isHome") is False else "",
+            "gameId": gid,
+            "date": st.get("date") or "",
+            "firstPitcherId": first_pitcher.get("playerId") or "",
+            "firstPitcher": first_pitcher.get("player") or "",
+            "note": note,
+        }
+        add_lookup(lookup, build_keys(st.get("playerId"), st.get("player"), gid, st.get("date")), payload, priority=45)
+        audit.append(payload)
+        diag[status] += 1
+    return diag
 
 
 # -------------------------- extraction candidates --------------------------
@@ -1201,34 +1475,148 @@ def pair_starters_with_team_runs(
 
 # ----------------------------- main pipeline -----------------------------
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--website-repo", default=".", help="Path to letsparlayml.github.io")
-    ap.add_argument("--mlb-data-dir", required=True, help="Path to local MLB data folder, e.g. C:\\python\\mlb_data")
-    ap.add_argument("--scan-all", action="store_true", help="Scan every parquet/csv under mlb-data-dir, not just likely log/box files")
-    ap.add_argument("--max-files", type=int, default=2000)
-    ap.add_argument("--target-date", default="", help="Optional current slate date. Defaults to site/props targetDate.")
-    ap.add_argument("--no-api-fallback", action="store_true", help="Disable free MLB Stats API line-score fallback for current slate pitcher last-5 starts.")
-    args = ap.parse_args()
+def write_outputs(
+    repo: Path,
+    mlb_data_dir: Path,
+    lookup: Dict[str, Dict[str, Any]],
+    audit: List[Dict[str, Any]],
+    diag: Counter,
+) -> Tuple[Path, Path, int]:
+    """Write merged lookup/audit outputs and return paths/count."""
+    public_lookup = {}
+    for k, v in lookup.items():
+        vv = dict(v)
+        vv.pop("priority", None)
+        public_lookup[k] = vv
 
-    repo = Path(args.website_repo).resolve()
-    mlb_data_dir = Path(args.mlb_data_dir).resolve()
-    if not mlb_data_dir.exists():
-        raise SystemExit(f"MLB data dir not found: {mlb_data_dir}")
+    out_dir = repo / "data" / "derived"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schemaVersion": "1.2-incremental-nonstart-classification",
+        "generatedAt": now_utc(),
+        "mlbDataDir": str(mlb_data_dir),
+        "diagnostics": dict(diag),
+        "lookup": public_lookup,
+    }
+    json_path = out_dir / "pitcher_first_inning_runs.json"
+    with json_path.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
 
-    target_date = args.target_date or load_target_date(repo)
+    audit_path = out_dir / "pitcher_first_inning_runs_audit.csv"
+    fieldnames = [
+        "date", "gameId", "playerId", "player", "team", "opponent", "runs",
+        "status", "display", "confidence", "method", "starterMethod",
+        "firstPitcher", "firstPitcherId", "note", "source",
+    ]
+    clean_rows = dedupe_audit(audit)
+    with audit_path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        for row in clean_rows:
+            writer.writerow(row)
+    return json_path, audit_path, len(public_lookup)
 
+
+def print_summary(diag: Counter, lookup_count: int, json_path: Path, audit_path: Path, incremental: bool) -> None:
+    print("\nFirst-inning lookup build complete")
+    print(f"  Mode                    : {'incremental append' if incremental else 'full rebuild'}")
+    print(f"  Existing lookup keys    : {diag['existing_lookup_keys']}")
+    print(f"  Current slate starts    : {diag['current_slate_starts']}")
+    print(f"  Missing starts checked  : {diag['missing_current_starts']}")
+    print(f"  Files read              : {diag['files_read']}")
+    print(f"  Direct pitcher rows     : {diag['direct_pitcher_rows']}")
+    print(f"  Starter candidates      : {diag['starter_candidates']}")
+    print(f"  Team 1st-inning rows    : {diag['team_first_rows']}")
+    print(f"  Paired starter rows     : {diag['paired_starter_rows']}")
+    print(f"  Statcast pitcher rows   : {diag['statcast_pitch_level_rows']}")
+    print(f"  StatsAPI current rows   : {diag['statsapi_current_pitcher_rows']}")
+    print(f"  Classified non-starts   : {diag['classified_non_start_rows']}")
+    if diag.get("relief_or_bulk_after_opener"):
+        print(f"    relief/bulk rows      : {diag['relief_or_bulk_after_opener']}")
+    if diag.get("not_in_statcast_for_game"):
+        print(f"    not in statcast game  : {diag['not_in_statcast_for_game']}")
+    if diag.get("no_statcast_pitch_data"):
+        print(f"    no pitch data rows    : {diag['no_statcast_pitch_data']}")
+    print(f"  Lookup keys written     : {lookup_count}")
+    print(f"  JSON                    : {json_path}")
+    print(f"  Audit                   : {audit_path}")
+
+
+def run_incremental(repo: Path, mlb_data_dir: Path, target_date: str, no_api_fallback: bool) -> int:
+    out_dir = repo / "data" / "derived"
+    json_path = out_dir / "pitcher_first_inning_runs.json"
+    audit_path = out_dir / "pitcher_first_inning_runs_audit.csv"
+
+    lookup = load_existing_lookup(json_path)
+    audit = load_existing_audit(audit_path)
+    diag = Counter()
+    diag["existing_lookup_keys"] = len(lookup)
+
+    all_starts, missing_starts = missing_current_starts(repo, target_date, lookup)
+    diag["current_slate_starts"] = len(all_starts)
+    diag["missing_current_starts"] = len(missing_starts)
+
+    if not missing_starts:
+        json_path, audit_path, lookup_count = write_outputs(repo, mlb_data_dir, lookup, audit, diag)
+        print_summary(diag, lookup_count, json_path, audit_path, incremental=True)
+        print("\nNo new first-inning pitcher-game rows were needed; existing lookup is current for this slate.")
+        return 0
+
+    needed_dates = sorted({safe_date(s.get("date")) for s in missing_starts if safe_date(s.get("date"))})
+    needed_games = sorted({clean_id(s.get("gameId")) for s in missing_starts if clean_id(s.get("gameId"))})
+    print(f"Incremental first-inning lookup: {len(missing_starts)} missing pitcher-game rows")
+    print(f"  Needed dates: {', '.join(needed_dates[:12])}{' ...' if len(needed_dates) > 12 else ''}")
+    print(f"  Needed games: {len(needed_games)}")
+
+    # Fast local source: only statcast files for the missing last-start dates/gameIds.
+    statcast_count = extract_statcast_first_inning_lookup(
+        repo, mlb_data_dir, target_date, lookup, audit, starts_override=missing_starts
+    )
+    diag["statcast_pitch_level_rows"] = statcast_count
+
+    # Fallback only for the same missing rows.
+    if not no_api_fallback:
+        api_count = add_statsapi_current_pitcher_rows(
+            repo, target_date, lookup, audit, starts_override=[s for s in missing_starts if not start_has_lookup(lookup, s)]
+        )
+        diag["statsapi_current_pitcher_rows"] = api_count
+
+    # Anything still without a numeric 1st-inning value is usually a relief/bulk
+    # appearance in the analyzer's recent-game series. Classify it so daily runs
+    # do not keep warning/rechecking the same non-start rows.
+    class_diag = classify_non_start_current_rows(
+        repo, mlb_data_dir, target_date, lookup, audit, starts_override=[s for s in missing_starts if not start_has_lookup(lookup, s)]
+    )
+    for k, v in class_diag.items():
+        diag[k] += v
+    diag["classified_non_start_rows"] = sum(class_diag.values())
+
+    json_path, audit_path, lookup_count = write_outputs(repo, mlb_data_dir, lookup, audit, diag)
+    print_summary(diag, lookup_count, json_path, audit_path, incremental=True)
+
+    still_missing = [s for s in missing_starts if not start_has_lookup(lookup, s)]
+    if still_missing:
+        print(f"\nWARNING: {len(still_missing)} current slate pitcher-game rows still unresolved after non-start classification.")
+        print("The Game Intelligence page will still build, but inspect the audit for these rows.")
+    elif diag.get("classified_non_start_rows"):
+        print(f"\nClassified {diag['classified_non_start_rows']} current-slate rows as relief/non-start/no-pitch-data instead of leaving them blank.")
+    return 0
+
+
+def run_full_rebuild(args: argparse.Namespace, repo: Path, mlb_data_dir: Path, target_date: str) -> int:
     files = discover_files(mlb_data_dir, scan_all=args.scan_all, max_files=args.max_files)
-    print(f"Scanning {len(files)} parquet/csv files under {mlb_data_dir}")
+    print(f"Full rebuild: scanning {len(files)} parquet/csv files under {mlb_data_dir}")
 
     lookup: Dict[str, Dict[str, Any]] = {}
     audit: List[Dict[str, Any]] = []
     starters: List[Dict[str, Any]] = []
     team_runs: List[Dict[str, Any]] = []
     diag = Counter()
+    diag["existing_lookup_keys"] = 0
+    all_starts = current_pitcher_series_starts(repo, target_date)
+    diag["current_slate_starts"] = len(all_starts)
+    diag["missing_current_starts"] = len(all_starts)
 
-    # Project-specific reliable source: statcast pitch-level parquet rows.
-    # This directly identifies the first pitcher in each first-inning half.
     statcast_count = extract_statcast_first_inning_lookup(repo, mlb_data_dir, target_date, lookup, audit)
     diag["statcast_pitch_level_rows"] = statcast_count
 
@@ -1237,7 +1625,6 @@ def main() -> int:
         if df is None or df.empty:
             continue
         diag["files_read"] += 1
-        cols = list(df.columns)
 
         direct_count = extract_direct_first_inning(df, fp, lookup, audit)
         if direct_count:
@@ -1260,53 +1647,35 @@ def main() -> int:
         api_count = add_statsapi_current_pitcher_rows(repo, target_date, lookup, audit)
         diag["statsapi_current_pitcher_rows"] = api_count
 
-    # Remove internal priority from public lookup.
-    public_lookup = {}
-    for k, v in lookup.items():
-        vv = dict(v)
-        vv.pop("priority", None)
-        public_lookup[k] = vv
-
-    out_dir = repo / "data" / "derived"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "schemaVersion": "1.0",
-        "generatedAt": now_utc(),
-        "mlbDataDir": str(mlb_data_dir),
-        "diagnostics": dict(diag),
-        "lookup": public_lookup,
-    }
-    json_path = out_dir / "pitcher_first_inning_runs.json"
-    with json_path.open("w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
-
-    audit_path = out_dir / "pitcher_first_inning_runs_audit.csv"
-    fieldnames = [
-        "date", "gameId", "playerId", "player", "team", "opponent", "runs",
-        "confidence", "method", "starterMethod", "source",
-    ]
-    with audit_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
-        writer.writeheader()
-        for row in audit:
-            writer.writerow(row)
-
-    print("\nFirst-inning lookup build complete")
-    print(f"  Files read              : {diag['files_read']}")
-    print(f"  Direct pitcher rows     : {diag['direct_pitcher_rows']}")
-    print(f"  Starter candidates      : {diag['starter_candidates']}")
-    print(f"  Team 1st-inning rows    : {diag['team_first_rows']}")
-    print(f"  Paired starter rows     : {diag['paired_starter_rows']}")
-    print(f"  Statcast pitcher rows   : {diag['statcast_pitch_level_rows']}")
-    print(f"  StatsAPI current rows   : {diag['statsapi_current_pitcher_rows']}")
-    print(f"  Lookup keys written     : {len(public_lookup)}")
-    print(f"  JSON                    : {json_path}")
-    print(f"  Audit                   : {audit_path}")
-
-    if not public_lookup:
+    json_path, audit_path, lookup_count = write_outputs(repo, mlb_data_dir, lookup, audit, diag)
+    print_summary(diag, lookup_count, json_path, audit_path, incremental=False)
+    if not lookup_count:
         print("\nWARNING: No first-inning lookup rows were created.")
         print("Try adding --scan-all, then inspect the audit/printed diagnostics and parquet column names.")
     return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--website-repo", default=".", help="Path to letsparlayml.github.io")
+    ap.add_argument("--mlb-data-dir", required=True, help="Path to local MLB data folder, e.g. C:\\python\\mlb_data")
+    ap.add_argument("--scan-all", action="store_true", help="With --full-rebuild, scan every parquet/csv under mlb-data-dir, not just likely log/box files")
+    ap.add_argument("--max-files", type=int, default=2000)
+    ap.add_argument("--target-date", default="", help="Optional current slate date. Defaults to site/props targetDate.")
+    ap.add_argument("--no-api-fallback", action="store_true", help="Disable free MLB Stats API line-score fallback for current slate pitcher last-5 starts.")
+    ap.add_argument("--full-rebuild", action="store_true", help="Recreate the whole lookup by scanning local parquet/csv sources. Default is incremental append only.")
+    args = ap.parse_args()
+
+    repo = Path(args.website_repo).resolve()
+    mlb_data_dir = Path(args.mlb_data_dir).resolve()
+    if not mlb_data_dir.exists():
+        raise SystemExit(f"MLB data dir not found: {mlb_data_dir}")
+
+    target_date = args.target_date or load_target_date(repo)
+
+    if args.full_rebuild:
+        return run_full_rebuild(args, repo, mlb_data_dir, target_date)
+    return run_incremental(repo, mlb_data_dir, target_date, args.no_api_fallback)
 
 
 if __name__ == "__main__":

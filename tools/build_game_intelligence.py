@@ -318,6 +318,46 @@ def summarize_first_inning_records(records: List[Dict[str, Any]]) -> Dict[str, A
         "multiRunCount": sum(1 for v in vals if v >= 2),
     }
 
+
+def is_true_start_row(row: Dict[str, Any]) -> bool:
+    """Keep only rows that represent a real start/appearance for the last-5-start table.
+
+    The analyzer can include postponed/no-game rows or relief/bulk appearances in
+    recent windows. Those should not appear in a section labeled last 5 starts.
+    """
+    status = str(row.get("firstInningStatus") or "").strip().lower()
+    display = str(row.get("firstInningDisplay") or "").strip().lower()
+    non_start_statuses = {
+        "relief_or_bulk_after_opener",
+        "not_first_inning_pitcher",
+        "appeared_after_first_inning",
+        "did_not_start",
+    }
+    if status in non_start_statuses:
+        return False
+    if "did not start" in display or "postpon" in display or "no game" in display:
+        return False
+    # If there is no pitch data and the box row is all zeros, this is almost
+    # always a postponed/no-game placeholder rather than a completed start.
+    if status == "no_pitch_data":
+        box_vals = [num(row.get(k)) for k in ("ip", "k", "hitsAllowed", "er", "bb")]
+        if all(v in (None, 0) for v in box_vals):
+            return False
+    return True
+
+
+def first_inning_scope_flags(summary: Dict[str, Any]) -> Dict[str, bool]:
+    last_samples = int(summary.get("firstInningSamples") or 0)
+    overall_samples = int(summary.get("firstInningOverallSamples") or 0)
+    location_samples = int(summary.get("firstInningLocationSamples") or 0)
+    return {
+        # Only show the overall box when it is actually wider than the recent
+        # sample. Otherwise it looks like a duplicate of Last 5 and implies a
+        # larger history that the data does not support.
+        "showOverallFirstInning": overall_samples > last_samples,
+        "showLocationFirstInning": location_samples > 0,
+    }
+
 def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List[Dict[str, Any]], pitcher: Dict[str, Any], first_inning_map: Dict[str, Any]) -> Dict[str, Any]:
     pid = clean_id(pitcher.get("playerId"))
     stat_series: Dict[str, Optional[Dict[str, Any]]] = {}
@@ -331,7 +371,9 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
     # Use only actual dated games as starts. Some analyzer files contain aggregate
     # windows like Prior/L10/L5/L3; those are useful, but they are not starts.
     candidate_games = stat_games.get("IP") or stat_games.get("K") or stat_games.get("HA") or []
-    base_games = [g for g in candidate_games if is_real_game_date(g.get("gameDate") or g.get("label"))][-5:]
+    # Pull more than five candidates first. We filter postponed/no-start/relief
+    # rows after first-inning lookup, then keep the latest five true starts.
+    base_games = [g for g in candidate_games if is_real_game_date(g.get("gameDate") or g.get("label"))][-25:]
     aggregate_windows = analyzer_aggregate_windows(stat_games)
 
     # Build maps by gameId/date for each stat.
@@ -366,6 +408,9 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
             if lk in first_inning_map:
                 first = first_inning_map[lk]
                 break
+        first_status = first.get("status") if isinstance(first, dict) else ""
+        first_display = first.get("display") if isinstance(first, dict) else ""
+        first_note = first.get("note") if isinstance(first, dict) else ""
         last5.append({
             "date": safe_date(row.get("gameDate") or row.get("label")),
             "gameId": clean_id(row.get("gameId") or row.get("gamePk") or ""),
@@ -378,8 +423,18 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
             "bb": stat_value("BB"),
             "outs": stat_value("OUTS"),
             "firstInningRunsAllowed": first.get("runs") if isinstance(first, dict) else first,
+            "firstInningStatus": first_status,
+            "firstInningDisplay": first_display,
+            "firstInningNote": first_note,
             "firstInningSource": first.get("source") if isinstance(first, dict) else "",
         })
+
+    # Remove postponed/no-game rows and pitchers who appeared after an opener so
+    # the table is truly last five starts. Backfill from the extra candidates
+    # pulled above, then cap to five.
+    filtered_last5 = [r for r in last5 if is_true_start_row(r)]
+    dropped_non_start_rows = len(last5) - len(filtered_last5)
+    last5 = filtered_last5[-5:]
 
     summary = {
         "avgIP": round_or_none(avg([r.get("ip") for r in last5]), 1),
@@ -389,6 +444,7 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
         "avgBB": round_or_none(avg([r.get("bb") for r in last5]), 1),
         "startsCount": len(last5),
         "hasStartByStartLogs": bool(last5),
+        "droppedNonStartRows": dropped_non_start_rows,
     }
     # If start-by-start logs are unavailable, expose the analyzer windows without
     # pretending they are actual game rows.
@@ -403,8 +459,12 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
             "startsCount": 0,
         })
     first_values = [num(r.get("firstInningRunsAllowed")) for r in last5 if r.get("firstInningRunsAllowed") is not None]
+    non_start_rows = [r for r in last5 if r.get("firstInningStatus") in {"relief_or_bulk_after_opener", "not_first_inning_pitcher", "appeared_after_first_inning", "did_not_start"}]
+    unresolved_first_rows = [r for r in last5 if r.get("firstInningStatus") and r.get("firstInningStatus") not in {"relief_or_bulk_after_opener", "not_first_inning_pitcher", "appeared_after_first_inning", "did_not_start"}]
     summary["firstInningRunAllowedRate"] = pct(sum(1 for v in first_values if v and v > 0), len(first_values)) if first_values else None
     summary["firstInningSamples"] = len(first_values)
+    summary["firstInningNonStartRows"] = len(non_start_rows)
+    summary["firstInningUnresolvedRows"] = len(unresolved_first_rows)
 
     # Full available first-inning history and home/away split summaries.
     first_history = first_inning_history_for_pitcher(pid, pitcher.get("player"), first_inning_map)
@@ -427,6 +487,7 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
         "firstInningLocationRunAllowedRate": loc_fi.get("runAllowedRate"),
         "firstInningHistoryRows": len(first_history),
     })
+    summary.update(first_inning_scope_flags(summary))
 
     # Same opponent starts when available.
     opp = team_norm(pitcher.get("opp"))
@@ -469,11 +530,15 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
     if summary.get("firstInningSamples"):
         rate_txt = fmt_pct(summary.get("firstInningRunAllowedRate"), 0)
         flags.append(f"First-inning run allowed in {rate_txt} of the last-{summary.get('firstInningSamples')} matched recent-start sample.")
-    if summary.get("firstInningOverallSamples"):
-        flags.append(f"Overall first-inning RA: {fmt_pct(summary.get('firstInningOverallRunAllowedRate'), 0)} over {summary.get('firstInningOverallSamples')} matched starts.")
-        if summary.get("firstInningLocationSamples") and summary.get("firstInningLocation"):
-            flags.append(f"{summary.get('firstInningLocation')} first-inning RA: {fmt_pct(summary.get('firstInningLocationRunAllowedRate'), 0)} over {summary.get('firstInningLocationSamples')} matched starts.")
-    elif not summary.get("firstInningSamples"):
+    if summary.get("droppedNonStartRows"):
+        flags.append(f"Removed {summary.get('droppedNonStartRows')} postponed/non-start/bulk row(s) so the table shows true recent starts.")
+    if summary.get("firstInningNonStartRows"):
+        flags.append(f"{summary.get('firstInningNonStartRows')} recent row(s) were relief/bulk appearances, so pitcher-specific 1st-inning RA does not apply to those games.")
+    if summary.get("showOverallFirstInning"):
+        flags.append(f"Available overall first-inning RA: {fmt_pct(summary.get('firstInningOverallRunAllowedRate'), 0)} over {summary.get('firstInningOverallSamples')} matched starts.")
+    if summary.get("showLocationFirstInning") and summary.get("firstInningLocation"):
+        flags.append(f"Available {summary.get('firstInningLocation').lower()} first-inning RA: {fmt_pct(summary.get('firstInningLocationRunAllowedRate'), 0)} over {summary.get('firstInningLocationSamples')} matched starts.")
+    if not summary.get("firstInningSamples") and not summary.get("showOverallFirstInning"):
         flags.append("First-inning starter run history was not found in the site files; this will populate if raw inning logs are available locally.")
 
     projections = {}
@@ -718,9 +783,10 @@ def parse_scores(text: str) -> Optional[Tuple[float, float]]:
 def team_model_form(team: str, results_history: List[Dict[str, Any]], display_limit: int = 5) -> Dict[str, Any]:
     """Build a team model-form card where the stats and visible rows use the same sample.
 
-    Earlier versions calculated the headline metrics on the last 10 but the page
-    only displayed 5 rows. That made the section look inconsistent. This now
-    intentionally uses the same capped sample for both metrics and rows.
+    The row scores stay in matchup order (away at home) so users do not have to
+    mentally flip the numbers between the two team cards. Team-specific stats
+    are based on that team's own predicted vs actual runs within the displayed
+    sample.
     """
     team = team_norm(team)
     rows = []
@@ -746,13 +812,63 @@ def team_model_form(team: str, results_history: List[Dict[str, Any]], display_li
             act_for, act_against = act_home, act_away
         pred_margin = pred_for - pred_against
         act_margin = act_for - act_against
+        team_error = abs(pred_for - act_for)
+        opponent_error = abs(pred_against - act_against)
+        scoreboard_error = team_error + opponent_error
+        projected_total = pred_away + pred_home
+        actual_total = act_away + act_home
+        total_error = abs(projected_total - actual_total)
+        team_diff = act_for - pred_for
+        opponent_diff = act_against - pred_against
+
+        def run_word(value: float) -> str:
+            return "run" if abs(value - 1.0) < 0.05 else "runs"
+
+        def scored_text(label: str, diff: float) -> str:
+            if abs(diff) < 0.05:
+                return f"{label} scored almost exactly as projected."
+            if diff > 0:
+                return f"{label} scored {abs(diff):.1f} more {run_word(abs(diff))} than projected."
+            return f"{label} scored {abs(diff):.1f} fewer {run_word(abs(diff))} than projected."
+
+        def allowed_text(label: str, diff: float) -> str:
+            if abs(diff) < 0.05:
+                return f"{label} allowed almost exactly the projected runs."
+            if diff > 0:
+                return f"{label} allowed {abs(diff):.1f} more {run_word(abs(diff))} than projected."
+            return f"{label} allowed {abs(diff):.1f} fewer {run_word(abs(diff))} than projected."
+
+        team_diff_text = scored_text(team, team_diff)
+        opponent_diff_text = allowed_text(team, opponent_diff)
+        scoreboard_text = f"Full scoreboard miss: {scoreboard_error:.1f} total {run_word(scoreboard_error)} across both teams."
+        total_text = f"Projected total missed by {total_error:.1f} {run_word(total_error)}."
         rows.append({
             "date": r.get("date") or "",
             "matchup": matchup,
+            "awayTeam": away,
+            "homeTeam": home,
+            "predAway": pred_away,
+            "predHome": pred_home,
+            "actualAway": act_away,
+            "actualHome": act_home,
             "predFor": pred_for,
             "predAgainst": pred_against,
             "actualFor": act_for,
             "actualAgainst": act_against,
+            "teamError": team_error,
+            "opponentError": opponent_error,
+            "scoreboardError": round(scoreboard_error, 2),
+            "projectedTotal": round(projected_total, 2),
+            "actualTotal": round(actual_total, 2),
+            "totalError": round(total_error, 2),
+            "teamDiff": round(team_diff, 2),
+            "opponentDiff": round(opponent_diff, 2),
+            "teamDiffText": team_diff_text,
+            "opponentDiffText": opponent_diff_text,
+            "scoreboardText": scoreboard_text,
+            "totalText": total_text,
+            "withinOneFive": team_error <= 1.5,
+            "bigMiss": team_error > 1.5,
             "correctSide": (pred_margin >= 0 and act_margin >= 0) or (pred_margin < 0 and act_margin < 0),
             "scoreError": abs(pred_for - act_for) + abs(pred_against - act_against),
             "overUnderTeam": "over" if act_for > pred_for + 0.25 else "under" if act_for < pred_for - 0.25 else "near",
@@ -760,21 +876,12 @@ def team_model_form(team: str, results_history: List[Dict[str, Any]], display_li
     rows.sort(key=lambda x: x.get("date") or "")
     sample_rows = rows[-display_limit:]
     correct = sum(1 for r in sample_rows if r.get("correctSide"))
-    avg_err = avg([r.get("scoreError") for r in sample_rows])
-    over_count = sum(1 for r in sample_rows if r.get("overUnderTeam") == "over")
-    under_count = sum(1 for r in sample_rows if r.get("overUnderTeam") == "under")
-    if len(sample_rows) >= 5:
-        acc = correct / len(sample_rows)
-        if acc >= 0.7:
-            label = "Hot"
-        elif acc >= 0.55:
-            label = "Solid"
-        elif acc <= 0.35:
-            label = "Cold"
-        else:
-            label = "Neutral"
-    else:
-        label = "Limited sample"
+    avg_team_err = avg([r.get("teamError") for r in sample_rows])
+    within_15 = sum(1 for r in sample_rows if r.get("withinOneFive"))
+    big_miss = sum(1 for r in sample_rows if r.get("bigMiss"))
+    # Do not assign a vague "Hot/Solid/Cold" badge here. The metrics below
+    # are clearer and avoid over-selling a small five-game sample.
+    label = ""
     return {
         "team": team,
         "sample": len(sample_rows),
@@ -782,12 +889,15 @@ def team_model_form(team: str, results_history: List[Dict[str, Any]], display_li
         "displayLimit": display_limit,
         "sideCorrect": correct,
         "sideAccuracy": pct(correct, len(sample_rows)) if sample_rows else None,
-        "avgScoreError": round_or_none(avg_err, 1),
-        "teamOverCount": over_count,
-        "teamUnderCount": under_count,
+        "avgTeamRunError": round_or_none(avg_team_err, 1),
+        "withinOneFiveCount": within_15,
+        "withinOneFiveRate": pct(within_15, len(sample_rows)) if sample_rows else None,
+        "bigMissCount": big_miss,
+        "teamOverCount": sum(1 for r in sample_rows if r.get("overUnderTeam") == "over"),
+        "teamUnderCount": sum(1 for r in sample_rows if r.get("overUnderTeam") == "under"),
         "label": label,
         "games": sample_rows,
-        "coverageNote": f"Stats and rows both use the last {len(sample_rows)} settled model reads shown below.",
+        "coverageNote": f"Stats use the same {len(sample_rows)} settled games shown below. Model and final scores stay in away/home order; the explanation is specific to {team}.",
     }
 
 
@@ -913,14 +1023,50 @@ def movement_from_game_records(game: Dict[str, Any]) -> Optional[Dict[str, Any]]
     if nrfi_d is not None and abs(nrfi_d) >= 0.02:
         bullets.append(f"NRFI probability moved {nrfi_d:+.1%}.")
 
+    analysis_parts: List[str] = []
+    side_delta = None
+    if first_away is not None and last_away is not None and first_home is not None and last_home is not None:
+        first_away_margin = first_away - first_home
+        last_away_margin = last_away - last_home
+        side_delta = round_or_none(last_away_margin - first_away_margin, 3)
+        if side_delta is not None and abs(side_delta) >= 0.15:
+            toward = away if side_delta > 0 else home
+            analysis_parts.append(
+                f"The side movement strengthened toward {toward}: {away} moved {away_d:+.2f} runs while {home} moved {home_d:+.2f}, changing the projected margin by {side_delta:+.2f} runs."
+            )
+        elif away_d is not None and home_d is not None and abs(away_d) >= 0.10 and abs(home_d) >= 0.10:
+            if away_d > 0 and home_d > 0:
+                analysis_parts.append(
+                    f"Both offenses moved up ({away} {away_d:+.2f}, {home} {home_d:+.2f}), so the movement is more about a higher-scoring game environment than a stronger side."
+                )
+            elif away_d < 0 and home_d < 0:
+                analysis_parts.append(
+                    f"Both offenses moved down ({away} {away_d:+.2f}, {home} {home_d:+.2f}), so the movement points more toward run suppression than a clearer side."
+                )
+    if total_d is not None and abs(total_d) >= 0.30:
+        if total_d > 0:
+            analysis_parts.append(f"The projected total climbed {total_d:+.2f}, which points to more offensive expectation than the earliest saved read.")
+        else:
+            analysis_parts.append(f"The projected total fell {total_d:+.2f}, which points to a lower-run game script than the earliest saved read.")
+    if nrfi_d is not None and abs(nrfi_d) >= 0.05:
+        if nrfi_d < 0:
+            analysis_parts.append(f"NRFI probability dropped {nrfi_d:+.1%}, so the first-inning read became more YRFI/early-scoring friendly.")
+        else:
+            analysis_parts.append(f"NRFI probability rose {nrfi_d:+.1%}, so the first-inning read became more pitcher-friendly early.")
+    if not analysis_parts and bullets:
+        analysis_parts.append("Movement exists, but it is not large enough in one direction to materially change the read from the earliest saved projection.")
+
     return {
         "available": True,
         "source": "game_movement",
-        "title": "Week-to-game trend",
-        "description": "Uses the same saved movement records shown in the main prediction movement chart.",
+        "title": "Week-to-game movement read",
+        "description": "Interprets the same saved movement records shown in the main prediction movement chart.",
         "firstDate": first.get("date") or first.get("capturedAt"),
         "latestDate": last.get("date") or last.get("capturedAt"),
         "movements": movements,
+        "movementToward": (away if side_delta is not None and side_delta > 0.15 else home if side_delta is not None and side_delta < -0.15 else None),
+        "awayMarginDelta": side_delta,
+        "analysis": " ".join(analysis_parts),
         "bullets": bullets,
         "snapshots": rows,
     }
@@ -1118,10 +1264,12 @@ def quick_writeup(game: Dict[str, Any], pitcher_reports: List[Dict[str, Any]], p
     pieces = []
     if num(game.get("modelAwayScore")) is not None and num(game.get("modelHomeScore")) is not None:
         pieces.append(f"The current model score is {away} {fmt_num(game.get('modelAwayScore'),2)} at {home} {fmt_num(game.get('modelHomeScore'),2)}, with a projected total of {fmt_num(game.get('modelTotal'),2)}.")
-    if movement.get("available") and movement.get("bullets"):
-        pieces.append("Movement note: " + movement["bullets"][0])
+    if movement.get("available") and movement.get("analysis"):
+        pieces.append("Movement read: " + movement["analysis"])
+    elif movement.get("available") and movement.get("bullets"):
+        pieces.append("Movement read: " + " ".join(movement.get("bullets", [])[:2]))
     else:
-        pieces.append("Movement note: this page has captured the current snapshot; run the builder again later in the day to show true first-to-latest model movement.")
+        pieces.append("Movement read: this page needs saved movement records or another builder run before it can explain how the model changed.")
     if pitcher_reports:
         best = sorted(pitcher_reports, key=lambda p: (num(p.get("last5Summary", {}).get("avgER")) if num(p.get("last5Summary", {}).get("avgER")) is not None else 999))[0]
         bs = best.get('last5Summary', {})
@@ -1160,15 +1308,19 @@ def build_report_for_game(repo: Path, props: Dict[str, Any], entries: List[Dict[
                 "runAllowedRate": p.get("last5Summary", {}).get("firstInningRunAllowedRate"),
                 "overallSamples": p.get("last5Summary", {}).get("firstInningOverallSamples"),
                 "overallRunAllowedRate": p.get("last5Summary", {}).get("firstInningOverallRunAllowedRate"),
+                "showOverallFirstInning": p.get("last5Summary", {}).get("showOverallFirstInning"),
                 "locationSamples": p.get("last5Summary", {}).get("firstInningLocationSamples"),
                 "locationRunAllowedRate": p.get("last5Summary", {}).get("firstInningLocationRunAllowedRate"),
+                "showLocationFirstInning": p.get("last5Summary", {}).get("showLocationFirstInning"),
+                "nonStartRows": p.get("last5Summary", {}).get("firstInningNonStartRows"),
+                "unresolvedRows": p.get("last5Summary", {}).get("firstInningUnresolvedRows"),
             }
             for p in pitcher_reports
         ],
         "note": "Starter first-inning run history requires raw inning-level/pitcher-log data. It is shown when those columns are found locally.",
     }
     return {
-        "schemaVersion": "2.5",
+        "schemaVersion": "2.9",
         "generatedAt": local_now(),
         "gameId": game.get("id"),
         "gamePk": game.get("gamePk"),
