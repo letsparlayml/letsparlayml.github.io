@@ -1385,8 +1385,8 @@ function giRenderModelForm(report) {
   return `
     <div class="gi-block">
       <div class="gi-block-head">
-        <h3>Model form by team</h3>
-        <p>Each card grades that team only. Rows keep the scoreboard in away/home order and then explain that team's scoring error in plain language.</p>
+        <h3>Model form over last 5 games</h3>
+        <p>Recent model accuracy for each team. Rows keep the scoreboard in away/home order and explain how close the model was to that team's actual scoring.</p>
       </div>
       <div class="gi-two-col">
         ${teams.map(team => {
@@ -1487,8 +1487,8 @@ function giRenderPitchers(report) {
   return `
     <div class="gi-block">
       <div class="gi-block-head">
-        <h3>Pitching matchup: last 5 starts</h3>
-        <p>Actual recent box stats from pitcher logs, not the model projection table below.</p>
+        <h3>Pitching matchup: last 5 outings</h3>
+        <p>Actual recent outing box stats from pitcher logs, not the model projection table below. First-inning runs only show when that outing was a confirmed start.</p>
       </div>
       <div class="gi-two-col">
         ${pitchers.map(p => {
@@ -1500,11 +1500,11 @@ function giRenderPitchers(report) {
                 <span>${escapeHtml([p.team, p.location, p.opponent ? `vs ${p.opponent}` : ''].filter(Boolean).join(' • '))}</span>
               </div>
               <div class="gi-mini-grid">
-                ${giSmallMetric('Avg IP', giValue(s.avgIP, 1), s.hasStartByStartLogs ? `${s.startsCount || 0} starts` : 'window data')}
+                ${giSmallMetric('Avg IP', giValue(s.avgIP, 1), s.hasOutingLogs || s.hasStartByStartLogs ? `${s.outingsCount || s.startsCount || 0} outings` : 'window data')}
                 ${giSmallMetric('Avg K', giValue(s.avgK, 1))}
                 ${giSmallMetric('Avg H allowed', giValue(s.avgHitsAllowed, 1))}
                 ${giSmallMetric('Avg ER', giValue(s.avgER, 1))}
-                ${giSmallMetric('Last 5 1st RA', s.firstInningSamples ? giPct(s.firstInningRunAllowedRate, 0) : (s.firstInningNonStartRows ? 'N/A' : 'No local log'), s.firstInningSamples ? `${s.firstInningSamples} starts` : (s.firstInningNonStartRows ? `${s.firstInningNonStartRows} relief/bulk rows` : 'needs inning data'))}
+                ${giSmallMetric('Last 5 1st RA', s.firstInningSamples ? giPct(s.firstInningRunAllowedRate, 0) : '-', s.firstInningSamples ? `${s.firstInningSamples} confirmed starts` : 'hidden for non-start outings')}
                 ${s.showOverallFirstInning ? giSmallMetric('Available overall 1st RA', giPct(s.firstInningOverallRunAllowedRate, 0), `${s.firstInningOverallSamples} starts`) : ''}
                 ${s.showLocationFirstInning ? giSmallMetric(`Available ${s.firstInningLocation || p.location || 'split'} 1st RA`, giPct(s.firstInningLocationRunAllowedRate, 0), `${s.firstInningLocationSamples} starts`) : ''}
               </div>
@@ -1522,7 +1522,7 @@ function giRenderPitchers(report) {
                           <td>${giValue(g.hitsAllowed, 0)}</td>
                           <td>${giValue(g.er, 0)}</td>
                           <td>${giValue(g.bb, 0)}</td>
-                          <td>${hasNumericValue(g.firstInningRunsAllowed) ? escapeHtml(String(g.firstInningRunsAllowed)) : escapeHtml(g.firstInningDisplay || (g.firstInningStatus ? 'N/A' : '—'))}</td>
+                          <td>${hasNumericValue(g.firstInningRunsAllowed) ? escapeHtml(String(g.firstInningRunsAllowed)) : '-'}</td>
                         </tr>
                       `).join('')}
                     </tbody>

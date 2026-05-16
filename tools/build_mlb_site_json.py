@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -39,21 +40,47 @@ def iso_timestamp(value: Any) -> str:
     return ts.isoformat().replace('+00:00', 'Z')
 
 
-def choose_total_prob_fields(total_line: Any, row: pd.Series) -> tuple[str, float | None, float | None]:
+def choose_total_prob_fields(total_line: Any, row: pd.Series, *, allow_fallback: bool = True) -> tuple[str, float | None, float | None]:
+    """Choose probabilities for the actual market total without mixing alt lines.
+
+    The model output currently carries half-point total probabilities such as
+    over_7p5_prob and over_8p5_prob. Those map cleanly to half-point market
+    totals. For integer lines, the push outcome matters, so we only fill the
+    side(s) that can be computed exactly from adjacent half-point probabilities:
+
+    * Over 8.0 = P(total >= 9) = over_8p5_prob
+    * Under 8.0 = P(total <= 7) = 1 - over_7p5_prob
+
+    If the exact market total cannot be supported by the available fields, return
+    the line label with None probabilities. Downstream cards can then use a
+    model-vs-market derived lean instead of falsely labeling an 8.5 probability
+    as an 8.0/9.0/etc. probability.
+    """
     total = safe_float(total_line)
-    if total is not None:
-        if abs(total - 7.5) < 0.11:
-            over = safe_float(row.get('over_7p5_prob'))
-            return f"Over {total:.1f}", over, (1 - over) if over is not None else None
-        if abs(total - 8.5) < 0.11:
-            over = safe_float(row.get('over_8p5_prob'))
-            return f"Over {total:.1f}", over, (1 - over) if over is not None else None
-    over85 = safe_float(row.get('over_8p5_prob'))
-    if over85 is not None:
-        return 'Over 8.5', over85, 1 - over85
     over75 = safe_float(row.get('over_7p5_prob'))
-    if over75 is not None:
-        return 'Over 7.5', over75, 1 - over75
+    over85 = safe_float(row.get('over_8p5_prob'))
+
+    if total is not None:
+        label = f"Total {total:.1f}"
+        if abs(total - 7.5) < 0.11:
+            return f"Over {total:.1f}", over75, (1 - over75) if over75 is not None else None
+        if abs(total - 8.5) < 0.11:
+            return f"Over {total:.1f}", over85, (1 - over85) if over85 is not None else None
+        if abs(total - 7.0) < 0.11:
+            return label, over75, None
+        if abs(total - 8.0) < 0.11:
+            under = (1 - over75) if over75 is not None else None
+            return label, over85, under
+        if abs(total - 9.0) < 0.11:
+            under = (1 - over85) if over85 is not None else None
+            return label, None, under
+        return label, None, None
+
+    if allow_fallback:
+        if over85 is not None:
+            return 'Over 8.5', over85, 1 - over85
+        if over75 is not None:
+            return 'Over 7.5', over75, 1 - over75
     return '', None, None
 
 
@@ -71,6 +98,71 @@ def choose_win_team_and_prob(row: pd.Series) -> tuple[str, float | None]:
     if (home_win or 0) >= (away_win or 0):
         return home_team, home_win
     return away_team, away_win
+
+
+def choose_market_runline_pick(row: pd.Series, market_spread: float | None) -> tuple[str, float | None, str]:
+    """Return the model's preferred side of the actual market run line.
+
+    marketSpread is stored from the away-team perspective:
+      +1.5 means away +1.5 / home -1.5
+      -1.5 means away -1.5 / home +1.5
+
+    The card should not blindly show the favorite. It should show whichever side
+    the model makes more likely against the actual line.
+    """
+    home = clean_str(row.get('home_team'))
+    away = clean_str(row.get('away_team'))
+    if market_spread is not None and abs(abs(market_spread) - 1.5) < 0.11:
+        if market_spread > 0:
+            # Away is +1.5, home is -1.5. Pick the more likely side.
+            candidates = [
+                (safe_float(row.get('home_minus1p5_prob')), f"{home} -1.5", home),
+                (safe_float(row.get('away_plus1p5_prob')), f"{away} +1.5", away),
+            ]
+        else:
+            # Away is -1.5, home is +1.5. Pick the more likely side.
+            candidates = [
+                (safe_float(row.get('away_minus1p5_prob')), f"{away} -1.5", away),
+                (safe_float(row.get('home_plus1p5_prob')), f"{home} +1.5", home),
+            ]
+        candidates = [c for c in candidates if c[0] is not None]
+        if candidates:
+            prob, label, team = max(candidates, key=lambda x: x[0])
+            return label, prob, team
+
+    favorite_team, _ = choose_win_team_and_prob(row)
+    if favorite_team == home:
+        fav_prob = safe_float(row.get('home_minus1p5_prob'))
+        dog_prob = safe_float(row.get('away_plus1p5_prob'))
+        candidates = [(fav_prob, f"{home} -1.5", home), (dog_prob, f"{away} +1.5", away)]
+    elif favorite_team == away:
+        fav_prob = safe_float(row.get('away_minus1p5_prob'))
+        dog_prob = safe_float(row.get('home_plus1p5_prob'))
+        candidates = [(fav_prob, f"{away} -1.5", away), (dog_prob, f"{home} +1.5", home)]
+    else:
+        candidates = []
+    candidates = [c for c in candidates if c[0] is not None]
+    if candidates:
+        prob, label, team = max(candidates, key=lambda x: x[0])
+        return label, prob, team
+    return '', None, ''
+
+
+def choose_market_total_pick(total_line: Any, row: pd.Series) -> tuple[str, float | None]:
+    total_label, over_prob, under_prob = choose_total_prob_fields(total_line, row, allow_fallback=False)
+    total = safe_float(total_line)
+    if total is not None and (over_prob is not None or under_prob is not None):
+        if (over_prob or 0) >= (under_prob or 0):
+            return f"Over {total:.1f}", over_prob
+        return f"Under {total:.1f}", under_prob
+    fallback_label, fallback_over, fallback_under = choose_total_prob_fields(None, row, allow_fallback=True)
+    if fallback_label and (fallback_over is not None or fallback_under is not None):
+        line_match = re.search(r"(\d+(?:\.\d+)?)", fallback_label)
+        line = line_match.group(1) if line_match else fallback_label.replace('Over ', '')
+        if (fallback_over or 0) >= (fallback_under or 0):
+            return f"Over {line}", fallback_over
+        return f"Under {line}", fallback_under
+    return '', None
 
 
 def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -101,15 +193,24 @@ def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = 
             market_cover_label = f"{away_team} -1.5"
             market_cover_prob = safe_float(row.get('away_minus1p5_prob'))
 
-    total_label, market_over_prob, market_under_prob = choose_total_prob_fields(market_total, row)
-    fallback_total_label, fallback_over_prob, fallback_under_prob = choose_total_prob_fields(None, row)
+    model_runline_label, model_runline_prob, model_runline_team = choose_market_runline_pick(row, market_spread)
+    model_total_label, model_total_prob = choose_market_total_pick(market_total, row)
+    total_label, market_over_prob, market_under_prob = choose_total_prob_fields(market_total, row, allow_fallback=False)
+    fallback_total_label, fallback_over_prob, fallback_under_prob = choose_total_prob_fields(None, row, allow_fallback=True)
 
     return {
         'favoriteTeam': favorite_team,
         'favoriteWinLabel': f"{favorite_team} win" if favorite_team else 'Favorite win',
         'favoriteWinProb': favorite_win_prob,
+        'modelMoneylineLabel': f"{favorite_team} ML" if favorite_team else 'ML',
+        'modelMoneylineProb': favorite_win_prob,
         'favoriteCoverLabel': default_cover_label,
         'favoriteCoverProb': default_cover_prob,
+        'modelSpreadPickLabel': model_runline_label,
+        'modelSpreadPickProb': model_runline_prob,
+        'modelSpreadPickTeam': model_runline_team,
+        'modelTotalPickLabel': model_total_label,
+        'modelTotalPickProb': model_total_prob,
         'marketSpread': market_spread,
         'marketTotal': market_total,
         'marketCoverTeam': market_cover_team,
@@ -344,19 +445,14 @@ def prop_confidence(prob: float | None) -> str:
     return 'Low'
 
 
-def build_summary(row: pd.Series) -> str:
+def build_summary(row: pd.Series, context: dict[str, Any] | None = None) -> str:
     parts: list[str] = []
     home = clean_str(row.get('home_team'))
     away = clean_str(row.get('away_team'))
     home_win = safe_float(row.get('home_win_prob'))
     away_win = safe_float(row.get('away_win_prob'))
     nrfi = safe_float(row.get('nrfi_prob'))
-    home_m15 = safe_float(row.get('home_minus1p5_prob'))
-    away_m15 = safe_float(row.get('away_minus1p5_prob'))
-    home_p15 = safe_float(row.get('home_plus1p5_prob'))
-    away_p15 = safe_float(row.get('away_plus1p5_prob'))
-    over75 = safe_float(row.get('over_7p5_prob'))
-    over85 = safe_float(row.get('over_8p5_prob'))
+    context = context or {}
 
     if nrfi is not None:
         parts.append(f"NRFI {pct_text(nrfi)}")
@@ -367,29 +463,20 @@ def build_summary(row: pd.Series) -> str:
         else:
             parts.append(f"{away} win {pct_text(away_win)}")
 
-    rl_options = []
-    if home_m15 is not None:
-        rl_options.append((home_m15, f"{home} -1.5 {pct_text(home_m15)}"))
-    if away_m15 is not None:
-        rl_options.append((away_m15, f"{away} -1.5 {pct_text(away_m15)}"))
-    if home_p15 is not None:
-        rl_options.append((home_p15, f"{home} +1.5 {pct_text(home_p15)}"))
-    if away_p15 is not None:
-        rl_options.append((away_p15, f"{away} +1.5 {pct_text(away_p15)}"))
-    if rl_options:
-        rl_options.sort(key=lambda x: x[0], reverse=True)
-        parts.append(rl_options[0][1])
+    spread_pick_label = clean_str(context.get('modelSpreadPickLabel'))
+    spread_pick_prob = safe_float(context.get('modelSpreadPickProb'))
+    if spread_pick_label and spread_pick_prob is not None:
+        parts.append(f"{spread_pick_label} {pct_text(spread_pick_prob)}")
+    else:
+        market_cover_label = clean_str(context.get('marketCoverLabel'))
+        market_cover_prob = safe_float(context.get('marketCoverProb'))
+        if market_cover_label and market_cover_prob is not None:
+            parts.append(f"{market_cover_label} {pct_text(market_cover_prob)}")
 
-    totals = []
-    if over75 is not None:
-        totals.append((over75, f"Over 7.5 {pct_text(over75)}"))
-        totals.append((1 - over75, f"Under 7.5 {pct_text(1 - over75)}"))
-    if over85 is not None:
-        totals.append((over85, f"Over 8.5 {pct_text(over85)}"))
-        totals.append((1 - over85, f"Under 8.5 {pct_text(1 - over85)}"))
-    if totals:
-        totals.sort(key=lambda x: x[0], reverse=True)
-        parts.append(totals[0][1])
+    total_pick_label = clean_str(context.get('modelTotalPickLabel'))
+    total_pick_prob = safe_float(context.get('modelTotalPickProb'))
+    if total_pick_label and total_pick_prob is not None:
+        parts.append(f"{total_pick_label} {pct_text(total_pick_prob)}")
 
     return ' • '.join(parts[:4]) or 'MLB model preview'
 
@@ -643,6 +730,8 @@ def build_game_objects(
             'awayWinProb': safe_float(row.get('away_win_prob')),
             'favoriteWinLabel': context.get('favoriteWinLabel'),
             'favoriteWinProb': context.get('favoriteWinProb'),
+            'modelMoneylineLabel': context.get('modelMoneylineLabel'),
+            'modelMoneylineProb': context.get('modelMoneylineProb'),
             'nrfiProb': safe_float(row.get('nrfi_prob')),
             'yrfiProb': safe_float(row.get('yrfi_prob')),
             'homeMinus1p5Prob': safe_float(row.get('home_minus1p5_prob')),
@@ -653,6 +742,11 @@ def build_game_objects(
             'underdogPlus1p5Prob': safe_float(row.get('underdog_plus1p5_prob')),
             'favoriteCoverLabel': context.get('favoriteCoverLabel'),
             'favoriteCoverProb': context.get('favoriteCoverProb'),
+            'modelSpreadPickLabel': context.get('modelSpreadPickLabel'),
+            'modelSpreadPickProb': context.get('modelSpreadPickProb'),
+            'modelSpreadPickTeam': context.get('modelSpreadPickTeam'),
+            'modelTotalPickLabel': context.get('modelTotalPickLabel'),
+            'modelTotalPickProb': context.get('modelTotalPickProb'),
             'marketCoverLabel': context.get('marketCoverLabel'),
             'marketCoverProb': context.get('marketCoverProb'),
             'over7p5Prob': safe_float(row.get('over_7p5_prob')),
@@ -678,7 +772,7 @@ def build_game_objects(
                 safe_float(row.get('over_7p5_prob')),
                 safe_float(row.get('over_8p5_prob')),
             ]),
-            'summary': build_summary(row),
+            'summary': build_summary(row, context),
             'movement': build_movement(movement_rows if movement_rows is not None else pd.DataFrame([row]), market_entry=market_entry),
             'marketSpreadText': 'Pending' if context.get('marketSpread') is None else context.get('marketCoverLabel') or 'Available',
             'marketTotalText': 'Pending' if context.get('marketTotal') is None else context.get('marketTotalLabel') or f"{context.get('marketTotal')}",

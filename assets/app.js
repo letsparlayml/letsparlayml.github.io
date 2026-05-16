@@ -163,6 +163,134 @@ function cardSummaryText(game) {
     );
 }
 
+function derivedSpreadProbabilityForDisplay(game, edge) {
+  const league = String(game?.league || '').toUpperCase();
+  const scale = league === 'NBA' ? 0.018 : league === 'NHL' ? 0.075 : 0.060;
+  const cap = league === 'NBA' ? 0.67 : 0.68;
+  return Math.min(cap, 0.50 + Math.abs(edge) * scale);
+}
+
+function derivedTotalProbabilityForDisplay(game, gap) {
+  const league = String(game?.league || '').toUpperCase();
+  const scale = league === 'NBA' ? 0.012 : league === 'NHL' ? 0.055 : 0.035;
+  const cap = league === 'NBA' ? 0.70 : 0.67;
+  return Math.min(cap, 0.52 + Math.abs(gap) * scale);
+}
+
+function signedLineText(team, line) {
+  return `${team || 'Team'} ${fmtSigned(line, 1)}`;
+}
+
+function mlbMarketRunLineSignal(game) {
+  const spread = marketSpreadForDisplay(game);
+  if (!Number.isFinite(spread) || Math.abs(Math.abs(spread) - 1.5) > 0.11) return '';
+
+  let candidates = [];
+  if (spread > 0) {
+    // Away +1.5 / home -1.5. Show whichever side the model makes more likely.
+    candidates = [
+      { label: `${game?.homeTeam || 'Home'} -1.5`, prob: coerceProbability(game?.homeMinus1p5Prob) },
+      { label: `${game?.awayTeam || 'Away'} +1.5`, prob: coerceProbability(game?.awayPlus1p5Prob) },
+    ];
+  } else {
+    // Away -1.5 / home +1.5. Show whichever side the model makes more likely.
+    candidates = [
+      { label: `${game?.awayTeam || 'Away'} -1.5`, prob: coerceProbability(game?.awayMinus1p5Prob) },
+      { label: `${game?.homeTeam || 'Home'} +1.5`, prob: coerceProbability(game?.homePlus1p5Prob) },
+    ];
+  }
+
+  const best = candidates
+    .filter(item => Number.isFinite(item.prob))
+    .sort((a, b) => b.prob - a.prob)[0];
+  return best ? `${best.label} ${fmtPct(best.prob, 0)}` : '';
+}
+
+function spreadSignalText(game) {
+  const league = String(game?.league || '').toUpperCase();
+  const marketSpread = marketSpreadForDisplay(game);
+  const storedModelPickProb = coerceProbability(game?.modelSpreadPickProb);
+  if (game?.modelSpreadPickLabel && Number.isFinite(storedModelPickProb)) {
+    return `${game.modelSpreadPickLabel} ${fmtPct(storedModelPickProb, 0)}`;
+  }
+
+  if (league === 'MLB') {
+    const mlbSignal = mlbMarketRunLineSignal(game);
+    if (mlbSignal) return mlbSignal;
+  }
+
+  const modelSpread = modelSpreadForDisplay(game);
+  if (Number.isFinite(modelSpread) && Number.isFinite(marketSpread)) {
+    const edge = modelSpread - marketSpread;
+    const prob = derivedSpreadProbabilityForDisplay(game, edge);
+    if (edge >= 0) {
+      return `${signedLineText(game?.homeTeam || 'Home', -marketSpread)} ${fmtPct(prob, 0)}`;
+    }
+    return `${signedLineText(game?.awayTeam || 'Away', marketSpread)} ${fmtPct(prob, 0)}`;
+  }
+
+  const marketCoverProb = coerceProbability(game?.marketCoverProb);
+  if (game?.marketCoverLabel && Number.isFinite(marketCoverProb)) {
+    return `${game.marketCoverLabel} ${fmtPct(marketCoverProb, 0)}`;
+  }
+
+  return Number.isFinite(marketSpread) ? `${spreadTeamLabel(game, marketSpread)} prob pending` : 'Spread pending';
+}
+
+function totalSignalText(game) {
+  const marketTotal = Number(game?.marketTotal);
+  const modelTotal = Number(game?.modelTotal);
+  const storedTotalProb = coerceProbability(game?.modelTotalPickProb);
+  if (game?.modelTotalPickLabel && Number.isFinite(storedTotalProb)) {
+    return `${game.modelTotalPickLabel} ${fmtPct(storedTotalProb, 0)}`;
+  }
+
+  const over = coerceProbability(game?.marketOverProb);
+  const under = coerceProbability(game?.marketUnderProb);
+
+  if (Number.isFinite(marketTotal) && (Number.isFinite(over) || Number.isFinite(under))) {
+    if ((Number.isFinite(over) ? over : 0) >= (Number.isFinite(under) ? under : 0)) {
+      return `Over ${fmt(marketTotal, 1)} ${fmtPct(over, 0)}`;
+    }
+    return `Under ${fmt(marketTotal, 1)} ${fmtPct(under, 0)}`;
+  }
+
+  if (Number.isFinite(marketTotal) && Number.isFinite(modelTotal)) {
+    const gap = modelTotal - marketTotal;
+    const side = gap >= 0 ? 'Over' : 'Under';
+    const prob = derivedTotalProbabilityForDisplay(game, gap);
+    return `${side} ${fmt(marketTotal, 1)} ${fmtPct(prob, 0)}`;
+  }
+
+  return Number.isFinite(marketTotal) ? `Total ${fmt(marketTotal, 1)} prob pending` : 'Total pending';
+}
+
+function moneylineSignalText(game) {
+  const storedProb = coerceProbability(game?.modelMoneylineProb ?? game?.favoriteWinProb);
+  const storedLabel = game?.modelMoneylineLabel || game?.favoriteWinLabel || '';
+  if (storedLabel && Number.isFinite(storedProb)) {
+    return `${storedLabel.replace(/ win$/i, ' ML')} ${fmtPct(storedProb, 0)}`;
+  }
+
+  const home = Number(game?.modelHomeScore);
+  const away = Number(game?.modelAwayScore);
+  if (Number.isFinite(home) && Number.isFinite(away)) {
+    const team = home >= away ? (game?.homeTeam || 'Home') : (game?.awayTeam || 'Away');
+    return `${team} ML prob pending`;
+  }
+  return 'ML pending';
+}
+
+function gameMarketSignalsHtml(game) {
+  return `
+    <div class="game-signal-row" aria-label="Model picks for current market lines">
+      <span class="game-signal-chip"><b>ML</b> ${escapeHtml(moneylineSignalText(game))}</span>
+      <span class="game-signal-chip"><b>Spread</b> ${escapeHtml(spreadSignalText(game))}</span>
+      <span class="game-signal-chip"><b>Total</b> ${escapeHtml(totalSignalText(game))}</span>
+    </div>
+  `;
+}
+
 function normalizeLookupToken(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -356,7 +484,7 @@ function gameCard(game) {
         </div>
         <div>
           <h3>${escapeHtml(game.awayTeam)} @ ${escapeHtml(game.homeTeam)}</h3>
-          <p class="muted">${escapeHtml(cardSummaryText(game))}</p>
+          ${gameMarketSignalsHtml(game)}
         </div>
         <div class="score-box">
           <div class="score-row"><span>${escapeHtml(game.awayTeam)}</span><strong>${fmt(game.modelAwayScore)}</strong></div>

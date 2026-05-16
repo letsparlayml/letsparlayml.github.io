@@ -257,6 +257,42 @@ def analyzer_aggregate_windows(stat_games: Dict[str, List[Dict[str, Any]]]) -> L
 
 
 
+def is_confirmed_first_inning_start_record(value: Any) -> bool:
+    """True only when the lookup proves the pitcher started that team half-inning.
+
+    Records created from the current slate pitcher series can identify recent
+    appearances, but they do not prove the pitcher was the first pitcher of that
+    historical game. Those rows should not populate first-inning RA for a last-5
+    starts table.
+    """
+    if not isinstance(value, dict):
+        return False
+    status = str(value.get("status") or "").strip().lower()
+    if status in {"relief_or_bulk_after_opener", "not_first_inning_pitcher", "appeared_after_first_inning", "did_not_start"}:
+        return False
+    method = str(value.get("method") or "").strip().lower()
+    starter_method = str(value.get("starterMethod") or value.get("starter_method") or "").strip().lower()
+    confidence = str(value.get("confidence") or "").strip().lower()
+    safe_tokens = (
+        "first_pitcher_in_half_inning",
+        "statcast_pitch_level_first_inning_start_pitcher",
+        "statsapi_first_pitcher_in_half_inning",
+        "probable_starter_confirmed",
+        "official_starter",
+    )
+    unsafe_tokens = (
+        "current_slate_pitcher_series",
+        "current_slate_pitcher_series_last5",
+        "pitcher_series_last5",
+        "recent_window",
+        "fallback_series",
+    )
+    combined = " ".join([method, starter_method, confidence])
+    if any(token in combined for token in unsafe_tokens) and not any(token in combined for token in safe_tokens):
+        return False
+    return any(token in combined for token in safe_tokens)
+
+
 def first_inning_history_for_pitcher(player_id: Any, player_name: Any, first_inning_map: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Return deduped first-inning RA records for a pitcher from the derived lookup.
 
@@ -278,6 +314,8 @@ def first_inning_history_for_pitcher(player_id: Any, player_name: Any, first_inn
         if not pid and nm and value_name and nm != value_name:
             continue
         if pid and not value_pid and nm and value_name and nm != value_name:
+            continue
+        if not is_confirmed_first_inning_start_record(value):
             continue
         runs = num(value.get("runs"))
         if runs is None:
@@ -320,25 +358,18 @@ def summarize_first_inning_records(records: List[Dict[str, Any]]) -> Dict[str, A
 
 
 def is_true_start_row(row: Dict[str, Any]) -> bool:
-    """Keep only rows that represent a real start/appearance for the last-5-start table.
+    """Keep actual pitcher outing rows and drop only non-games/placeholders.
 
-    The analyzer can include postponed/no-game rows or relief/bulk appearances in
-    recent windows. Those should not appear in a section labeled last 5 starts.
+    Relief/opening pitchers should still show their last-five outing box stats.
+    First-inning runs are handled separately and are only populated when the
+    lookup confirms this pitcher was the first pitcher of that historical game.
     """
     status = str(row.get("firstInningStatus") or "").strip().lower()
     display = str(row.get("firstInningDisplay") or "").strip().lower()
-    non_start_statuses = {
-        "relief_or_bulk_after_opener",
-        "not_first_inning_pitcher",
-        "appeared_after_first_inning",
-        "did_not_start",
-    }
-    if status in non_start_statuses:
-        return False
-    if "did not start" in display or "postpon" in display or "no game" in display:
+    if "postpon" in display or "no game" in display:
         return False
     # If there is no pitch data and the box row is all zeros, this is almost
-    # always a postponed/no-game placeholder rather than a completed start.
+    # always a postponed/no-game placeholder rather than a completed outing.
     if status == "no_pitch_data":
         box_vals = [num(row.get(k)) for k in ("ip", "k", "hitsAllowed", "er", "bb")]
         if all(v in (None, 0) for v in box_vals):
@@ -408,9 +439,14 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
             if lk in first_inning_map:
                 first = first_inning_map[lk]
                 break
+        first_confirmed = is_confirmed_first_inning_start_record(first)
         first_status = first.get("status") if isinstance(first, dict) else ""
         first_display = first.get("display") if isinstance(first, dict) else ""
         first_note = first.get("note") if isinstance(first, dict) else ""
+        if isinstance(first, dict) and not first_confirmed:
+            first_status = first_status or "first_inning_not_confirmed_start"
+            first_display = first_display or "-"
+            first_note = first_note or "First-inning runs hidden because this outing was not confirmed as a start/first-inning appearance."
         last5.append({
             "date": safe_date(row.get("gameDate") or row.get("label")),
             "gameId": clean_id(row.get("gameId") or row.get("gamePk") or ""),
@@ -422,16 +458,16 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
             "er": stat_value("ER"),
             "bb": stat_value("BB"),
             "outs": stat_value("OUTS"),
-            "firstInningRunsAllowed": first.get("runs") if isinstance(first, dict) else first,
+            "firstInningRunsAllowed": first.get("runs") if isinstance(first, dict) and first_confirmed else None,
             "firstInningStatus": first_status,
             "firstInningDisplay": first_display,
             "firstInningNote": first_note,
             "firstInningSource": first.get("source") if isinstance(first, dict) else "",
         })
 
-    # Remove postponed/no-game rows and pitchers who appeared after an opener so
-    # the table is truly last five starts. Backfill from the extra candidates
-    # pulled above, then cap to five.
+    # Remove postponed/no-game placeholders, but keep relief/opening appearances
+    # as last-five outings. First-inning RA remains blank for outings that were
+    # not confirmed as true starts/first-inning appearances.
     filtered_last5 = [r for r in last5 if is_true_start_row(r)]
     dropped_non_start_rows = len(last5) - len(filtered_last5)
     last5 = filtered_last5[-5:]
@@ -443,7 +479,9 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
         "avgER": round_or_none(avg([r.get("er") for r in last5]), 1),
         "avgBB": round_or_none(avg([r.get("bb") for r in last5]), 1),
         "startsCount": len(last5),
+        "outingsCount": len(last5),
         "hasStartByStartLogs": bool(last5),
+        "hasOutingLogs": bool(last5),
         "droppedNonStartRows": dropped_non_start_rows,
     }
     # If start-by-start logs are unavailable, expose the analyzer windows without
@@ -460,7 +498,7 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
         })
     first_values = [num(r.get("firstInningRunsAllowed")) for r in last5 if r.get("firstInningRunsAllowed") is not None]
     non_start_rows = [r for r in last5 if r.get("firstInningStatus") in {"relief_or_bulk_after_opener", "not_first_inning_pitcher", "appeared_after_first_inning", "did_not_start"}]
-    unresolved_first_rows = [r for r in last5 if r.get("firstInningStatus") and r.get("firstInningStatus") not in {"relief_or_bulk_after_opener", "not_first_inning_pitcher", "appeared_after_first_inning", "did_not_start"}]
+    unresolved_first_rows = [r for r in last5 if r.get("firstInningStatus") and r.get("firstInningStatus") not in {"relief_or_bulk_after_opener", "not_first_inning_pitcher", "appeared_after_first_inning", "did_not_start", "first_inning_not_confirmed_start"}]
     summary["firstInningRunAllowedRate"] = pct(sum(1 for v in first_values if v and v > 0), len(first_values)) if first_values else None
     summary["firstInningSamples"] = len(first_values)
     summary["firstInningNonStartRows"] = len(non_start_rows)
@@ -1273,10 +1311,10 @@ def quick_writeup(game: Dict[str, Any], pitcher_reports: List[Dict[str, Any]], p
     if pitcher_reports:
         best = sorted(pitcher_reports, key=lambda p: (num(p.get("last5Summary", {}).get("avgER")) if num(p.get("last5Summary", {}).get("avgER")) is not None else 999))[0]
         bs = best.get('last5Summary', {})
-        if bs.get('hasStartByStartLogs'):
-            pieces.append(f"Pitching context: {best.get('player')} has the better recent run-prevention profile in the available start logs at {fmt_num(bs.get('avgER'),1)} ER over the last {bs.get('startsCount')} starts.")
+        if bs.get('hasOutingLogs') or bs.get('hasStartByStartLogs'):
+            pieces.append(f"Pitching context: {best.get('player')} has the better recent run-prevention profile in the available outing logs at {fmt_num(bs.get('avgER'),1)} ER over the last {bs.get('outingsCount') or bs.get('startsCount')} outings.")
         else:
-            pieces.append(f"Pitching context: detailed start-by-start logs were not available for every starter, so the page separates actual starts from analyzer L3/L5/L10 windows instead of treating those windows as box scores.")
+            pieces.append(f"Pitching context: detailed outing logs were not available for every pitcher, so the page separates actual outings from analyzer L3/L5/L10 windows instead of treating those windows as box scores.")
     if positives:
         names = ", ".join([p.get("player") or "" for p in positives[:3]])
         pieces.append(f"Batter research is strongest for {names}, based on recent hit rates, matching location/opponent samples, or similar-game production.")

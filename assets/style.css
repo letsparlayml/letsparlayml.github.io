@@ -1214,16 +1214,54 @@ code {
 .quick-game-card h3 { font-size: 1.12rem; }
 .quick-game-card p { margin: 0; }
 .collapsible-board {
-  margin-top: 1rem;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 1rem;
-  padding: .85rem 1rem 1rem;
-  background: rgba(255,255,255,.025);
+  margin-top: 1.15rem;
+  border: 1px solid rgba(69, 201, 255, .22);
+  border-radius: 1.2rem;
+  padding: .95rem 1rem 1rem;
+  background: linear-gradient(180deg, rgba(30, 73, 118, .24), rgba(255,255,255,.025));
 }
 .collapsible-board summary {
   cursor: pointer;
-  font-weight: 800;
-  color: #d7efff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  width: fit-content;
+  min-width: min(100%, 270px);
+  padding: .82rem 1.15rem;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, .35);
+  background: linear-gradient(135deg, rgba(20,184,166,.34), rgba(59,130,246,.28));
+  box-shadow: 0 0 22px rgba(45, 212, 191, .16);
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: #f4fbff;
+}
+.collapsible-board summary::after {
+  content: 'Every game + detail links';
+  font-size: .78rem;
+  font-weight: 700;
+  color: rgba(225, 245, 255, .72);
+}
+.game-signal-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: .5rem;
+}
+.game-signal-chip {
+  border: 1px solid rgba(103, 232, 249, .2);
+  border-radius: .85rem;
+  padding: .52rem .65rem;
+  background: rgba(5, 18, 32, .38);
+  color: #e9f8ff;
+  font-size: .9rem;
+}
+.game-signal-chip b {
+  display: block;
+  color: #8eeaff;
+  font-size: .72rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 .tool-grid {
   display: grid;

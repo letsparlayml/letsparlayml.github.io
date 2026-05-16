@@ -313,12 +313,32 @@ def board_rows_from_sheet(df: pd.DataFrame, games_map: dict[str, dict]) -> list[
     return rows
 
 
-def pick_sheet(xls: pd.ExcelFile, candidates: list[str]) -> str | None:
+def load_section_rows(workbook_path: Path, xls: pd.ExcelFile, candidates: list[str], games_map: dict[str, dict]) -> list[dict]:
+    """Load and combine every matching strategy sheet for a section.
+
+    The previous builder used only the first matching sheet. That made, for
+    example, a populated ceiling_form sheet invisible whenever ceiling_overlap
+    also existed but had no rows for the selected date.
+    """
+    rows: list[dict] = []
+    seen = set()
     names = set(xls.sheet_names)
     for candidate in candidates:
-        if candidate in names:
-            return candidate
-    return None
+        if candidate not in names:
+            continue
+        sheet_rows = board_rows_from_sheet(normalize_props_df(pd.read_excel(workbook_path, sheet_name=candidate)), games_map)
+        for row in sheet_rows:
+            key = prop_lookup_key(row, True)
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(row)
+    rows.sort(key=lambda x: (
+        x.get("board_rank_date") is None,
+        x.get("board_rank_date") if x.get("board_rank_date") is not None else 10**9,
+        -(x.get("prob_cons") or -1),
+    ))
+    return rows
 
 
 
@@ -334,6 +354,181 @@ def prop_lookup_key(item: dict | pd.Series, include_player_id: bool = True) -> t
         round(line_value, 3) if line_value is not None else None,
     )
 
+
+def prop_family_key(item: dict) -> tuple:
+    player_id = safe_int(item.get("playerId"))
+    return (
+        clean_str(item.get("gameDate")),
+        safe_int(item.get("gameId")),
+        player_id if player_id is not None else clean_str(item.get("player")).lower(),
+        clean_str(item.get("stat")).upper(),
+    )
+
+
+def prop_sort_score(item: dict, section: str) -> float:
+    prob = safe_float(item.get("prob_cons")) or 0.0
+    pred_gap = safe_float(item.get("pred_minus_line")) or 0.0
+    avg_gap = safe_float(item.get("avg_minus_line")) or 0.0
+    hit = safe_float(item.get("hit_score")) or 0.0
+    stability = safe_float(item.get("stability_score")) or 0.0
+    agreement = safe_float(item.get("agreement_score")) or 0.0
+    matchup = safe_float(item.get("matchup_score")) or 0.0
+    line = safe_float(item.get("line")) or 0.0
+    avg_anchor = safe_float(item.get("avg_anchor")) or 0.0
+    elevated = max(0.0, line - avg_anchor)
+    if section == "ceiling":
+        return prob * 1.1 + hit * 0.25 + stability * 0.15 + matchup * 0.20 + elevated * 0.04
+    if section == "consistency":
+        return prob * 0.75 + stability * 0.25 + agreement * 0.20 + hit * 0.15
+    if section == "floor":
+        return prob * 0.90 + max(pred_gap, 0.0) * 0.04 + max(avg_gap, 0.0) * 0.03 + stability * 0.10
+    return prob * 0.85 + max(pred_gap, 0.0) * 0.04 + matchup * 0.15 + agreement * 0.10
+
+
+def is_ceiling_candidate(item: dict) -> bool:
+    prob = safe_float(item.get("prob_cons")) or 0.0
+    pred_gap = safe_float(item.get("pred_minus_line")) or 0.0
+    hit = safe_float(item.get("hit_score")) or 0.0
+    stability = safe_float(item.get("stability_score")) or 0.0
+    matchup = safe_float(item.get("matchup_score")) or 0.0
+    line = safe_float(item.get("line"))
+    avg_anchor = safe_float(item.get("avg_anchor"))
+    elevated_line = line is not None and avg_anchor is not None and line >= avg_anchor
+    return prob >= 0.40 and (pred_gap >= 0.20 or elevated_line) and (hit >= 0.40 or stability >= 0.85 or matchup >= 0.15)
+
+
+def is_consistency_candidate(item: dict) -> bool:
+    prob = safe_float(item.get("prob_cons")) or 0.0
+    stability = safe_float(item.get("stability_score")) or 0.0
+    agreement = safe_float(item.get("agreement_score")) or 0.0
+    hit = safe_float(item.get("hit_score")) or 0.0
+    return prob >= 0.48 and (stability >= 0.85 or agreement >= 0.70 or hit >= 0.58)
+
+
+def is_floor_candidate(item: dict) -> bool:
+    prob = safe_float(item.get("prob_cons")) or 0.0
+    pred_gap = safe_float(item.get("pred_minus_line")) or 0.0
+    avg_gap = safe_float(item.get("avg_minus_line")) or 0.0
+    stability = safe_float(item.get("stability_score")) or 0.0
+    return prob >= 0.56 and (pred_gap >= 0.0 or avg_gap >= -0.25 or stability >= 0.88)
+
+
+def is_consensus_candidate(item: dict) -> bool:
+    prob = safe_float(item.get("prob_cons")) or 0.0
+    return prob >= 0.50
+
+
+def dedupe_exact(items: list[dict]) -> list[dict]:
+    out = []
+    seen = set()
+    for item in items:
+        if not clean_str(item.get("player")) or not clean_str(item.get("stat")):
+            continue
+        key = prop_lookup_key(item, True)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+def ladder_replacement(item: dict, all_rows: list[dict]) -> dict:
+    base_line = safe_float(item.get("line"))
+    if base_line is None:
+        return item
+    family = prop_family_key(item)
+    options = []
+    for row in all_rows:
+        if prop_family_key(row) != family:
+            continue
+        line = safe_float(row.get("line"))
+        prob = safe_float(row.get("prob_cons")) or 0.0
+        if line is None or line <= base_line:
+            continue
+        if prob < 0.40:
+            continue
+        if not is_ceiling_candidate(row):
+            continue
+        candidate = dict(row)
+        candidate["board"] = "ceiling_ladder"
+        candidate["summary"] = candidate.get("summary") or item.get("summary")
+        candidate["boardDriver"] = candidate.get("boardDriver") or "Higher-line ladder version of a strong base prop."
+        options.append(candidate)
+    if not options:
+        return item
+    options.sort(key=lambda row: (safe_float(row.get("line")) or 0.0, prop_sort_score(row, "ceiling")), reverse=True)
+    return options[0]
+
+
+def assign_strategy_sections(raw_sections: dict[str, list[dict]], day_all: list[dict]) -> dict[str, list[dict]]:
+    enriched = {
+        key: dedupe_exact(enrich_board_rows(rows, day_all))
+        for key, rows in raw_sections.items()
+    }
+
+    ceiling_pool = [ladder_replacement(row, day_all) for row in enriched.get("ceiling", [])]
+    ceiling_pool = [row for row in dedupe_exact(ceiling_pool) if is_ceiling_candidate(row)]
+
+    assigned: dict[str, list[dict]] = {"consensus": [], "floor": [], "consistency": [], "ceiling": []}
+    used_exact = set()
+    used_family_named = set()
+
+    # Priority matters: put true upside/ladders first, then stable repeatable props,
+    # then lower-line floor spots. Consensus is filled last so the same exact prop
+    # does not show up in multiple strategy buckets.
+    priority_defs = [
+        ("ceiling", ceiling_pool, is_ceiling_candidate),
+        ("consistency", enriched.get("consistency", []), is_consistency_candidate),
+        ("floor", enriched.get("floor", []), is_floor_candidate),
+    ]
+
+    for section, rows, predicate in priority_defs:
+        candidates = [row for row in dedupe_exact(rows) if predicate(row)]
+        candidates.sort(key=lambda row: prop_sort_score(row, section), reverse=True)
+        for row in candidates:
+            exact = prop_lookup_key(row, True)
+            if exact in used_exact:
+                continue
+            used_exact.add(exact)
+            used_family_named.add(prop_family_key(row))
+            assigned[section].append(row)
+
+    def add_consensus_candidates(rows: list[dict], *, avoid_named_family: bool, strict_role: bool) -> None:
+        candidates = []
+        for row in dedupe_exact(rows):
+            exact = prop_lookup_key(row, True)
+            family = prop_family_key(row)
+            if exact in used_exact:
+                continue
+            if avoid_named_family and family in used_family_named:
+                continue
+            if not is_consensus_candidate(row):
+                continue
+            if strict_role and (is_ceiling_candidate(row) or is_consistency_candidate(row) or is_floor_candidate(row)):
+                continue
+            candidates.append(row)
+        candidates.sort(key=lambda row: prop_sort_score(row, "consensus"), reverse=True)
+        for row in candidates:
+            exact = prop_lookup_key(row, True)
+            if exact in used_exact:
+                continue
+            used_exact.add(exact)
+            assigned["consensus"].append(row)
+            if len(assigned["consensus"]) >= 8:
+                break
+
+    # First use the source consensus sheets, then backfill from all candidates with
+    # matchup/projection signals. The staged fallback keeps the board populated
+    # without allowing exact duplicate player/stat/line/game rows across buckets.
+    add_consensus_candidates(enriched.get("consensus", []), avoid_named_family=True, strict_role=True)
+    if len(assigned["consensus"]) < 4:
+        add_consensus_candidates(day_all, avoid_named_family=True, strict_role=True)
+    if len(assigned["consensus"]) < 4:
+        add_consensus_candidates(enriched.get("consensus", []), avoid_named_family=True, strict_role=False)
+    if len(assigned["consensus"]) < 4:
+        add_consensus_candidates(day_all, avoid_named_family=False, strict_role=False)
+
+    return assigned
 
 def enrich_board_rows(items: list[dict], all_rows: list[dict]) -> list[dict]:
     exact_lookup = {prop_lookup_key(row, True): row for row in all_rows}
@@ -412,13 +607,10 @@ def build_payload(workbook_path: Path, games_path: Path) -> dict:
     all_sheet = "all_candidates" if "all_candidates" in xls.sheet_names else xls.sheet_names[0]
     all_df = normalize_props_df(pd.read_excel(workbook_path, sheet_name=all_sheet))
 
-    sections_by_sheet = {}
-    for section, candidates in SHEET_MAP.items():
-        sheet_name = pick_sheet(xls, candidates)
-        if sheet_name:
-            sections_by_sheet[section] = board_rows_from_sheet(normalize_props_df(pd.read_excel(workbook_path, sheet_name=sheet_name)), games_map)
-        else:
-            sections_by_sheet[section] = []
+    sections_by_sheet = {
+        section: load_section_rows(workbook_path, xls, candidates, games_map)
+        for section, candidates in SHEET_MAP.items()
+    }
 
     role_up, role_down = build_role_sections(all_df, games_map)
 
@@ -428,6 +620,13 @@ def build_payload(workbook_path: Path, games_path: Path) -> dict:
     by_date = {}
     for date in dates:
         day_all = [r for r in all_rows if r.get("gameDate") == date]
+        raw_day_sections = {
+            "consensus": [r for r in sections_by_sheet["consensus"] if r.get("gameDate") == date],
+            "floor": [r for r in sections_by_sheet["floor"] if r.get("gameDate") == date],
+            "consistency": [r for r in sections_by_sheet["consistency"] if r.get("gameDate") == date],
+            "ceiling": [r for r in sections_by_sheet["ceiling"] if r.get("gameDate") == date],
+        }
+        strategy_sections = assign_strategy_sections(raw_day_sections, day_all)
         by_date[date] = {
             "meta": {
                 "propCount": len(day_all),
@@ -436,10 +635,10 @@ def build_payload(workbook_path: Path, games_path: Path) -> dict:
             },
             "allProps": day_all,
             "sections": {
-                "consensus": enrich_board_rows([r for r in sections_by_sheet["consensus"] if r.get("gameDate") == date], day_all),
-                "floor": enrich_board_rows([r for r in sections_by_sheet["floor"] if r.get("gameDate") == date], day_all),
-                "consistency": enrich_board_rows([r for r in sections_by_sheet["consistency"] if r.get("gameDate") == date], day_all),
-                "ceiling": enrich_board_rows([r for r in sections_by_sheet["ceiling"] if r.get("gameDate") == date], day_all),
+                "consensus": strategy_sections["consensus"],
+                "floor": strategy_sections["floor"],
+                "consistency": strategy_sections["consistency"],
+                "ceiling": strategy_sections["ceiling"],
                 "roleUp": [r for r in role_up if r.get("gameDate") == date],
                 "roleDown": [r for r in role_down if r.get("gameDate") == date],
             },

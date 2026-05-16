@@ -79,6 +79,32 @@ def is_hidden_injury(row: dict[str, Any]) -> bool:
     return status in {"out", "doubtful", "o", "d"}
 
 
+def pitcher_projected_ip(row: dict[str, Any]) -> float | None:
+    for key in ("expMin", "contextMetricValue", "projectedIP", "predictedIP", "ip", "IP"):
+        value = num(row.get(key))
+        if value is not None:
+            return value
+    for key in ("summary", "driver_summary", "boardDriver"):
+        text = str(row.get(key) or "")
+        match = re.search(r"projected\s+([0-9]+(?:\.[0-9]+)?)\s*IP", text, flags=re.IGNORECASE)
+        if match:
+            return num(match.group(1))
+    return None
+
+
+def is_probable_starting_pitcher(row: dict[str, Any], *, min_ip: float = 3.0) -> bool:
+    """Filter bullpen/openers out of SP-only homepage boards."""
+    if str(row.get("playerType") or row.get("role") or "").lower() != "pitcher":
+        return False
+    projected_ip = pitcher_projected_ip(row)
+    if projected_ip is not None and projected_ip < min_ip:
+        return False
+    text = " ".join(str(row.get(k) or "") for k in ("summary", "driver_summary", "boardDriver", "reason_flags")).lower()
+    if any(token in text for token in ("relief", "opener", "bulk", "bullpen")) and (projected_ip is None or projected_ip < 4.0):
+        return False
+    return True
+
+
 def line_matches(row: dict[str, Any], wanted: float | None) -> bool:
     if wanted is None:
         return True
@@ -515,6 +541,42 @@ def compact_game(game: dict[str, Any], tracker: dict[str, Any], *, kind: str, ti
     }
 
 
+def total_pick_from_game(g: dict[str, Any]) -> tuple[float, str, str]:
+    """Return (probability, side, reason) for the actual market total.
+
+    Prefer exact market probabilities. If an exact probability is unavailable for
+    the actual line, derive a conservative probability from model-vs-market gap
+    instead of borrowing an alternate 7.5/8.5 probability and mislabeling it.
+    """
+    over_p = pct(g.get("marketOverProb"))
+    under_p = pct(g.get("marketUnderProb"))
+    market_total = num(g.get("marketTotal"))
+    model_total = num(g.get("modelTotal"))
+    league = str(g.get("league") or "").upper()
+
+    if over_p is not None or under_p is not None:
+        if (over_p or 0) >= (under_p or 0):
+            return over_p or 0.0, "Over", "Exact probability for the current market total."
+        return under_p or 0.0, "Under", "Exact probability for the current market total."
+
+    if market_total is not None and model_total is not None:
+        gap = model_total - market_total
+        min_gap = 3.0 if league == "NBA" else 0.45 if league == "NHL" else 0.55
+        if abs(gap) >= min_gap:
+            side = "Over" if gap > 0 else "Under"
+            return derived_total_probability(league, gap), side, f"Model total {fmt_num(model_total, 1)} vs market {fmt_num(market_total, 1)}."
+
+    if market_total is None:
+        fallback_over = pct(g.get("fallbackOverProb"))
+        fallback_under = pct(g.get("fallbackUnderProb"))
+        if fallback_over is not None or fallback_under is not None:
+            if (fallback_over or 0) >= (fallback_under or 0):
+                return fallback_over or 0.0, "Over", "Fallback total probability; market total pending."
+            return fallback_under or 0.0, "Under", "Fallback total probability; market total pending."
+
+    return 0.0, "", ""
+
+
 def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     today = [g for g in games if safe_date(g.get("gameDate")) == date]
     high_conf = []
@@ -582,18 +644,17 @@ def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: l
 
     total_candidates = []
     for g in today:
-        p = pct(g.get("marketOverProb") if g.get("marketOverProb") is not None else g.get("fallbackOverProb"))
-        under_p = pct(g.get("marketUnderProb") if g.get("marketUnderProb") is not None else g.get("fallbackUnderProb"))
-        best_p = max(p or 0, under_p or 0)
-        total_candidates.append((best_p, g, "Over" if (p or 0) >= (under_p or 0) else "Under"))
+        prob, side, total_reason = total_pick_from_game(g)
+        if side:
+            total_candidates.append((prob, g, side, total_reason))
     total_candidates.sort(key=lambda x: x[0], reverse=True)
     if total_candidates and total_candidates[0][0] >= 0.56:
-        prob, g, side = total_candidates[0]
+        prob, g, side, total_reason = total_candidates[0]
         line = g.get("marketTotal") if g.get("marketTotal") not in (None, "") else ""
         cards.append(compact_game(
             g, game_tracker(results_history, "totalResult", str(g.get("league") or ""), 40),
-            kind="TOTAL", title="Best Game Total Signal", pick=f"{side} {line}".strip(),
-            probability=prob, reason=g.get("summary") or "Top total probability signal on today’s board."
+            kind="TOTAL", title="Best Game Total Signal", pick=f"{side} {fmt_num(line, 1) if line != '' else ''}".strip(),
+            probability=prob, reason=total_reason or g.get("summary") or "Top total probability signal on today’s board."
         ))
 
     nrfi_candidates = []
@@ -720,10 +781,16 @@ def derived_spread_pick(game: dict[str, Any]) -> tuple[str, float, float, str] |
     """Return (team, signed_line, probability, reason) from actual market spread.
 
     The games payload may contain stale cover probabilities created before the
-    market line was available. This function uses the current market spread and
-    the model margin directly so the builder never says a favorite is likely to
-    cover a line the model does not actually project it to cover.
+    market line was available. Prefer a structured modelSpreadPick when present;
+    otherwise use the current market spread and model margin directly.
     """
+    direct_label = str(game.get("modelSpreadPickLabel") or "").strip()
+    direct_prob = pct(game.get("modelSpreadPickProb"))
+    if direct_label and direct_prob is not None:
+        m = re.match(r"^(.+?)\s+([+-]?\d+(?:\.\d+)?)$", direct_label)
+        if m:
+            return m.group(1).strip(), float(m.group(2)), direct_prob, game.get("summary") or "Model run-line probability for the actual market line."
+
     league = str(game.get("league") or "").upper()
     home = str(game.get("homeTeam") or "")
     away = str(game.get("awayTeam") or "")
@@ -816,31 +883,14 @@ def build_game_parlay_candidates(games: list[dict[str, Any]], date: str, results
                 probability=summary_win, reason=g.get("summary") or "Model win signal from game summary."
             ))
 
-        over_prob = pct(g.get("marketOverProb") if g.get("marketOverProb") is not None else g.get("fallbackOverProb"))
-        under_prob = pct(g.get("marketUnderProb") if g.get("marketUnderProb") is not None else g.get("fallbackUnderProb"))
-        if over_prob is not None or under_prob is not None:
-            side = "Over" if (over_prob or 0) >= (under_prob or 0) else "Under"
-            prob = max(over_prob or 0, under_prob or 0)
-            if prob >= 0.54:
-                candidates.append(compact_game(
-                    g, game_tracker(results_history, "totalResult", league, 40),
-                    kind="TOTAL", title="Game Total", pick=f"{side} {g.get('marketTotal') or ''}".strip(),
-                    probability=prob, reason=g.get("summary") or "Model total probability signal."
-                ))
-        else:
-            model_total = num(g.get("modelTotal"))
+        total_prob, total_side, total_reason = total_pick_from_game(g)
+        if total_side and total_prob >= 0.54:
             market_total = num(g.get("marketTotal"))
-            if model_total is not None and market_total is not None:
-                gap = model_total - market_total
-                min_gap = 3.0 if league == "NBA" else 0.45 if league == "NHL" else 0.55
-                if abs(gap) >= min_gap:
-                    side = "Over" if gap > 0 else "Under"
-                    candidates.append(compact_game(
-                        g, game_tracker(results_history, "totalResult", league, 40),
-                        kind="TOTAL", title="Game Total", pick=f"{side} {fmt_num(market_total, 1)}",
-                        probability=derived_total_probability(league, gap),
-                        reason=f"Model total {fmt_num(model_total, 1)} vs market {fmt_num(market_total, 1)}."
-                    ))
+            candidates.append(compact_game(
+                g, game_tracker(results_history, "totalResult", league, 40),
+                kind="TOTAL", title="Game Total", pick=f"{total_side} {fmt_num(market_total, 1) if market_total is not None else ''}".strip(),
+                probability=total_prob, reason=total_reason or "Model total probability signal."
+            ))
 
         if league == "MLB":
             n = pct(g.get("nrfiProb")) or 0
@@ -897,9 +947,16 @@ def main() -> None:
     tb15 = choose_prop_rows(entries, target, "TB", role="batter", line=1.5, limit=8)
     pitcher_k = choose_prop_rows(entries, target, "K", role="pitcher", limit=8, prefer_model_gap=True)
     pitcher_ha = choose_prop_rows(entries, target, "HA", role="pitcher", limit=8)
-    pitcher_er_low = choose_prop_rows(entries, target, "ER", role="pitcher", limit=5, reverse=False, prefer_model_gap=False)
+    starter_er_rows = [
+        r for r in choose_prop_rows(entries, target, "ER", role="pitcher", limit=80, unique_player=True)
+        if is_probable_starting_pitcher(r)
+    ]
+    pitcher_er_low = sorted(
+        starter_er_rows,
+        key=lambda r: num(r.get("pred_anchor") if r.get("pred_anchor") is not None else r.get("mu_cons"), 999) or 999,
+    )[:5]
     pitcher_er_high = sorted(
-        [r for r in choose_prop_rows(entries, target, "ER", role="pitcher", limit=40, unique_player=True) if not is_tbd_player(r)],
+        starter_er_rows,
         key=lambda r: num(r.get("pred_anchor") if r.get("pred_anchor") is not None else r.get("mu_cons"), 0) or 0,
         reverse=True,
     )[:5]
