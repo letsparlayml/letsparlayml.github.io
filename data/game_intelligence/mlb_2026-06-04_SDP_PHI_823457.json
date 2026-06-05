@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.9",
-  "generatedAt": "2026-06-04T12:28:12.185576+00:00",
+  "generatedAt": "2026-06-05T12:43:57.820365+00:00",
   "gameId": "mlb-823457",
   "gamePk": 823457,
   "league": "MLB",
@@ -8,54 +8,23 @@
   "awayTeam": "SDP",
   "homeTeam": "PHI",
   "headline": "SDP @ PHI matchup research",
-  "quickWriteup": "The current model score is SDP 2.61 at PHI 3.54, with a projected total of 6.15. Movement read: Both offenses moved up (SDP +0.14, PHI +0.24), so the movement is more about a higher-scoring game environment than a stronger side. The projected total climbed +0.38, which points to more offensive expectation than the earliest saved read. NRFI probability rose +5.8%, so the first-inning read became more pitcher-friendly early. Pitching context: Zack Wheeler has the better recent run-prevention profile in the available outing logs at 1.6 ER over the last 5 outings. Batter research is strongest for Fernando Tatis Jr., Brandon Marsh, Kyle Schwarber, based on recent hit rates, matching location/opponent samples, or similar-game production. The cold/risk list flags Bryce Johnson, Edmundo Sosa because the recent hit profile or strikeout trend is weaker than the projection alone would show.",
+  "quickWriteup": "The current model score is SDP 2.61 at PHI 3.54, with a projected total of 6.15. Movement read: Both offenses moved up (SDP +0.14, PHI +0.24), so the movement is more about a higher-scoring game environment than a stronger side. The projected total climbed +0.38, which points to more offensive expectation than the earliest saved read. NRFI probability rose +5.9%, so the first-inning read became more pitcher-friendly early. Pitching context: Zack Wheeler has the better recent run-prevention profile in the available outing logs at 1.6 ER over the last 5 outings. Batter research is strongest for Fernando Tatis Jr., Brandon Marsh, Kyle Schwarber, based on recent hit rates, matching location/opponent samples, or similar-game production. The cold/risk list flags Bryce Johnson, Adolis García because the recent hit profile or strikeout trend is weaker than the projection alone would show.",
   "modelForm": {
     "SDP": {
       "team": "SDP",
       "sample": 5,
-      "availableSettledGames": 44,
+      "availableSettledGames": 45,
       "displayLimit": 5,
-      "sideCorrect": 1,
-      "sideAccuracy": 0.2,
-      "avgTeamRunError": 1.6,
-      "withinOneFiveCount": 3,
-      "withinOneFiveRate": 0.6,
-      "bigMissCount": 2,
+      "sideCorrect": 2,
+      "sideAccuracy": 0.4,
+      "avgTeamRunError": 1.1,
+      "withinOneFiveCount": 4,
+      "withinOneFiveRate": 0.8,
+      "bigMissCount": 1,
       "teamOverCount": 2,
       "teamUnderCount": 2,
       "label": "",
       "games": [
-        {
-          "date": "2026-05-29",
-          "matchup": "SDP @ WSN",
-          "awayTeam": "SDP",
-          "homeTeam": "WSN",
-          "predAway": 3.5,
-          "predHome": 3.8,
-          "actualAway": 7.0,
-          "actualHome": 5.0,
-          "predFor": 3.5,
-          "predAgainst": 3.8,
-          "actualFor": 7.0,
-          "actualAgainst": 5.0,
-          "teamError": 3.5,
-          "opponentError": 1.2000000000000002,
-          "scoreboardError": 4.7,
-          "projectedTotal": 7.3,
-          "actualTotal": 12.0,
-          "totalError": 4.7,
-          "teamDiff": 3.5,
-          "opponentDiff": 1.2,
-          "teamDiffText": "SDP scored 3.5 more runs than projected.",
-          "opponentDiffText": "SDP allowed 1.2 more runs than projected.",
-          "scoreboardText": "Full scoreboard miss: 4.7 total runs across both teams.",
-          "totalText": "Projected total missed by 4.7 runs.",
-          "withinOneFive": false,
-          "bigMiss": true,
-          "correctSide": false,
-          "scoreError": 4.7,
-          "overUnderTeam": "over"
-        },
         {
           "date": "2026-05-30",
           "matchup": "SDP @ WSN",
@@ -179,6 +148,37 @@
           "correctSide": true,
           "scoreError": 0.7000000000000002,
           "overUnderTeam": "near"
+        },
+        {
+          "date": "2026-06-04",
+          "matchup": "SDP @ PHI",
+          "awayTeam": "SDP",
+          "homeTeam": "PHI",
+          "predAway": 2.6,
+          "predHome": 3.5,
+          "actualAway": 4.0,
+          "actualHome": 6.0,
+          "predFor": 2.6,
+          "predAgainst": 3.5,
+          "actualFor": 4.0,
+          "actualAgainst": 6.0,
+          "teamError": 1.4,
+          "opponentError": 2.5,
+          "scoreboardError": 3.9,
+          "projectedTotal": 6.1,
+          "actualTotal": 10.0,
+          "totalError": 3.9,
+          "teamDiff": 1.4,
+          "opponentDiff": 2.5,
+          "teamDiffText": "SDP scored 1.4 more runs than projected.",
+          "opponentDiffText": "SDP allowed 2.5 more runs than projected.",
+          "scoreboardText": "Full scoreboard miss: 3.9 total runs across both teams.",
+          "totalText": "Projected total missed by 3.9 runs.",
+          "withinOneFive": true,
+          "bigMiss": false,
+          "correctSide": true,
+          "scoreError": 3.9,
+          "overUnderTeam": "over"
         }
       ],
       "coverageNote": "Stats use the same 5 settled games shown below. Model and final scores stay in away/home order; the explanation is specific to SDP."
@@ -186,49 +186,18 @@
     "PHI": {
       "team": "PHI",
       "sample": 5,
-      "availableSettledGames": 45,
+      "availableSettledGames": 46,
       "displayLimit": 5,
-      "sideCorrect": 2,
-      "sideAccuracy": 0.4,
-      "avgTeamRunError": 1.0,
-      "withinOneFiveCount": 4,
-      "withinOneFiveRate": 0.8,
-      "bigMissCount": 1,
-      "teamOverCount": 1,
-      "teamUnderCount": 4,
+      "sideCorrect": 3,
+      "sideAccuracy": 0.6,
+      "avgTeamRunError": 1.3,
+      "withinOneFiveCount": 3,
+      "withinOneFiveRate": 0.6,
+      "bigMissCount": 2,
+      "teamOverCount": 2,
+      "teamUnderCount": 3,
       "label": "",
       "games": [
-        {
-          "date": "2026-05-29",
-          "matchup": "PHI @ LAD",
-          "awayTeam": "PHI",
-          "homeTeam": "LAD",
-          "predAway": 3.1,
-          "predHome": 2.7,
-          "actualAway": 2.0,
-          "actualHome": 4.0,
-          "predFor": 3.1,
-          "predAgainst": 2.7,
-          "actualFor": 2.0,
-          "actualAgainst": 4.0,
-          "teamError": 1.1,
-          "opponentError": 1.2999999999999998,
-          "scoreboardError": 2.4,
-          "projectedTotal": 5.8,
-          "actualTotal": 6.0,
-          "totalError": 0.2,
-          "teamDiff": -1.1,
-          "opponentDiff": 1.3,
-          "teamDiffText": "PHI scored 1.1 fewer runs than projected.",
-          "opponentDiffText": "PHI allowed 1.3 more runs than projected.",
-          "scoreboardText": "Full scoreboard miss: 2.4 total runs across both teams.",
-          "totalText": "Projected total missed by 0.2 runs.",
-          "withinOneFive": true,
-          "bigMiss": false,
-          "correctSide": false,
-          "scoreError": 2.4,
-          "overUnderTeam": "under"
-        },
         {
           "date": "2026-05-30",
           "matchup": "PHI @ LAD",
@@ -352,6 +321,37 @@
           "correctSide": true,
           "scoreError": 0.7000000000000002,
           "overUnderTeam": "under"
+        },
+        {
+          "date": "2026-06-04",
+          "matchup": "SDP @ PHI",
+          "awayTeam": "SDP",
+          "homeTeam": "PHI",
+          "predAway": 2.6,
+          "predHome": 3.5,
+          "actualAway": 4.0,
+          "actualHome": 6.0,
+          "predFor": 3.5,
+          "predAgainst": 2.6,
+          "actualFor": 6.0,
+          "actualAgainst": 4.0,
+          "teamError": 2.5,
+          "opponentError": 1.4,
+          "scoreboardError": 3.9,
+          "projectedTotal": 6.1,
+          "actualTotal": 10.0,
+          "totalError": 3.9,
+          "teamDiff": 2.5,
+          "opponentDiff": 1.4,
+          "teamDiffText": "PHI scored 2.5 more runs than projected.",
+          "opponentDiffText": "PHI allowed 1.4 more runs than projected.",
+          "scoreboardText": "Full scoreboard miss: 3.9 total runs across both teams.",
+          "totalText": "Projected total missed by 3.9 runs.",
+          "withinOneFive": false,
+          "bigMiss": true,
+          "correctSide": true,
+          "scoreError": 3.9,
+          "overUnderTeam": "over"
         }
       ],
       "coverageNote": "Stats use the same 5 settled games shown below. Model and final scores stay in away/home order; the explanation is specific to PHI."
@@ -363,29 +363,29 @@
     "title": "Week-to-game movement read",
     "description": "Interprets the same saved movement records shown in the main prediction movement chart.",
     "firstDate": "2026-05-28",
-    "latestDate": "2026-06-04",
+    "latestDate": "2026-06-05",
     "movements": {
       "awayScoreDelta": 0.142,
       "homeScoreDelta": 0.236,
       "totalDelta": 0.378,
       "modelSpreadDelta": 0.094,
       "homeWinProbDelta": 0.012,
-      "awayWinProbDelta": -0.013,
+      "awayWinProbDelta": -0.012,
       "favoriteWinProbDelta": 0.012,
-      "favoriteCoverProbDelta": 0.022,
-      "nrfiProbDelta": 0.058,
+      "favoriteCoverProbDelta": 0.023,
+      "nrfiProbDelta": 0.059,
       "yrfiProbDelta": null,
-      "marketOverProbDelta": 0.044
+      "marketOverProbDelta": 0.039
     },
     "movementToward": null,
     "awayMarginDelta": -0.094,
-    "analysis": "Both offenses moved up (SDP +0.14, PHI +0.24), so the movement is more about a higher-scoring game environment than a stronger side. The projected total climbed +0.38, which points to more offensive expectation than the earliest saved read. NRFI probability rose +5.8%, so the first-inning read became more pitcher-friendly early.",
+    "analysis": "Both offenses moved up (SDP +0.14, PHI +0.24), so the movement is more about a higher-scoring game environment than a stronger side. The projected total climbed +0.38, which points to more offensive expectation than the earliest saved read. NRFI probability rose +5.9%, so the first-inning read became more pitcher-friendly early.",
     "bullets": [
       "SDP run projection moved +0.14, from 2.46 to 2.61.",
       "PHI run projection moved +0.24, from 3.31 to 3.54.",
       "Projected total moved +0.38, from 5.77 to 6.15.",
-      "Cover probability moved +2.2% across the saved movement records.",
-      "NRFI probability moved +5.8%."
+      "Cover probability moved +2.3% across the saved movement records.",
+      "NRFI probability moved +5.9%."
     ],
     "snapshots": [
       {
@@ -563,32 +563,32 @@
         "note": "Snapshot"
       },
       {
-        "date": "2026-06-04",
+        "date": "2026-06-05",
         "predictedAway": 2.605608550389324,
         "predictedHome": 3.5430449643295403,
         "modelHomeSpread": 0.9374364139402163,
         "marketSpread": 1.5,
         "modelTotal": 6.148653514718864,
         "marketTotal": 8.0,
-        "nrfiProb": 0.6742155395951404,
-        "homeWinProb": 0.6251,
-        "awayWinProb": 0.3748999999999999,
+        "nrfiProb": 0.675,
+        "homeWinProb": 0.6245,
+        "awayWinProb": 0.3755,
         "favoriteWinLabel": "PHI win",
-        "favoriteWinProb": 0.6251,
+        "favoriteWinProb": 0.6245,
         "favoriteCoverLabel": "PHI -1.5",
-        "favoriteCoverProb": 0.4,
+        "favoriteCoverProb": 0.401,
         "marketCoverLabel": "PHI -1.5",
-        "marketCoverProb": 0.4,
+        "marketCoverProb": 0.401,
         "marketTotalLabel": "Total 8.0",
-        "marketOverProb": 0.221,
-        "marketUnderProb": 0.6912,
+        "marketOverProb": 0.216,
+        "marketUnderProb": 0.6906,
         "fallbackTotalLabel": "Over 8.5",
-        "fallbackOverProb": 0.221,
-        "fallbackUnderProb": 0.779,
-        "homeMinus1p5Prob": 0.4,
-        "awayMinus1p5Prob": 0.1738,
-        "over7p5Prob": 0.3088,
-        "over8p5Prob": 0.221,
+        "fallbackOverProb": 0.216,
+        "fallbackUnderProb": 0.784,
+        "homeMinus1p5Prob": 0.401,
+        "awayMinus1p5Prob": 0.1798,
+        "over7p5Prob": 0.3094,
+        "over8p5Prob": 0.216,
         "note": "Snapshot"
       }
     ]
@@ -687,10 +687,10 @@
       "sameOpponentStarts": [],
       "projections": {
         "IP": 5.0,
-        "K": 4.0,
-        "HA": 4.1,
-        "ER": 2.76,
-        "BB": 2.49,
+        "K": 4.12,
+        "HA": 4.11,
+        "ER": 2.77,
+        "BB": 2.47,
         "OUTS": 15.16
       },
       "flags": [
@@ -825,11 +825,11 @@
       "sameOpponentStarts": [],
       "projections": {
         "IP": 6.0,
-        "K": 7.3,
-        "HA": 4.1,
-        "ER": 2.11,
-        "BB": 1.4,
-        "OUTS": 18.55
+        "K": 7.05,
+        "HA": 4.02,
+        "ER": 2.1,
+        "BB": 1.41,
+        "OUTS": 18.35
       },
       "flags": [
         "Worked 6+ IP in 5/5 recent starts.",
@@ -840,8 +840,8 @@
     }
   ],
   "firstInningOutlook": {
-    "nrfiProb": 0.6742155395951404,
-    "yrfiProb": 0.3257844604048597,
+    "nrfiProb": 0.675,
+    "yrfiProb": 0.325,
     "pitcherSamples": [
       {
         "player": "Lucas Giolito",
@@ -884,7 +884,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 1 • R vs R • 87°F • Wind 13",
+        "context": "Order 1 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -999,12 +999,12 @@
           }
         },
         "projections": {
-          "H": 0.78,
-          "TB": 1.48,
-          "HRR": 1.44,
-          "K": 0.87,
+          "H": 0.82,
+          "TB": 1.49,
+          "HRR": 1.56,
+          "K": 0.77,
           "HR": 0.07,
-          "BB": 0.28
+          "BB": 0.23
         },
         "notes": [
           "Hit in 8/10 recent games; 1.70 H/game in that span.",
@@ -1023,7 +1023,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 5 • L vs R • 87°F • Wind 13",
+        "context": "Order 4 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1123,37 +1123,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.8333333333333334,
-            "avg": 1.67
+            "hitRate": 0.75,
+            "avg": 1.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.75
+            "hitRate": 0.4166666666666667,
+            "avg": 1.58
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.33
+            "hitRate": 0.5,
+            "avg": 2.08
           }
         },
         "projections": {
-          "H": 0.56,
-          "TB": 1.83,
-          "HRR": 1.34,
-          "K": 0.93,
-          "HR": 0.06,
-          "BB": 0.28
+          "H": 0.79,
+          "TB": 1.67,
+          "HRR": 1.76,
+          "K": 0.89,
+          "HR": 0.07,
+          "BB": 0.25
         },
         "notes": [
           "Hit in 7/10 recent games; 1.20 H/game in that span.",
           "Home split in logs: hit in 14/20, 1.30 H/game.",
           "Recent games vs SDP: hit in 2/2, 3.00 H/game.",
-          "Similar-game sample: hit in 10/12, 1.67 H/game.",
+          "Similar-game sample: hit in 9/12, 1.50 H/game.",
           "2+ total bases in 6/10 recent games.",
           "2+ HRR in 6/10 recent games."
         ],
-        "hotScore": 3.947,
+        "hotScore": 3.88,
         "coldScore": 0.2
       },
       {
@@ -1162,7 +1162,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 1 • L vs R • 87°F • Wind 13",
+        "context": "Order 1 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1277,12 +1277,12 @@
           }
         },
         "projections": {
-          "H": 0.67,
-          "TB": 1.96,
-          "HRR": 1.8,
-          "K": 1.62,
-          "HR": 0.33,
-          "BB": 0.6
+          "H": 0.86,
+          "TB": 2.29,
+          "HRR": 2.11,
+          "K": 1.82,
+          "HR": 0.31,
+          "BB": 0.77
         },
         "notes": [
           "Hit in 7/10 recent games; 1.00 H/game in that span.",
@@ -1296,151 +1296,12 @@
         "coldScore": 1.2
       },
       {
-        "playerId": 664034,
-        "player": "Ty France",
-        "team": "SDP",
-        "opponent": "PHI",
-        "location": "Away",
-        "context": "Order 9 • R vs R • 87°F • Wind 13",
-        "batSide": "R",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.6,
-            "avg": 1.0,
-            "lastValues": [
-              2.0,
-              1.0,
-              1.0,
-              0.0,
-              2.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.8,
-            "avg": 1.2,
-            "lastValues": [
-              2.0,
-              1.0,
-              1.0,
-              0.0,
-              2.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.5,
-            "avg": 1.8,
-            "lastValues": [
-              5.0,
-              1.0,
-              2.0,
-              0.0,
-              3.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.5,
-            "avg": 1.8,
-            "lastValues": [
-              5.0,
-              1.0,
-              2.0,
-              0.0,
-              3.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.6,
-            "avg": 1.1,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.1,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.15,
-            "avg": 0.15,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 20,
-            "hitRate": 0.5,
-            "avg": 0.75
-          },
-          "opponentHits": {
-            "sample": 5,
-            "hitRate": 0.4,
-            "avg": 0.8
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.75,
-            "avg": 1.17
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.75
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.0
-          }
-        },
-        "projections": {
-          "H": 0.44,
-          "TB": 1.1,
-          "HRR": 0.86,
-          "K": 1.0,
-          "HR": 0.03,
-          "BB": 0.18
-        },
-        "notes": [
-          "Hit in 6/10 recent games; 1.00 H/game in that span.",
-          "Away split in logs: hit in 10/20, 0.75 H/game.",
-          "Recent games vs PHI: hit in 2/5, 0.80 H/game.",
-          "Similar-game sample: hit in 9/12, 1.17 H/game.",
-          "2+ total bases in 5/10 recent games.",
-          "2+ HRR in 5/10 recent games."
-        ],
-        "hotScore": 3.3,
-        "coldScore": 0.22
-      },
-      {
         "playerId": 657757,
         "player": "Gavin Sheets",
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 2 • L vs R • 87°F • Wind 13",
+        "context": "Order 2 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1555,12 +1416,12 @@
           }
         },
         "projections": {
-          "H": 0.49,
-          "TB": 1.03,
-          "HRR": 0.93,
-          "K": 1.18,
+          "H": 0.66,
+          "TB": 1.16,
+          "HRR": 1.4,
+          "K": 1.07,
           "HR": 0.1,
-          "BB": 0.4
+          "BB": 0.5
         },
         "notes": [
           "Hit in 6/10 recent games; 0.70 H/game in that span.",
@@ -1574,12 +1435,151 @@
         "coldScore": 0.59
       },
       {
+        "playerId": 664034,
+        "player": "Ty France",
+        "team": "SDP",
+        "opponent": "PHI",
+        "location": "Away",
+        "context": "Order 4 • R vs R • 88°F • Wind 13",
+        "batSide": "R",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.6,
+            "avg": 1.0,
+            "lastValues": [
+              2.0,
+              1.0,
+              1.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.8,
+            "avg": 1.2,
+            "lastValues": [
+              2.0,
+              1.0,
+              1.0,
+              0.0,
+              2.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.8,
+            "lastValues": [
+              5.0,
+              1.0,
+              2.0,
+              0.0,
+              3.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.8,
+            "lastValues": [
+              5.0,
+              1.0,
+              2.0,
+              0.0,
+              3.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.6,
+            "avg": 1.1,
+            "lastValues": [
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 1.1,
+            "lastValues": [
+              0.0,
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.15,
+            "avg": 0.15,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 20,
+            "hitRate": 0.5,
+            "avg": 0.75
+          },
+          "opponentHits": {
+            "sample": 5,
+            "hitRate": 0.4,
+            "avg": 0.8
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.3333333333333333,
+            "avg": 0.5
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 0.67
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 0.67
+          }
+        },
+        "projections": {
+          "H": 0.68,
+          "TB": 1.45,
+          "HRR": 1.39,
+          "K": 0.9,
+          "HR": 0.1,
+          "BB": 0.2
+        },
+        "notes": [
+          "Hit in 6/10 recent games; 1.00 H/game in that span.",
+          "Away split in logs: hit in 10/20, 0.75 H/game.",
+          "Recent games vs PHI: hit in 2/5, 0.80 H/game.",
+          "Similar-game sample: hit in 4/12, 0.50 H/game.",
+          "2+ total bases in 5/10 recent games.",
+          "2+ HRR in 5/10 recent games."
+        ],
+        "hotScore": 2.967,
+        "coldScore": 0.22
+      },
+      {
         "playerId": 607208,
         "player": "Trea Turner",
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 2 • R vs R • 87°F • Wind 13",
+        "context": "Order 2 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -1694,11 +1694,11 @@
           }
         },
         "projections": {
-          "H": 0.62,
-          "TB": 1.47,
-          "HRR": 1.53,
-          "K": 1.04,
-          "HR": 0.07,
+          "H": 0.89,
+          "TB": 1.5,
+          "HRR": 1.96,
+          "K": 1.18,
+          "HR": 0.08,
           "BB": 0.27
         },
         "notes": [
@@ -1713,151 +1713,12 @@
         "coldScore": 0.18
       },
       {
-        "playerId": 681082,
-        "player": "Bryson Stott",
-        "team": "PHI",
-        "opponent": "SDP",
-        "location": "Home",
-        "context": "Order 7 • L vs R • 87°F • Wind 13",
-        "batSide": "L",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 0.5,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.4,
-            "avg": 0.4,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.9,
-            "lastValues": [
-              0.0,
-              0.0,
-              4.0,
-              0.0,
-              2.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              3.0,
-              0.0,
-              2.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 0.5,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.5,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.15,
-            "avg": 0.15,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 18,
-            "hitRate": 0.7777777777777778,
-            "avg": 0.89
-          },
-          "opponentHits": {
-            "sample": 2,
-            "hitRate": 0.5,
-            "avg": 0.5
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.9166666666666666,
-            "avg": 1.08
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 2.08
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.17
-          }
-        },
-        "projections": {
-          "H": 0.59,
-          "TB": 1.29,
-          "HRR": 1.43,
-          "K": 0.64,
-          "HR": 0.08,
-          "BB": 0.28
-        },
-        "notes": [
-          "Hit in 4/10 recent games; 0.50 H/game in that span.",
-          "Home split in logs: hit in 14/18, 0.89 H/game.",
-          "Recent games vs SDP: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 11/12, 1.08 H/game.",
-          "2+ total bases in 3/10 recent games.",
-          "2+ HRR in 4/10 recent games."
-        ],
-        "hotScore": 2.806,
-        "coldScore": 0.845
-      },
-      {
         "playerId": 701538,
         "player": "Jackson Merrill",
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 6 • L vs R • 87°F • Wind 13",
+        "context": "Order 5 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1972,12 +1833,12 @@
           }
         },
         "projections": {
-          "H": 0.47,
-          "TB": 1.1,
-          "HRR": 0.91,
-          "K": 1.03,
-          "HR": 0.05,
-          "BB": 0.29
+          "H": 0.64,
+          "TB": 1.04,
+          "HRR": 1.18,
+          "K": 1.05,
+          "HR": 0.06,
+          "BB": 0.28
         },
         "notes": [
           "Hit in 5/10 recent games; 0.80 H/game in that span.",
@@ -1989,6 +1850,145 @@
         ],
         "hotScore": 2.74,
         "coldScore": 0.335
+      },
+      {
+        "playerId": 592663,
+        "player": "J.T. Realmuto",
+        "team": "PHI",
+        "opponent": "SDP",
+        "location": "Home",
+        "context": "Order 7 • R vs R • 88°F • Wind 13",
+        "batSide": "R",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 0.7,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.4,
+            "avg": 0.4,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 1.3,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              4.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 1.1,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              3.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 0.7,
+            "lastValues": [
+              0.0,
+              1.0,
+              3.0,
+              0.0,
+              0.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.7,
+            "lastValues": [
+              0.0,
+              1.0,
+              3.0,
+              0.0,
+              0.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.1,
+            "avg": 0.1,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "locationHits": {
+            "sample": 23,
+            "hitRate": 0.5652173913043478,
+            "avg": 0.87
+          },
+          "opponentHits": {
+            "sample": 1,
+            "hitRate": 1.0,
+            "avg": 1.0
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.6666666666666666,
+            "avg": 0.92
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.5,
+            "avg": 1.33
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.5833333333333334,
+            "avg": 1.5
+          }
+        },
+        "projections": {
+          "H": 0.62,
+          "TB": 1.12,
+          "HRR": 1.41,
+          "K": 0.87,
+          "HR": 0.09,
+          "BB": 0.19
+        },
+        "notes": [
+          "Hit in 5/10 recent games; 0.70 H/game in that span.",
+          "Recent hit pace down: last 5 at 0.40 H/game vs last 10 at 0.70.",
+          "Home split in logs: hit in 13/23, 0.87 H/game.",
+          "Similar-game sample: hit in 8/12, 0.92 H/game.",
+          "2+ total bases in 3/10 recent games.",
+          "2+ HRR in 3/10 recent games."
+        ],
+        "hotScore": 2.706,
+        "coldScore": 0.955
       }
     ],
     "riskFlags": [
@@ -1998,7 +1998,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 7 • B vs R • 87°F • Wind 13",
+        "context": "Order 9 • B vs R • 88°F • Wind 13",
         "batSide": "B",
         "pitchHand": "R",
         "metrics": {
@@ -2107,11 +2107,11 @@
           }
         },
         "projections": {
-          "H": 0.32,
-          "HRR": 0.69,
-          "K": 0.63,
-          "HR": 0.01,
-          "BB": 0.15
+          "H": 0.41,
+          "HRR": 0.8,
+          "K": 0.65,
+          "HR": 0.02,
+          "BB": 0.17
         },
         "notes": [
           "Hit in 1/10 recent games; 0.10 H/game in that span.",
@@ -2125,382 +2125,118 @@
         "coldScore": 2.075
       },
       {
-        "playerId": 624641,
-        "player": "Edmundo Sosa",
+        "playerId": 666969,
+        "player": "Adolis García",
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 8 • R vs R • 87°F • Wind 13",
+        "context": "Order 8 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
+            "hitRate": 0.3,
+            "avg": 0.3,
             "lastValues": [
               0.0,
               0.0,
               0.0,
               1.0,
-              0.0
+              1.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
-            "hitRate": 0.2,
-            "avg": 0.2,
+            "hitRate": 0.4,
+            "avg": 0.4,
             "lastValues": [
               0.0,
               0.0,
               0.0,
               1.0,
-              0.0
+              1.0
             ]
           },
           "tb2Last10": {
             "sample": 10,
             "hitRate": 0.2,
-            "avg": 0.8,
+            "avg": 0.5,
             "lastValues": [
               0.0,
               0.0,
               0.0,
-              4.0,
-              0.0
+              1.0,
+              2.0
             ]
           },
           "hrr2Last10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.2,
+            "hitRate": 0.1,
+            "avg": 0.5,
             "lastValues": [
               0.0,
               0.0,
+              0.0,
               1.0,
-              4.0,
-              0.0
+              2.0
             ]
           },
           "kLast10": {
             "sample": 10,
-            "hitRate": 0.6,
-            "avg": 1.0,
+            "hitRate": 0.8,
+            "avg": 1.3,
             "lastValues": [
               0.0,
-              1.0,
-              0.0,
+              3.0,
+              2.0,
               1.0,
               1.0
             ]
           },
           "k2Last10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.0,
+            "hitRate": 0.4,
+            "avg": 1.3,
             "lastValues": [
               0.0,
-              1.0,
-              0.0,
+              3.0,
+              2.0,
               1.0,
               1.0
             ]
           },
           "hrLast20": {
             "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
+            "hitRate": 0.0,
+            "avg": 0.0,
             "lastValues": [
               0.0,
               0.0,
               0.0,
-              1.0,
+              0.0,
               0.0
             ]
           },
           "locationHits": {
             "sample": 18,
-            "hitRate": 0.5,
-            "avg": 0.61
-          },
-          "opponentHits": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHits": {
-            "sample": 12,
             "hitRate": 0.5,
             "avg": 0.67
           },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.25,
-            "avg": 1.25
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 1.0
           },
-          "similarHRR2": {
+          "similarHits": {
             "sample": 12,
             "hitRate": 0.3333333333333333,
-            "avg": 1.67
-          }
-        },
-        "projections": {
-          "H": 0.44,
-          "TB": 1.3,
-          "HRR": 1.05,
-          "K": 0.84,
-          "HR": 0.06,
-          "BB": 0.16
-        },
-        "notes": [
-          "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Home split in logs: hit in 9/18, 0.61 H/game.",
-          "Similar-game sample: hit in 6/12, 0.67 H/game.",
-          "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 3/10 recent games.",
-          "Strikeout context: 1.00 K/game last 10; 2+ K in 3/10."
-        ],
-        "hotScore": 1.57,
-        "coldScore": 1.805
-      },
-      {
-        "playerId": 596117,
-        "player": "Garrett Stubbs",
-        "team": "PHI",
-        "opponent": "SDP",
-        "location": "Home",
-        "context": "Order 6 • L vs R • 87°F • Wind 13",
-        "batSide": "L",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.4,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.7,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 0.4,
-            "lastValues": [
-              1.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.0,
-            "avg": 0.4,
-            "lastValues": [
-              1.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 11,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 4,
-            "hitRate": 0.0,
-            "avg": 0.0
-          },
-          "opponentHits": {
-            "sample": 1,
-            "hitRate": 0.0,
-            "avg": 0.0
-          },
-          "similarHits": {
-            "sample": 11,
-            "hitRate": 0.2727272727272727,
-            "avg": 0.36
+            "avg": 0.42
           },
           "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHRR2": {
-            "sample": 11,
-            "hitRate": 0.09090909090909091,
-            "avg": 0.73
-          }
-        },
-        "projections": {
-          "H": 0.42,
-          "HRR": 0.89,
-          "K": 0.64,
-          "HR": 0.02,
-          "BB": 0.17
-        },
-        "notes": [
-          "Hit in 3/10 recent games; 0.40 H/game in that span.",
-          "Recent hit pace down: last 5 at 0.00 H/game vs last 10 at 0.40.",
-          "Similar-game sample: hit in 3/11, 0.36 H/game.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.40 K/game last 10; 2+ K in 0/10."
-        ],
-        "hotScore": 1.108,
-        "coldScore": 1.765
-      },
-      {
-        "playerId": 823550,
-        "player": "Sung-Mun Song",
-        "team": "SDP",
-        "opponent": "PHI",
-        "location": "Away",
-        "context": "Order 8 • L vs R • 87°F • Wind 13",
-        "batSide": "L",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              2.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              2.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 18,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 11,
-            "hitRate": 0.2727272727272727,
-            "avg": 0.36
-          },
-          "opponentHits": {
-            "sample": 1,
-            "hitRate": 0.0,
-            "avg": 0.0
-          },
-          "similarHits": {
             "sample": 12,
             "hitRate": 0.25,
-            "avg": 0.33
-          },
-          "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
+            "avg": 0.67
           },
           "similarHRR2": {
             "sample": 12,
@@ -2509,31 +2245,280 @@
           }
         },
         "projections": {
-          "H": 0.51,
-          "HRR": 0.91,
-          "K": 0.7,
-          "HR": 0.02,
-          "BB": 0.29
+          "H": 0.6,
+          "TB": 0.97,
+          "HRR": 1.32,
+          "K": 1.43,
+          "HR": 0.05,
+          "BB": 0.41
         },
         "notes": [
-          "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Away split in logs: hit in 3/11, 0.36 H/game.",
-          "Similar-game sample: hit in 3/12, 0.33 H/game.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.30 K/game last 10; 2+ K in 1/10."
+          "Hit in 3/10 recent games; 0.30 H/game in that span.",
+          "Home split in logs: hit in 9/18, 0.67 H/game.",
+          "Recent games vs SDP: hit in 2/2, 1.00 H/game.",
+          "Similar-game sample: hit in 4/12, 0.42 H/game.",
+          "2+ total bases in 2/10 recent games.",
+          "2+ HRR in 1/10 recent games."
         ],
-        "hotScore": 0.988,
-        "coldScore": 1.705
+        "hotScore": 1.597,
+        "coldScore": 1.695
+      },
+      {
+        "playerId": 687749,
+        "player": "Jase Bowen",
+        "team": "SDP",
+        "opponent": "PHI",
+        "location": "Away",
+        "context": "Order 8 • R vs R • 88°F • Wind 13",
+        "batSide": "R",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null,
+            "lastValues": []
+          },
+          "hrr2Last10": {
+            "sample": 2,
+            "hitRate": 0.0,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0
+            ]
+          },
+          "kLast10": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 2.0,
+            "lastValues": [
+              3.0,
+              1.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 2.0,
+            "lastValues": [
+              3.0,
+              1.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null,
+            "lastValues": []
+          },
+          "locationHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarTB2": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null
+          },
+          "similarHRR2": {
+            "sample": 2,
+            "hitRate": 0.0,
+            "avg": 0.5
+          }
+        },
+        "projections": {
+          "H": 0.35,
+          "HRR": 0.7,
+          "K": 0.3,
+          "BB": 0.04
+        },
+        "notes": [
+          "Hit in 1/2 recent games; 0.50 H/game in that span.",
+          "Recent games vs PHI: hit in 1/2, 0.50 H/game.",
+          "2+ HRR in 0/2 recent games.",
+          "Strikeout context: 2.00 K/game last 2; 2+ K in 1/2."
+        ],
+        "hotScore": 1.3,
+        "coldScore": 1.495
       }
     ],
     "allPlayers": [
+      {
+        "playerId": 666969,
+        "player": "Adolis García",
+        "team": "PHI",
+        "opponent": "SDP",
+        "location": "Home",
+        "context": "Order 8 • R vs R • 88°F • Wind 13",
+        "batSide": "R",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 0.3,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.4,
+            "avg": 0.4,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.5,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              2.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.5,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              1.0,
+              2.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.8,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              3.0,
+              2.0,
+              1.0,
+              1.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.4,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              3.0,
+              2.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.0,
+            "avg": 0.0,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 18,
+            "hitRate": 0.5,
+            "avg": 0.67
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 1.0
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.3333333333333333,
+            "avg": 0.42
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 0.67
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.16666666666666666,
+            "avg": 0.83
+          }
+        },
+        "projections": {
+          "H": 0.6,
+          "TB": 0.97,
+          "HRR": 1.32,
+          "K": 1.43,
+          "HR": 0.05,
+          "BB": 0.41
+        },
+        "notes": [
+          "Hit in 3/10 recent games; 0.30 H/game in that span.",
+          "Home split in logs: hit in 9/18, 0.67 H/game.",
+          "Recent games vs SDP: hit in 2/2, 1.00 H/game.",
+          "Similar-game sample: hit in 4/12, 0.42 H/game.",
+          "2+ total bases in 2/10 recent games.",
+          "2+ HRR in 1/10 recent games."
+        ],
+        "hotScore": 1.597,
+        "coldScore": 1.695
+      },
       {
         "playerId": 664761,
         "player": "Alec Bohm",
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 4 • R vs R • 87°F • Wind 13",
+        "context": "Order 5 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -2648,12 +2633,12 @@
           }
         },
         "projections": {
-          "H": 0.55,
-          "TB": 1.29,
-          "HRR": 1.3,
-          "K": 0.45,
-          "HR": 0.05,
-          "BB": 0.31
+          "H": 0.8,
+          "TB": 1.37,
+          "HRR": 1.75,
+          "K": 0.51,
+          "HR": 0.1,
+          "BB": 0.28
         },
         "notes": [
           "Hit in 6/10 recent games; 0.60 H/game in that span.",
@@ -2672,7 +2657,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 5 • L vs R • 87°F • Wind 13",
+        "context": "Order 4 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -2772,37 +2757,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.8333333333333334,
-            "avg": 1.67
+            "hitRate": 0.75,
+            "avg": 1.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.75
+            "hitRate": 0.4166666666666667,
+            "avg": 1.58
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.33
+            "hitRate": 0.5,
+            "avg": 2.08
           }
         },
         "projections": {
-          "H": 0.56,
-          "TB": 1.83,
-          "HRR": 1.34,
-          "K": 0.93,
-          "HR": 0.06,
-          "BB": 0.28
+          "H": 0.79,
+          "TB": 1.67,
+          "HRR": 1.76,
+          "K": 0.89,
+          "HR": 0.07,
+          "BB": 0.25
         },
         "notes": [
           "Hit in 7/10 recent games; 1.20 H/game in that span.",
           "Home split in logs: hit in 14/20, 1.30 H/game.",
           "Recent games vs SDP: hit in 2/2, 3.00 H/game.",
-          "Similar-game sample: hit in 10/12, 1.67 H/game.",
+          "Similar-game sample: hit in 9/12, 1.50 H/game.",
           "2+ total bases in 6/10 recent games.",
           "2+ HRR in 6/10 recent games."
         ],
-        "hotScore": 3.947,
+        "hotScore": 3.88,
         "coldScore": 0.2
       },
       {
@@ -2811,7 +2796,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 3 • L vs R • 87°F • Wind 13",
+        "context": "Order 3 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -2926,12 +2911,12 @@
           }
         },
         "projections": {
-          "H": 0.84,
-          "TB": 2.12,
-          "HRR": 2.14,
-          "K": 1.02,
-          "HR": 0.39,
-          "BB": 0.84
+          "H": 0.85,
+          "TB": 1.9,
+          "HRR": 2.12,
+          "K": 1.03,
+          "HR": 0.25,
+          "BB": 0.93
         },
         "notes": [
           "Hit in 4/10 recent games; 0.60 H/game in that span.",
@@ -2950,7 +2935,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 7 • B vs R • 87°F • Wind 13",
+        "context": "Order 9 • B vs R • 88°F • Wind 13",
         "batSide": "B",
         "pitchHand": "R",
         "metrics": {
@@ -3059,11 +3044,11 @@
           }
         },
         "projections": {
-          "H": 0.32,
-          "HRR": 0.69,
-          "K": 0.63,
-          "HR": 0.01,
-          "BB": 0.15
+          "H": 0.41,
+          "HRR": 0.8,
+          "K": 0.65,
+          "HR": 0.02,
+          "BB": 0.17
         },
         "notes": [
           "Hit in 1/10 recent games; 0.10 H/game in that span.",
@@ -3082,7 +3067,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 7 • L vs R • 87°F • Wind 13",
+        "context": "Order 6 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -3182,177 +3167,38 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.9166666666666666,
-            "avg": 1.08
+            "hitRate": 0.75,
+            "avg": 0.83
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 2.08
+            "hitRate": 0.5,
+            "avg": 1.5
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.5833333333333334,
-            "avg": 2.17
+            "avg": 1.83
           }
         },
         "projections": {
-          "H": 0.59,
-          "TB": 1.29,
-          "HRR": 1.43,
+          "H": 0.84,
+          "TB": 1.56,
+          "HRR": 1.86,
           "K": 0.64,
-          "HR": 0.08,
+          "HR": 0.12,
           "BB": 0.28
         },
         "notes": [
           "Hit in 4/10 recent games; 0.50 H/game in that span.",
           "Home split in logs: hit in 14/18, 0.89 H/game.",
           "Recent games vs SDP: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 11/12, 1.08 H/game.",
+          "Similar-game sample: hit in 9/12, 0.83 H/game.",
           "2+ total bases in 3/10 recent games.",
           "2+ HRR in 4/10 recent games."
         ],
-        "hotScore": 2.806,
+        "hotScore": 2.672,
         "coldScore": 0.845
-      },
-      {
-        "playerId": 624641,
-        "player": "Edmundo Sosa",
-        "team": "PHI",
-        "opponent": "SDP",
-        "location": "Home",
-        "context": "Order 8 • R vs R • 87°F • Wind 13",
-        "batSide": "R",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              1.0,
-              0.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              1.0,
-              0.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.8,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              4.0,
-              0.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              4.0,
-              0.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.6,
-            "avg": 1.0,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              1.0,
-              1.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.0,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              1.0,
-              1.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              1.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 18,
-            "hitRate": 0.5,
-            "avg": 0.61
-          },
-          "opponentHits": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 0.67
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.25,
-            "avg": 1.25
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.67
-          }
-        },
-        "projections": {
-          "H": 0.44,
-          "TB": 1.3,
-          "HRR": 1.05,
-          "K": 0.84,
-          "HR": 0.06,
-          "BB": 0.16
-        },
-        "notes": [
-          "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Home split in logs: hit in 9/18, 0.61 H/game.",
-          "Similar-game sample: hit in 6/12, 0.67 H/game.",
-          "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 3/10 recent games.",
-          "Strikeout context: 1.00 K/game last 10; 2+ K in 3/10."
-        ],
-        "hotScore": 1.57,
-        "coldScore": 1.805
       },
       {
         "playerId": 665487,
@@ -3360,7 +3206,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 1 • R vs R • 87°F • Wind 13",
+        "context": "Order 1 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -3475,12 +3321,12 @@
           }
         },
         "projections": {
-          "H": 0.78,
-          "TB": 1.48,
-          "HRR": 1.44,
-          "K": 0.87,
+          "H": 0.82,
+          "TB": 1.49,
+          "HRR": 1.56,
+          "K": 0.77,
           "HR": 0.07,
-          "BB": 0.28
+          "BB": 0.23
         },
         "notes": [
           "Hit in 8/10 recent games; 1.70 H/game in that span.",
@@ -3494,143 +3340,12 @@
         "coldScore": 0.1
       },
       {
-        "playerId": 596117,
-        "player": "Garrett Stubbs",
-        "team": "PHI",
-        "opponent": "SDP",
-        "location": "Home",
-        "context": "Order 6 • L vs R • 87°F • Wind 13",
-        "batSide": "L",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.4,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.7,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 0.4,
-            "lastValues": [
-              1.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.0,
-            "avg": 0.4,
-            "lastValues": [
-              1.0,
-              1.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 11,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 4,
-            "hitRate": 0.0,
-            "avg": 0.0
-          },
-          "opponentHits": {
-            "sample": 1,
-            "hitRate": 0.0,
-            "avg": 0.0
-          },
-          "similarHits": {
-            "sample": 11,
-            "hitRate": 0.2727272727272727,
-            "avg": 0.36
-          },
-          "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHRR2": {
-            "sample": 11,
-            "hitRate": 0.09090909090909091,
-            "avg": 0.73
-          }
-        },
-        "projections": {
-          "H": 0.42,
-          "HRR": 0.89,
-          "K": 0.64,
-          "HR": 0.02,
-          "BB": 0.17
-        },
-        "notes": [
-          "Hit in 3/10 recent games; 0.40 H/game in that span.",
-          "Recent hit pace down: last 5 at 0.00 H/game vs last 10 at 0.40.",
-          "Similar-game sample: hit in 3/11, 0.36 H/game.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.40 K/game last 10; 2+ K in 0/10."
-        ],
-        "hotScore": 1.108,
-        "coldScore": 1.765
-      },
-      {
         "playerId": 657757,
         "player": "Gavin Sheets",
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 2 • L vs R • 87°F • Wind 13",
+        "context": "Order 2 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -3745,12 +3460,12 @@
           }
         },
         "projections": {
-          "H": 0.49,
-          "TB": 1.03,
-          "HRR": 0.93,
-          "K": 1.18,
+          "H": 0.66,
+          "TB": 1.16,
+          "HRR": 1.4,
+          "K": 1.07,
           "HR": 0.1,
-          "BB": 0.4
+          "BB": 0.5
         },
         "notes": [
           "Hit in 6/10 recent games; 0.70 H/game in that span.",
@@ -3769,7 +3484,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 9 • R vs R • 87°F • Wind 13",
+        "context": "Order 7 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -3870,32 +3585,32 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.6666666666666666,
-            "avg": 1.0
+            "avg": 0.92
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.58
+            "hitRate": 0.5,
+            "avg": 1.33
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.75
+            "hitRate": 0.5833333333333334,
+            "avg": 1.5
           }
         },
         "projections": {
-          "H": 0.51,
-          "TB": 1.14,
-          "HRR": 1.16,
-          "K": 0.79,
-          "HR": 0.03,
-          "BB": 0.26
+          "H": 0.62,
+          "TB": 1.12,
+          "HRR": 1.41,
+          "K": 0.87,
+          "HR": 0.09,
+          "BB": 0.19
         },
         "notes": [
           "Hit in 5/10 recent games; 0.70 H/game in that span.",
           "Recent hit pace down: last 5 at 0.40 H/game vs last 10 at 0.70.",
           "Home split in logs: hit in 13/23, 0.87 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
+          "Similar-game sample: hit in 8/12, 0.92 H/game.",
           "2+ total bases in 3/10 recent games.",
           "2+ HRR in 3/10 recent games."
         ],
@@ -3908,7 +3623,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 6 • L vs R • 87°F • Wind 13",
+        "context": "Order 5 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4023,12 +3738,12 @@
           }
         },
         "projections": {
-          "H": 0.47,
-          "TB": 1.1,
-          "HRR": 0.91,
-          "K": 1.03,
-          "HR": 0.05,
-          "BB": 0.29
+          "H": 0.64,
+          "TB": 1.04,
+          "HRR": 1.18,
+          "K": 1.05,
+          "HR": 0.06,
+          "BB": 0.28
         },
         "notes": [
           "Hit in 5/10 recent games; 0.80 H/game in that span.",
@@ -4042,12 +3757,259 @@
         "coldScore": 0.335
       },
       {
+        "playerId": 687749,
+        "player": "Jase Bowen",
+        "team": "SDP",
+        "opponent": "PHI",
+        "location": "Away",
+        "context": "Order 8 • R vs R • 88°F • Wind 13",
+        "batSide": "R",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null,
+            "lastValues": []
+          },
+          "hrr2Last10": {
+            "sample": 2,
+            "hitRate": 0.0,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0
+            ]
+          },
+          "kLast10": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 2.0,
+            "lastValues": [
+              3.0,
+              1.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 2.0,
+            "lastValues": [
+              3.0,
+              1.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null,
+            "lastValues": []
+          },
+          "locationHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarTB2": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null
+          },
+          "similarHRR2": {
+            "sample": 2,
+            "hitRate": 0.0,
+            "avg": 0.5
+          }
+        },
+        "projections": {
+          "H": 0.35,
+          "HRR": 0.7,
+          "K": 0.3,
+          "BB": 0.04
+        },
+        "notes": [
+          "Hit in 1/2 recent games; 0.50 H/game in that span.",
+          "Recent games vs PHI: hit in 1/2, 0.50 H/game.",
+          "2+ HRR in 0/2 recent games.",
+          "Strikeout context: 2.00 K/game last 2; 2+ K in 1/2."
+        ],
+        "hotScore": 1.3,
+        "coldScore": 1.495
+      },
+      {
+        "playerId": 702222,
+        "player": "Justin Crawford",
+        "team": "PHI",
+        "opponent": "SDP",
+        "location": "Home",
+        "context": "Order 9 • L vs R • 88°F • Wind 13",
+        "batSide": "L",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.4,
+            "avg": 0.4,
+            "lastValues": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.8,
+            "avg": 0.8,
+            "lastValues": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              0.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              1.0,
+              2.0,
+              1.0,
+              0.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.6,
+            "lastValues": [
+              2.0,
+              2.0,
+              1.0,
+              1.0,
+              0.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.6,
+            "avg": 0.7,
+            "lastValues": [
+              0.0,
+              1.0,
+              1.0,
+              0.0,
+              2.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.7,
+            "lastValues": [
+              0.0,
+              1.0,
+              1.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.05,
+            "avg": 0.05,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 21,
+            "hitRate": 0.42857142857142855,
+            "avg": 0.67
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.3333333333333333,
+            "avg": 0.58
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.16666666666666666,
+            "avg": 0.92
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.16666666666666666,
+            "avg": 1.0
+          }
+        },
+        "projections": {
+          "H": 0.82,
+          "TB": 1.06,
+          "HRR": 1.49,
+          "K": 0.59,
+          "HR": 0.02,
+          "BB": 0.17
+        },
+        "notes": [
+          "Hit in 4/10 recent games; 0.40 H/game in that span.",
+          "Recent hit pace up: last 5 at 0.80 H/game vs last 10 at 0.40.",
+          "Home split in logs: hit in 9/21, 0.67 H/game.",
+          "Recent games vs SDP: hit in 1/2, 0.50 H/game.",
+          "Similar-game sample: hit in 4/12, 0.58 H/game.",
+          "2+ total bases in 1/10 recent games."
+        ],
+        "hotScore": 1.8,
+        "coldScore": 0.965
+      },
+      {
         "playerId": 656941,
         "player": "Kyle Schwarber",
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 1 • L vs R • 87°F • Wind 13",
+        "context": "Order 1 • L vs R • 88°F • Wind 13",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4162,12 +4124,12 @@
           }
         },
         "projections": {
-          "H": 0.67,
-          "TB": 1.96,
-          "HRR": 1.8,
-          "K": 1.62,
-          "HR": 0.33,
-          "BB": 0.6
+          "H": 0.86,
+          "TB": 2.29,
+          "HRR": 2.11,
+          "K": 1.82,
+          "HR": 0.31,
+          "BB": 0.77
         },
         "notes": [
           "Hit in 7/10 recent games; 1.00 H/game in that span.",
@@ -4186,7 +4148,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 3 • R vs R • 87°F • Wind 13",
+        "context": "Order 3 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4301,12 +4263,12 @@
           }
         },
         "projections": {
-          "H": 0.5,
-          "TB": 1.07,
-          "HRR": 0.92,
-          "K": 1.06,
-          "HR": 0.05,
-          "BB": 0.3
+          "H": 0.67,
+          "TB": 1.28,
+          "HRR": 1.37,
+          "K": 1.22,
+          "HR": 0.12,
+          "BB": 0.25
         },
         "notes": [
           "Hit in 4/10 recent games; 0.50 H/game in that span.",
@@ -4325,7 +4287,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 4 • R vs R • 87°F • Wind 13",
+        "context": "Order 7 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4425,146 +4387,13 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 1.0
+            "hitRate": 0.5833333333333334,
+            "avg": 0.67
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.67
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.25,
-            "avg": 1.5
-          }
-        },
-        "projections": {
-          "H": 0.51,
-          "TB": 0.98,
-          "HRR": 0.91,
-          "K": 0.79,
-          "HR": 0.02,
-          "BB": 0.16
-        },
-        "notes": [
-          "Hit in 5/10 recent games; 0.60 H/game in that span.",
-          "Away split in logs: hit in 14/19, 1.11 H/game.",
-          "Recent games vs PHI: hit in 3/5, 0.80 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
-          "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 2/10 recent games."
-        ],
-        "hotScore": 2.683,
-        "coldScore": 0.475
-      },
-      {
-        "playerId": 823550,
-        "player": "Sung-Mun Song",
-        "team": "SDP",
-        "opponent": "PHI",
-        "location": "Away",
-        "context": "Order 8 • L vs R • 87°F • Wind 13",
-        "batSide": "L",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              2.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              2.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 18,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 11,
-            "hitRate": 0.2727272727272727,
-            "avg": 0.36
-          },
-          "opponentHits": {
-            "sample": 1,
-            "hitRate": 0.0,
-            "avg": 0.0
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.25,
-            "avg": 0.33
-          },
-          "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
+            "hitRate": 0.16666666666666666,
+            "avg": 0.75
           },
           "similarHRR2": {
             "sample": 12,
@@ -4573,21 +4402,23 @@
           }
         },
         "projections": {
-          "H": 0.51,
-          "HRR": 0.91,
-          "K": 0.7,
-          "HR": 0.02,
-          "BB": 0.29
+          "H": 0.67,
+          "TB": 1.03,
+          "HRR": 1.23,
+          "K": 0.71,
+          "HR": 0.04,
+          "BB": 0.16
         },
         "notes": [
-          "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Away split in logs: hit in 3/11, 0.36 H/game.",
-          "Similar-game sample: hit in 3/12, 0.33 H/game.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.30 K/game last 10; 2+ K in 1/10."
+          "Hit in 5/10 recent games; 0.60 H/game in that span.",
+          "Away split in logs: hit in 14/19, 1.11 H/game.",
+          "Recent games vs PHI: hit in 3/5, 0.80 H/game.",
+          "Similar-game sample: hit in 7/12, 0.67 H/game.",
+          "2+ total bases in 2/10 recent games.",
+          "2+ HRR in 2/10 recent games."
         ],
-        "hotScore": 0.988,
-        "coldScore": 1.705
+        "hotScore": 2.616,
+        "coldScore": 0.475
       },
       {
         "playerId": 607208,
@@ -4595,7 +4426,7 @@
         "team": "PHI",
         "opponent": "SDP",
         "location": "Home",
-        "context": "Order 2 • R vs R • 87°F • Wind 13",
+        "context": "Order 2 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4710,11 +4541,11 @@
           }
         },
         "projections": {
-          "H": 0.62,
-          "TB": 1.47,
-          "HRR": 1.53,
-          "K": 1.04,
-          "HR": 0.07,
+          "H": 0.89,
+          "TB": 1.5,
+          "HRR": 1.96,
+          "K": 1.18,
+          "HR": 0.08,
           "BB": 0.27
         },
         "notes": [
@@ -4734,7 +4565,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 9 • R vs R • 87°F • Wind 13",
+        "context": "Order 4 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4834,37 +4665,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.75,
-            "avg": 1.17
+            "hitRate": 0.3333333333333333,
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.75
+            "hitRate": 0.25,
+            "avg": 0.67
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.0
+            "hitRate": 0.25,
+            "avg": 0.67
           }
         },
         "projections": {
-          "H": 0.44,
-          "TB": 1.1,
-          "HRR": 0.86,
-          "K": 1.0,
-          "HR": 0.03,
-          "BB": 0.18
+          "H": 0.68,
+          "TB": 1.45,
+          "HRR": 1.39,
+          "K": 0.9,
+          "HR": 0.1,
+          "BB": 0.2
         },
         "notes": [
           "Hit in 6/10 recent games; 1.00 H/game in that span.",
           "Away split in logs: hit in 10/20, 0.75 H/game.",
           "Recent games vs PHI: hit in 2/5, 0.80 H/game.",
-          "Similar-game sample: hit in 9/12, 1.17 H/game.",
+          "Similar-game sample: hit in 4/12, 0.50 H/game.",
           "2+ total bases in 5/10 recent games.",
           "2+ HRR in 5/10 recent games."
         ],
-        "hotScore": 3.3,
+        "hotScore": 2.967,
         "coldScore": 0.22
       },
       {
@@ -4873,7 +4704,7 @@
         "team": "SDP",
         "opponent": "PHI",
         "location": "Away",
-        "context": "Order 5 • R vs R • 87°F • Wind 13",
+        "context": "Order 6 • R vs R • 88°F • Wind 13",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4974,32 +4805,32 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.5833333333333334,
-            "avg": 0.67
+            "avg": 0.75
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.16666666666666666,
-            "avg": 0.92
+            "hitRate": 0.25,
+            "avg": 1.25
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.4166666666666667,
-            "avg": 1.33
+            "avg": 1.58
           }
         },
         "projections": {
-          "H": 0.51,
-          "TB": 1.1,
-          "HRR": 0.99,
-          "K": 0.94,
-          "HR": 0.03,
-          "BB": 0.37
+          "H": 0.68,
+          "TB": 1.09,
+          "HRR": 1.28,
+          "K": 0.89,
+          "HR": 0.07,
+          "BB": 0.41
         },
         "notes": [
           "Hit in 5/10 recent games; 0.60 H/game in that span.",
           "Away split in logs: hit in 13/22, 0.77 H/game.",
           "Recent games vs PHI: hit in 2/5, 0.40 H/game.",
-          "Similar-game sample: hit in 7/12, 0.67 H/game.",
+          "Similar-game sample: hit in 7/12, 0.75 H/game.",
           "2+ total bases in 2/10 recent games.",
           "2+ HRR in 4/10 recent games."
         ],
@@ -5009,7 +4840,7 @@
     ]
   },
   "dataCoverage": {
-    "propsAnalyzerEntries": 312,
+    "propsAnalyzerEntries": 316,
     "firstInningHistoryFound": true,
     "rawBatterSplitsFound": false
   },

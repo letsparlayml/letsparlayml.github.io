@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.9",
-  "generatedAt": "2026-06-04T12:28:11.519314+00:00",
+  "generatedAt": "2026-06-05T12:43:57.014626+00:00",
   "gameId": "mlb-824672",
   "gamePk": 824672,
   "league": "MLB",
@@ -8,54 +8,23 @@
   "awayTeam": "OAK",
   "homeTeam": "CHC",
   "headline": "OAK @ CHC matchup research",
-  "quickWriteup": "The current model score is OAK 3.36 at CHC 4.71, with a projected total of 8.07. Movement read: The side movement strengthened toward CHC: OAK moved -0.21 runs while CHC moved +0.35, changing the projected margin by -0.56 runs. NRFI probability dropped -5.1%, so the first-inning read became more YRFI/early-scoring friendly. Pitching context: J.T. Ginn has the better recent run-prevention profile in the available outing logs at 1.0 ER over the last 5 outings. Batter research is strongest for Michael Busch, Tyler Soderstrom, Nick Kurtz, based on recent hit rates, matching location/opponent samples, or similar-game production. The cold/risk list flags Lawrence Butler, Kevin Alcántara because the recent hit profile or strikeout trend is weaker than the projection alone would show.",
+  "quickWriteup": "The current model score is OAK 3.28 at CHC 4.80, with a projected total of 8.08. Movement read: The side movement strengthened toward CHC: OAK moved -0.29 runs while CHC moved +0.44, changing the projected margin by -0.73 runs. NRFI probability dropped -5.5%, so the first-inning read became more YRFI/early-scoring friendly. Pitching context: J.T. Ginn has the better recent run-prevention profile in the available outing logs at 1.0 ER over the last 5 outings. Batter research is strongest for Michael Busch, Tyler Soderstrom, Pete Crow-Armstrong, based on recent hit rates, matching location/opponent samples, or similar-game production. The cold/risk list flags Lawrence Butler, Kevin Alcántara because the recent hit profile or strikeout trend is weaker than the projection alone would show.",
   "modelForm": {
     "OAK": {
       "team": "OAK",
       "sample": 5,
-      "availableSettledGames": 46,
+      "availableSettledGames": 47,
       "displayLimit": 5,
       "sideCorrect": 2,
       "sideAccuracy": 0.4,
-      "avgTeamRunError": 2.4,
-      "withinOneFiveCount": 2,
-      "withinOneFiveRate": 0.4,
-      "bigMissCount": 3,
-      "teamOverCount": 3,
-      "teamUnderCount": 2,
+      "avgTeamRunError": 2.8,
+      "withinOneFiveCount": 1,
+      "withinOneFiveRate": 0.2,
+      "bigMissCount": 4,
+      "teamOverCount": 4,
+      "teamUnderCount": 1,
       "label": "",
       "games": [
-        {
-          "date": "2026-05-29",
-          "matchup": "NYY @ OAK",
-          "awayTeam": "NYY",
-          "homeTeam": "OAK",
-          "predAway": 4.4,
-          "predHome": 2.7,
-          "actualAway": 8.0,
-          "actualHome": 2.0,
-          "predFor": 2.7,
-          "predAgainst": 4.4,
-          "actualFor": 2.0,
-          "actualAgainst": 8.0,
-          "teamError": 0.7000000000000002,
-          "opponentError": 3.5999999999999996,
-          "scoreboardError": 4.3,
-          "projectedTotal": 7.1,
-          "actualTotal": 10.0,
-          "totalError": 2.9,
-          "teamDiff": -0.7,
-          "opponentDiff": 3.6,
-          "teamDiffText": "OAK scored 0.7 fewer runs than projected.",
-          "opponentDiffText": "OAK allowed 3.6 more runs than projected.",
-          "scoreboardText": "Full scoreboard miss: 4.3 total runs across both teams.",
-          "totalText": "Projected total missed by 2.9 runs.",
-          "withinOneFive": true,
-          "bigMiss": false,
-          "correctSide": true,
-          "scoreError": 4.3,
-          "overUnderTeam": "under"
-        },
         {
           "date": "2026-05-30",
           "matchup": "NYY @ OAK",
@@ -179,6 +148,37 @@
           "correctSide": false,
           "scoreError": 1.9,
           "overUnderTeam": "over"
+        },
+        {
+          "date": "2026-06-04",
+          "matchup": "OAK @ CHC",
+          "awayTeam": "OAK",
+          "homeTeam": "CHC",
+          "predAway": 3.4,
+          "predHome": 4.7,
+          "actualAway": 6.0,
+          "actualHome": 7.0,
+          "predFor": 3.4,
+          "predAgainst": 4.7,
+          "actualFor": 6.0,
+          "actualAgainst": 7.0,
+          "teamError": 2.6,
+          "opponentError": 2.3,
+          "scoreboardError": 4.9,
+          "projectedTotal": 8.1,
+          "actualTotal": 13.0,
+          "totalError": 4.9,
+          "teamDiff": 2.6,
+          "opponentDiff": 2.3,
+          "teamDiffText": "OAK scored 2.6 more runs than projected.",
+          "opponentDiffText": "OAK allowed 2.3 more runs than projected.",
+          "scoreboardText": "Full scoreboard miss: 4.9 total runs across both teams.",
+          "totalText": "Projected total missed by 4.9 runs.",
+          "withinOneFive": false,
+          "bigMiss": true,
+          "correctSide": true,
+          "scoreError": 4.9,
+          "overUnderTeam": "over"
         }
       ],
       "coverageNote": "Stats use the same 5 settled games shown below. Model and final scores stay in away/home order; the explanation is specific to OAK."
@@ -186,49 +186,18 @@
     "CHC": {
       "team": "CHC",
       "sample": 5,
-      "availableSettledGames": 46,
+      "availableSettledGames": 47,
       "displayLimit": 5,
-      "sideCorrect": 1,
-      "sideAccuracy": 0.2,
-      "avgTeamRunError": 2.2,
-      "withinOneFiveCount": 2,
-      "withinOneFiveRate": 0.4,
-      "bigMissCount": 3,
+      "sideCorrect": 2,
+      "sideAccuracy": 0.4,
+      "avgTeamRunError": 2.4,
+      "withinOneFiveCount": 1,
+      "withinOneFiveRate": 0.2,
+      "bigMissCount": 4,
       "teamOverCount": 2,
       "teamUnderCount": 3,
       "label": "",
       "games": [
-        {
-          "date": "2026-05-29",
-          "matchup": "CHC @ STL",
-          "awayTeam": "CHC",
-          "homeTeam": "STL",
-          "predAway": 3.7,
-          "predHome": 3.5,
-          "actualAway": 5.0,
-          "actualHome": 6.0,
-          "predFor": 3.7,
-          "predAgainst": 3.5,
-          "actualFor": 5.0,
-          "actualAgainst": 6.0,
-          "teamError": 1.2999999999999998,
-          "opponentError": 2.5,
-          "scoreboardError": 3.8,
-          "projectedTotal": 7.2,
-          "actualTotal": 11.0,
-          "totalError": 3.8,
-          "teamDiff": 1.3,
-          "opponentDiff": 2.5,
-          "teamDiffText": "CHC scored 1.3 more runs than projected.",
-          "opponentDiffText": "CHC allowed 2.5 more runs than projected.",
-          "scoreboardText": "Full scoreboard miss: 3.8 total runs across both teams.",
-          "totalText": "Projected total missed by 3.8 runs.",
-          "withinOneFive": true,
-          "bigMiss": false,
-          "correctSide": false,
-          "scoreError": 3.8,
-          "overUnderTeam": "over"
-        },
         {
           "date": "2026-05-30",
           "matchup": "CHC @ STL",
@@ -352,6 +321,37 @@
           "correctSide": false,
           "scoreError": 1.9,
           "overUnderTeam": "under"
+        },
+        {
+          "date": "2026-06-04",
+          "matchup": "OAK @ CHC",
+          "awayTeam": "OAK",
+          "homeTeam": "CHC",
+          "predAway": 3.4,
+          "predHome": 4.7,
+          "actualAway": 6.0,
+          "actualHome": 7.0,
+          "predFor": 4.7,
+          "predAgainst": 3.4,
+          "actualFor": 7.0,
+          "actualAgainst": 6.0,
+          "teamError": 2.3,
+          "opponentError": 2.6,
+          "scoreboardError": 4.9,
+          "projectedTotal": 8.1,
+          "actualTotal": 13.0,
+          "totalError": 4.9,
+          "teamDiff": 2.3,
+          "opponentDiff": 2.6,
+          "teamDiffText": "CHC scored 2.3 more runs than projected.",
+          "opponentDiffText": "CHC allowed 2.6 more runs than projected.",
+          "scoreboardText": "Full scoreboard miss: 4.9 total runs across both teams.",
+          "totalText": "Projected total missed by 4.9 runs.",
+          "withinOneFive": false,
+          "bigMiss": true,
+          "correctSide": true,
+          "scoreError": 4.9,
+          "overUnderTeam": "over"
         }
       ],
       "coverageNote": "Stats use the same 5 settled games shown below. Model and final scores stay in away/home order; the explanation is specific to CHC."
@@ -363,31 +363,31 @@
     "title": "Week-to-game movement read",
     "description": "Interprets the same saved movement records shown in the main prediction movement chart.",
     "firstDate": "2026-05-28",
-    "latestDate": "2026-06-04",
+    "latestDate": "2026-06-05",
     "movements": {
-      "awayScoreDelta": -0.208,
-      "homeScoreDelta": 0.35,
-      "totalDelta": 0.142,
-      "modelSpreadDelta": 0.558,
-      "homeWinProbDelta": 0.07,
-      "awayWinProbDelta": -0.07,
-      "favoriteWinProbDelta": 0.07,
-      "favoriteCoverProbDelta": 0.077,
-      "nrfiProbDelta": -0.051,
+      "awayScoreDelta": -0.292,
+      "homeScoreDelta": 0.438,
+      "totalDelta": 0.146,
+      "modelSpreadDelta": 0.73,
+      "homeWinProbDelta": 0.082,
+      "awayWinProbDelta": -0.082,
+      "favoriteWinProbDelta": 0.082,
+      "favoriteCoverProbDelta": 0.087,
+      "nrfiProbDelta": -0.055,
       "yrfiProbDelta": null,
-      "marketOverProbDelta": -0.002
+      "marketOverProbDelta": -0.004
     },
     "movementToward": "CHC",
-    "awayMarginDelta": -0.558,
-    "analysis": "The side movement strengthened toward CHC: OAK moved -0.21 runs while CHC moved +0.35, changing the projected margin by -0.56 runs. NRFI probability dropped -5.1%, so the first-inning read became more YRFI/early-scoring friendly.",
+    "awayMarginDelta": -0.73,
+    "analysis": "The side movement strengthened toward CHC: OAK moved -0.29 runs while CHC moved +0.44, changing the projected margin by -0.73 runs. NRFI probability dropped -5.5%, so the first-inning read became more YRFI/early-scoring friendly.",
     "bullets": [
-      "OAK run projection moved -0.21, from 3.57 to 3.36.",
-      "CHC run projection moved +0.35, from 4.36 to 4.71.",
-      "Model spread moved from CHC -0.80 to CHC -1.35.",
-      "Projected total moved +0.14, from 7.93 to 8.07.",
-      "Win probability for the listed model favorite moved +7.0%.",
-      "Cover probability moved +7.7% across the saved movement records.",
-      "NRFI probability moved -5.1%."
+      "OAK run projection moved -0.29, from 3.57 to 3.28.",
+      "CHC run projection moved +0.44, from 4.36 to 4.80.",
+      "Model spread moved from CHC -0.80 to CHC -1.53.",
+      "Projected total moved +0.15, from 7.93 to 8.08.",
+      "Win probability for the listed model favorite moved +8.2%.",
+      "Cover probability moved +8.7% across the saved movement records.",
+      "NRFI probability moved -5.5%."
     ],
     "snapshots": [
       {
@@ -565,32 +565,32 @@
         "note": "Snapshot"
       },
       {
-        "date": "2026-06-04",
-        "predictedAway": 3.35982632949469,
-        "predictedHome": 4.714251905523468,
-        "modelHomeSpread": 1.3544255760287776,
+        "date": "2026-06-05",
+        "predictedAway": 3.275819305657727,
+        "predictedHome": 4.8019735758085496,
+        "modelHomeSpread": 1.5261542701508226,
         "marketSpread": 1.5,
-        "modelTotal": 8.074078235018158,
+        "modelTotal": 8.077792881466276,
         "marketTotal": 10.0,
-        "nrfiProb": 0.4784313220820552,
-        "homeWinProb": 0.6615,
-        "awayWinProb": 0.3385,
+        "nrfiProb": 0.4745826149834212,
+        "homeWinProb": 0.6734,
+        "awayWinProb": 0.3266,
         "favoriteWinLabel": "CHC win",
-        "favoriteWinProb": 0.6615,
+        "favoriteWinProb": 0.6734,
         "favoriteCoverLabel": "CHC -1.5",
-        "favoriteCoverProb": 0.4734,
+        "favoriteCoverProb": 0.4838,
         "marketCoverLabel": "CHC -1.5",
-        "marketCoverProb": 0.4734,
+        "marketCoverProb": 0.4838,
         "marketTotalLabel": "Total 10.0",
         "marketOverProb": null,
         "marketUnderProb": null,
         "fallbackTotalLabel": "Over 8.5",
-        "fallbackOverProb": 0.3948,
-        "fallbackUnderProb": 0.6052,
-        "homeMinus1p5Prob": 0.4734,
-        "awayMinus1p5Prob": 0.1822,
-        "over7p5Prob": 0.4948,
-        "over8p5Prob": 0.3948,
+        "fallbackOverProb": 0.3926,
+        "fallbackUnderProb": 0.6073999999999999,
+        "homeMinus1p5Prob": 0.4838,
+        "awayMinus1p5Prob": 0.1688,
+        "over7p5Prob": 0.495,
+        "over8p5Prob": 0.3926,
         "note": "Snapshot"
       }
     ]
@@ -723,11 +723,11 @@
       "sameOpponentStarts": [],
       "projections": {
         "IP": 5.1,
-        "K": 4.55,
-        "HA": 4.33,
-        "ER": 2.37,
+        "K": 4.7,
+        "HA": 4.27,
+        "ER": 2.33,
         "BB": 2.2,
-        "OUTS": 16.8
+        "OUTS": 16.63
       },
       "flags": [
         "Held opponents to 2 ER or fewer in 5/5 recent starts.",
@@ -864,11 +864,11 @@
       "sameOpponentStarts": [],
       "projections": {
         "IP": 5.2,
-        "K": 5.78,
-        "HA": 5.61,
-        "ER": 2.93,
+        "K": 5.61,
+        "HA": 5.83,
+        "ER": 2.94,
         "BB": 1.7,
-        "OUTS": 17.08
+        "OUTS": 17.06
       },
       "flags": [
         "Worked 6+ IP in 3/5 recent starts.",
@@ -880,8 +880,8 @@
     }
   ],
   "firstInningOutlook": {
-    "nrfiProb": 0.4784313220820552,
-    "yrfiProb": 0.5215686779179448,
+    "nrfiProb": 0.4745826149834212,
+    "yrfiProb": 0.5254173850165788,
     "pitcherSamples": [
       {
         "player": "J.T. Ginn",
@@ -924,7 +924,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 4 • L vs R • 85°F • Wind 21",
+        "context": "Order 3 • L vs R • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1025,33 +1025,33 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.6666666666666666,
-            "avg": 1.08
+            "avg": 0.92
           },
           "similarTB2": {
             "sample": 12,
             "hitRate": 0.4166666666666667,
-            "avg": 2.17
+            "avg": 1.83
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.0
+            "hitRate": 0.4166666666666667,
+            "avg": 1.58
           }
         },
         "projections": {
-          "H": 0.57,
-          "TB": 1.33,
-          "HRR": 1.47,
-          "K": 1.14,
-          "HR": 0.05,
-          "BB": 0.71
+          "H": 0.76,
+          "TB": 1.41,
+          "HRR": 1.85,
+          "K": 1.23,
+          "HR": 0.11,
+          "BB": 0.55
         },
         "notes": [
           "Hit in 9/10 recent games; 1.30 H/game in that span.",
           "Recent hit pace up: last 5 at 1.60 H/game vs last 10 at 1.30.",
           "Home split in logs: hit in 13/18, 1.17 H/game.",
           "Recent games vs OAK: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 8/12, 1.08 H/game.",
+          "Similar-game sample: hit in 8/12, 0.92 H/game.",
           "2+ total bases in 5/10 recent games."
         ],
         "hotScore": 4.341,
@@ -1063,7 +1063,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 6 • L vs L • 85°F • Wind 21",
+        "context": "Order 5 • L vs L • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -1178,12 +1178,12 @@
           }
         },
         "projections": {
-          "H": 0.52,
-          "TB": 1.84,
-          "HRR": 1.21,
-          "K": 0.54,
-          "HR": 0.1,
-          "BB": 0.42
+          "H": 0.74,
+          "TB": 1.99,
+          "HRR": 1.77,
+          "K": 0.62,
+          "HR": 0.34,
+          "BB": 0.48
         },
         "notes": [
           "Hit in 9/10 recent games; 1.40 H/game in that span.",
@@ -1197,12 +1197,151 @@
         "coldScore": 0.0
       },
       {
+        "playerId": 691718,
+        "player": "Pete Crow-Armstrong",
+        "team": "CHC",
+        "opponent": "OAK",
+        "location": "Home",
+        "context": "Order 1 • L vs R • 86°F • Wind 24",
+        "batSide": "L",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.8,
+            "avg": 1.2,
+            "lastValues": [
+              1.0,
+              4.0,
+              1.0,
+              2.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 1.0,
+            "avg": 1.8,
+            "lastValues": [
+              1.0,
+              4.0,
+              1.0,
+              2.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 2.1,
+            "lastValues": [
+              2.0,
+              8.0,
+              1.0,
+              2.0,
+              4.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.7,
+            "avg": 2.5,
+            "lastValues": [
+              2.0,
+              8.0,
+              1.0,
+              2.0,
+              4.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.0,
+            "lastValues": [
+              2.0,
+              1.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.4,
+            "avg": 1.0,
+            "lastValues": [
+              2.0,
+              1.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.2,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              1.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "locationHits": {
+            "sample": 18,
+            "hitRate": 0.7222222222222222,
+            "avg": 1.0
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 1.5
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.8333333333333334,
+            "avg": 1.17
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.5,
+            "avg": 2.17
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.6666666666666666,
+            "avg": 2.5
+          }
+        },
+        "projections": {
+          "H": 0.77,
+          "TB": 1.65,
+          "HRR": 1.88,
+          "K": 1.22,
+          "HR": 0.24,
+          "BB": 0.4
+        },
+        "notes": [
+          "Hit in 8/10 recent games; 1.20 H/game in that span.",
+          "Recent hit pace up: last 5 at 1.80 H/game vs last 10 at 1.20.",
+          "Home split in logs: hit in 13/18, 1.00 H/game.",
+          "Recent games vs OAK: hit in 2/2, 1.50 H/game.",
+          "Similar-game sample: hit in 10/12, 1.17 H/game.",
+          "2+ total bases in 5/10 recent games."
+        ],
+        "hotScore": 4.164,
+        "coldScore": 0.2
+      },
+      {
         "playerId": 701762,
         "player": "Nick Kurtz",
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 2 • L vs L • 85°F • Wind 21",
+        "context": "Order 2 • L vs L • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -1317,12 +1456,12 @@
           }
         },
         "projections": {
-          "H": 0.81,
-          "TB": 2.81,
-          "HRR": 1.99,
-          "K": 1.24,
-          "HR": 0.26,
-          "BB": 0.58
+          "H": 1.08,
+          "TB": 2.87,
+          "HRR": 2.38,
+          "K": 1.31,
+          "HR": 0.39,
+          "BB": 0.74
         },
         "notes": [
           "Hit in 7/10 recent games; 1.20 H/game in that span.",
@@ -1336,151 +1475,12 @@
         "coldScore": 0.36
       },
       {
-        "playerId": 691718,
-        "player": "Pete Crow-Armstrong",
-        "team": "CHC",
-        "opponent": "OAK",
-        "location": "Home",
-        "context": "Order 2 • L vs R • 85°F • Wind 21",
-        "batSide": "L",
-        "pitchHand": "R",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.8,
-            "avg": 1.2,
-            "lastValues": [
-              1.0,
-              4.0,
-              1.0,
-              2.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 1.0,
-            "avg": 1.8,
-            "lastValues": [
-              1.0,
-              4.0,
-              1.0,
-              2.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.5,
-            "avg": 2.1,
-            "lastValues": [
-              2.0,
-              8.0,
-              1.0,
-              2.0,
-              4.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.7,
-            "avg": 2.5,
-            "lastValues": [
-              2.0,
-              8.0,
-              1.0,
-              2.0,
-              4.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.5,
-            "avg": 1.0,
-            "lastValues": [
-              2.0,
-              1.0,
-              0.0,
-              0.0,
-              2.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.0,
-            "lastValues": [
-              2.0,
-              1.0,
-              0.0,
-              0.0,
-              2.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "locationHits": {
-            "sample": 18,
-            "hitRate": 0.7222222222222222,
-            "avg": 1.0
-          },
-          "opponentHits": {
-            "sample": 2,
-            "hitRate": 1.0,
-            "avg": 1.5
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 1.0
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.92
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.17
-          }
-        },
-        "projections": {
-          "H": 0.64,
-          "TB": 1.61,
-          "HRR": 1.61,
-          "K": 0.97,
-          "HR": 0.07,
-          "BB": 0.46
-        },
-        "notes": [
-          "Hit in 8/10 recent games; 1.20 H/game in that span.",
-          "Recent hit pace up: last 5 at 1.80 H/game vs last 10 at 1.20.",
-          "Home split in logs: hit in 13/18, 1.00 H/game.",
-          "Recent games vs OAK: hit in 2/2, 1.50 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
-          "2+ total bases in 5/10 recent games."
-        ],
-        "hotScore": 4.031,
-        "coldScore": 0.2
-      },
-      {
         "playerId": 608324,
         "player": "Alex Bregman",
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 3 • R vs R • 85°F • Wind 21",
+        "context": "Order 4 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -1581,37 +1581,176 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.5,
-            "avg": 0.58
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.25,
-            "avg": 0.92
+            "hitRate": 0.16666666666666666,
+            "avg": 0.67
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.17
+            "hitRate": 0.25,
+            "avg": 1.08
           }
         },
         "projections": {
-          "H": 0.84,
-          "TB": 1.43,
-          "HRR": 1.95,
-          "K": 0.74,
+          "H": 0.77,
+          "TB": 1.28,
+          "HRR": 1.81,
+          "K": 0.56,
           "HR": 0.11,
-          "BB": 0.48
+          "BB": 0.31
         },
         "notes": [
           "Hit in 9/10 recent games; 1.20 H/game in that span.",
           "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.20.",
           "Home split in logs: hit in 13/19, 0.84 H/game.",
           "Recent games vs OAK: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 6/12, 0.58 H/game.",
+          "Similar-game sample: hit in 6/12, 0.50 H/game.",
           "2+ total bases in 4/10 recent games."
         ],
         "hotScore": 3.967,
         "coldScore": 0.6
+      },
+      {
+        "playerId": 680869,
+        "player": "Zack Gelof",
+        "team": "OAK",
+        "opponent": "CHC",
+        "location": "Away",
+        "context": "Order 7 • R vs L • 86°F • Wind 24",
+        "batSide": "R",
+        "pitchHand": "L",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.8,
+            "avg": 1.2,
+            "lastValues": [
+              2.0,
+              1.0,
+              2.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 1.0,
+            "avg": 1.4,
+            "lastValues": [
+              2.0,
+              1.0,
+              2.0,
+              1.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.4,
+            "lastValues": [
+              2.0,
+              1.0,
+              2.0,
+              1.0,
+              2.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.7,
+            "avg": 1.7,
+            "lastValues": [
+              3.0,
+              2.0,
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.7,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              1.0,
+              2.0,
+              2.0,
+              0.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              1.0,
+              2.0,
+              2.0,
+              0.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.15,
+            "avg": 0.15,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 21,
+            "hitRate": 0.6190476190476191,
+            "avg": 0.81
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 1.0
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.6666666666666666,
+            "avg": 0.83
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 1.25
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.5833333333333334,
+            "avg": 2.0
+          }
+        },
+        "projections": {
+          "H": 0.85,
+          "TB": 1.75,
+          "HRR": 1.84,
+          "K": 1.13,
+          "HR": 0.15,
+          "BB": 0.24
+        },
+        "notes": [
+          "Hit in 8/10 recent games; 1.20 H/game in that span.",
+          "Away split in logs: hit in 13/21, 0.81 H/game.",
+          "Recent games vs CHC: hit in 2/2, 1.00 H/game.",
+          "Similar-game sample: hit in 8/12, 0.83 H/game.",
+          "2+ total bases in 5/10 recent games.",
+          "2+ HRR in 7/10 recent games."
+        ],
+        "hotScore": 3.949,
+        "coldScore": 0.46
       },
       {
         "playerId": 663538,
@@ -1619,7 +1758,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 1 • R vs R • 85°F • Wind 21",
+        "context": "Order 6 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -1719,37 +1858,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.75,
-            "avg": 0.92
+            "hitRate": 0.6666666666666666,
+            "avg": 0.75
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.33
+            "hitRate": 0.3333333333333333,
+            "avg": 1.0
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 1.75
+            "hitRate": 0.5,
+            "avg": 1.5
           }
         },
         "projections": {
-          "H": 0.63,
-          "TB": 1.01,
-          "HRR": 1.57,
-          "K": 0.24,
-          "HR": 0.02,
-          "BB": 0.57
+          "H": 0.73,
+          "TB": 1.0,
+          "HRR": 1.76,
+          "K": 0.21,
+          "HR": 0.03,
+          "BB": 0.4
         },
         "notes": [
           "Hit in 8/10 recent games; 1.00 H/game in that span.",
           "Home split in logs: hit in 13/18, 0.89 H/game.",
           "Recent games vs OAK: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 9/12, 0.92 H/game.",
+          "Similar-game sample: hit in 8/12, 0.75 H/game.",
           "2+ total bases in 3/10 recent games.",
           "2+ HRR in 5/10 recent games."
         ],
-        "hotScore": 3.778,
+        "hotScore": 3.711,
         "coldScore": 0.0
       },
       {
@@ -1758,7 +1897,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 5 • B vs R • 85°F • Wind 21",
+        "context": "Order 5 • B vs R • 86°F • Wind 24",
         "batSide": "B",
         "pitchHand": "R",
         "metrics": {
@@ -1873,12 +2012,12 @@
           }
         },
         "projections": {
-          "H": 0.59,
-          "TB": 1.92,
-          "HRR": 1.53,
-          "K": 1.33,
-          "HR": 0.1,
-          "BB": 0.54
+          "H": 0.79,
+          "TB": 1.93,
+          "HRR": 1.91,
+          "K": 1.31,
+          "HR": 0.25,
+          "BB": 0.49
         },
         "notes": [
           "Hit in 7/10 recent games; 1.30 H/game in that span.",
@@ -1890,145 +2029,6 @@
         ],
         "hotScore": 3.674,
         "coldScore": 0.22
-      },
-      {
-        "playerId": 666126,
-        "player": "Carlos Cortes",
-        "team": "OAK",
-        "opponent": "CHC",
-        "location": "Away",
-        "context": "Order 1 • L vs L • 85°F • Wind 21",
-        "batSide": "L",
-        "pitchHand": "L",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.6,
-            "avg": 0.7,
-            "lastValues": [
-              1.0,
-              0.0,
-              1.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.6,
-            "avg": 0.6,
-            "lastValues": [
-              1.0,
-              0.0,
-              1.0,
-              0.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 1.1,
-            "lastValues": [
-              1.0,
-              0.0,
-              2.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.2,
-            "lastValues": [
-              1.0,
-              0.0,
-              2.0,
-              0.0,
-              2.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.0,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.05,
-            "avg": 0.05,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 20,
-            "hitRate": 0.85,
-            "avg": 1.3
-          },
-          "opponentHits": {
-            "sample": 2,
-            "hitRate": 0.5,
-            "avg": 0.5
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.9166666666666666,
-            "avg": 1.42
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 2.5
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.5
-          }
-        },
-        "projections": {
-          "H": 0.56,
-          "TB": 1.4,
-          "HRR": 1.35,
-          "K": 0.37,
-          "HR": 0.05,
-          "BB": 0.27
-        },
-        "notes": [
-          "Hit in 6/10 recent games; 0.70 H/game in that span.",
-          "Away split in logs: hit in 17/20, 1.30 H/game.",
-          "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 11/12, 1.42 H/game.",
-          "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 4/10 recent games."
-        ],
-        "hotScore": 3.333,
-        "coldScore": 0.18
       }
     ],
     "riskFlags": [
@@ -2038,7 +2038,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 7 • L vs L • 85°F • Wind 21",
+        "context": "Order 4 • L vs L • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -2149,16 +2149,16 @@
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.16666666666666666,
-            "avg": 0.67
+            "avg": 0.75
           }
         },
         "projections": {
-          "H": 0.39,
-          "TB": 0.83,
-          "HRR": 0.94,
-          "K": 0.6,
-          "HR": 0.03,
-          "BB": 0.18
+          "H": 0.56,
+          "TB": 0.98,
+          "HRR": 1.17,
+          "K": 0.44,
+          "HR": 0.11,
+          "BB": 0.14
         },
         "notes": [
           "Hit in 1/10 recent games; 0.10 H/game in that span.",
@@ -2177,7 +2177,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 7 • R vs R • 85°F • Wind 21",
+        "context": "Order 7 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -2248,10 +2248,16 @@
             ]
           },
           "hrLast20": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
+            "sample": 8,
+            "hitRate": 0.0,
+            "avg": 0.0,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
           },
           "locationHits": {
             "sample": 4,
@@ -2280,10 +2286,11 @@
           }
         },
         "projections": {
-          "H": 0.34,
-          "HRR": 0.85,
-          "K": 0.63,
-          "BB": 0.16
+          "H": 0.48,
+          "HRR": 1.24,
+          "K": 0.55,
+          "HR": 0.01,
+          "BB": 0.17
         },
         "notes": [
           "Hit in 1/8 recent games; 0.12 H/game in that span.",
@@ -2296,12 +2303,151 @@
         "coldScore": 1.938
       },
       {
+        "playerId": 675961,
+        "player": "Alika Williams",
+        "team": "OAK",
+        "opponent": "CHC",
+        "location": "Away",
+        "context": "Order 9 • R vs L • 86°F • Wind 24",
+        "batSide": "R",
+        "pitchHand": "L",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.2,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.0,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.5,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              3.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 0.7,
+            "lastValues": [
+              1.0,
+              1.0,
+              2.0,
+              0.0,
+              2.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.7,
+            "lastValues": [
+              1.0,
+              1.0,
+              2.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 11,
+            "hitRate": 0.0,
+            "avg": 0.0,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 7,
+            "hitRate": 0.2857142857142857,
+            "avg": 0.29
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarHits": {
+            "sample": 11,
+            "hitRate": 0.18181818181818182,
+            "avg": 0.18
+          },
+          "similarTB2": {
+            "sample": 11,
+            "hitRate": 0.0,
+            "avg": 0.18
+          },
+          "similarHRR2": {
+            "sample": 11,
+            "hitRate": 0.18181818181818182,
+            "avg": 0.45
+          }
+        },
+        "projections": {
+          "H": 0.6,
+          "TB": 0.83,
+          "HRR": 1.3,
+          "K": 0.9,
+          "HR": 0.04,
+          "BB": 0.15
+        },
+        "notes": [
+          "Hit in 2/10 recent games; 0.20 H/game in that span.",
+          "Away split in logs: hit in 2/7, 0.29 H/game.",
+          "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
+          "Similar-game sample: hit in 2/11, 0.18 H/game.",
+          "2+ total bases in 0/10 recent games.",
+          "2+ HRR in 2/10 recent games."
+        ],
+        "hotScore": 0.994,
+        "coldScore": 1.755
+      },
+      {
         "playerId": 624424,
         "player": "Michael Conforto",
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 8 • L vs R • 85°F • Wind 21",
+        "context": "Order 2 • L vs R • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -2401,177 +2547,38 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.16666666666666666,
-            "avg": 0.33
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.08333333333333333,
-            "avg": 0.67
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.16666666666666666,
-            "avg": 0.83
-          }
-        },
-        "projections": {
-          "H": 0.43,
-          "TB": 1.0,
-          "HRR": 1.09,
-          "K": 0.94,
-          "HR": 0.05,
-          "BB": 0.43
-        },
-        "notes": [
-          "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Home split in logs: hit in 5/18, 0.39 H/game.",
-          "Similar-game sample: hit in 2/12, 0.33 H/game.",
-          "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.80 K/game last 10; 2+ K in 2/10."
-        ],
-        "hotScore": 1.026,
-        "coldScore": 1.755
-      },
-      {
-        "playerId": 687515,
-        "player": "Colby Thomas",
-        "team": "OAK",
-        "opponent": "CHC",
-        "location": "Away",
-        "context": "Order 3 • R vs L • 85°F • Wind 21",
-        "batSide": "R",
-        "pitchHand": "L",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.6,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              4.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.8,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              3.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 0.5,
-            "lastValues": [
-              0.0,
-              0.0,
-              2.0,
-              1.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.5,
-            "lastValues": [
-              0.0,
-              0.0,
-              2.0,
-              1.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "locationHits": {
-            "sample": 9,
-            "hitRate": 0.5555555555555556,
-            "avg": 0.67
-          },
-          "opponentHits": {
-            "sample": 2,
-            "hitRate": 0.5,
+            "hitRate": 0.3333333333333333,
             "avg": 0.5
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 0.67
           },
           "similarTB2": {
             "sample": 12,
             "hitRate": 0.3333333333333333,
-            "avg": 1.08
+            "avg": 1.25
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.42
+            "hitRate": 0.25,
+            "avg": 1.17
           }
         },
         "projections": {
-          "H": 0.71,
-          "TB": 1.0,
-          "HRR": 1.4,
-          "K": 0.69,
-          "HR": 0.03,
-          "BB": 0.19
+          "H": 0.63,
+          "TB": 1.23,
+          "HRR": 1.68,
+          "K": 0.89,
+          "HR": 0.17,
+          "BB": 0.42
         },
         "notes": [
           "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Away split in logs: hit in 5/9, 0.67 H/game.",
-          "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 6/12, 0.67 H/game.",
+          "Home split in logs: hit in 5/18, 0.39 H/game.",
+          "Similar-game sample: hit in 4/12, 0.50 H/game.",
           "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 2/10 recent games."
+          "2+ HRR in 1/10 recent games.",
+          "Strikeout context: 0.80 K/game last 10; 2+ K in 2/10."
         ],
-        "hotScore": 1.564,
-        "coldScore": 1.705
+        "hotScore": 1.159,
+        "coldScore": 1.755
       }
     ],
     "allPlayers": [
@@ -2581,7 +2588,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 3 • R vs R • 85°F • Wind 21",
+        "context": "Order 4 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -2682,257 +2689,257 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.5,
-            "avg": 0.58
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.25,
-            "avg": 0.92
+            "hitRate": 0.16666666666666666,
+            "avg": 0.67
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.17
+            "hitRate": 0.25,
+            "avg": 1.08
           }
         },
         "projections": {
-          "H": 0.84,
-          "TB": 1.43,
-          "HRR": 1.95,
-          "K": 0.74,
+          "H": 0.77,
+          "TB": 1.28,
+          "HRR": 1.81,
+          "K": 0.56,
           "HR": 0.11,
-          "BB": 0.48
+          "BB": 0.31
         },
         "notes": [
           "Hit in 9/10 recent games; 1.20 H/game in that span.",
           "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.20.",
           "Home split in logs: hit in 13/19, 0.84 H/game.",
           "Recent games vs OAK: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 6/12, 0.58 H/game.",
+          "Similar-game sample: hit in 6/12, 0.50 H/game.",
           "2+ total bases in 4/10 recent games."
         ],
         "hotScore": 3.967,
         "coldScore": 0.6
       },
       {
-        "playerId": 667670,
-        "player": "Brent Rooker",
+        "playerId": 675961,
+        "player": "Alika Williams",
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 5 • R vs L • 85°F • Wind 21",
+        "context": "Order 9 • R vs L • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "L",
         "metrics": {
           "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.5,
-            "avg": 0.7,
-            "lastValues": [
-              1.0,
-              0.0,
-              2.0,
-              1.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.8,
-            "avg": 1.0,
-            "lastValues": [
-              1.0,
-              0.0,
-              2.0,
-              1.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 1.1,
-            "lastValues": [
-              1.0,
-              0.0,
-              6.0,
-              1.0,
-              1.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.3,
-            "lastValues": [
-              2.0,
-              1.0,
-              4.0,
-              2.0,
-              1.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.9,
-            "avg": 1.4,
-            "lastValues": [
-              2.0,
-              1.0,
-              1.0,
-              1.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.4,
-            "lastValues": [
-              2.0,
-              1.0,
-              1.0,
-              1.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.15,
-            "avg": 0.15,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 21,
-            "hitRate": 0.5238095238095238,
-            "avg": 0.76
-          },
-          "opponentHits": {
-            "sample": 2,
-            "hitRate": 1.0,
-            "avg": 1.0
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.75,
-            "avg": 1.08
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.92
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 2.33
-          }
-        },
-        "projections": {
-          "H": 0.61,
-          "TB": 1.8,
-          "HRR": 1.42,
-          "K": 1.19,
-          "HR": 0.12,
-          "BB": 0.25
-        },
-        "notes": [
-          "Hit in 5/10 recent games; 0.70 H/game in that span.",
-          "Recent hit pace up: last 5 at 1.00 H/game vs last 10 at 0.70.",
-          "Away split in logs: hit in 11/21, 0.76 H/game.",
-          "Recent games vs CHC: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 9/12, 1.08 H/game.",
-          "2+ total bases in 2/10 recent games."
-        ],
-        "hotScore": 2.739,
-        "coldScore": 0.785
-      },
-      {
-        "playerId": 666126,
-        "player": "Carlos Cortes",
-        "team": "OAK",
-        "opponent": "CHC",
-        "location": "Away",
-        "context": "Order 1 • L vs L • 85°F • Wind 21",
-        "batSide": "L",
-        "pitchHand": "L",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.6,
-            "avg": 0.7,
-            "lastValues": [
-              1.0,
-              0.0,
-              1.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.6,
-            "avg": 0.6,
-            "lastValues": [
-              1.0,
-              0.0,
-              1.0,
-              0.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 1.1,
-            "lastValues": [
-              1.0,
-              0.0,
-              2.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.2,
-            "lastValues": [
-              1.0,
-              0.0,
-              2.0,
-              0.0,
-              2.0
-            ]
-          },
-          "kLast10": {
             "sample": 10,
             "hitRate": 0.2,
             "avg": 0.2,
             "lastValues": [
               0.0,
               0.0,
-              1.0,
               0.0,
-              0.0
+              0.0,
+              1.0
             ]
           },
-          "k2Last10": {
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.2,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
             "sample": 10,
             "hitRate": 0.0,
             "avg": 0.2,
             "lastValues": [
               0.0,
               0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.5,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              3.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 0.7,
+            "lastValues": [
               1.0,
+              1.0,
+              2.0,
+              0.0,
+              2.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.7,
+            "lastValues": [
+              1.0,
+              1.0,
+              2.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 11,
+            "hitRate": 0.0,
+            "avg": 0.0,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
               0.0,
               0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 7,
+            "hitRate": 0.2857142857142857,
+            "avg": 0.29
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarHits": {
+            "sample": 11,
+            "hitRate": 0.18181818181818182,
+            "avg": 0.18
+          },
+          "similarTB2": {
+            "sample": 11,
+            "hitRate": 0.0,
+            "avg": 0.18
+          },
+          "similarHRR2": {
+            "sample": 11,
+            "hitRate": 0.18181818181818182,
+            "avg": 0.45
+          }
+        },
+        "projections": {
+          "H": 0.6,
+          "TB": 0.83,
+          "HRR": 1.3,
+          "K": 0.9,
+          "HR": 0.04,
+          "BB": 0.15
+        },
+        "notes": [
+          "Hit in 2/10 recent games; 0.20 H/game in that span.",
+          "Away split in logs: hit in 2/7, 0.29 H/game.",
+          "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
+          "Similar-game sample: hit in 2/11, 0.18 H/game.",
+          "2+ total bases in 0/10 recent games.",
+          "2+ HRR in 2/10 recent games."
+        ],
+        "hotScore": 0.994,
+        "coldScore": 1.755
+      },
+      {
+        "playerId": 621020,
+        "player": "Dansby Swanson",
+        "team": "CHC",
+        "opponent": "OAK",
+        "location": "Home",
+        "context": "Order 9 • R vs R • 86°F • Wind 24",
+        "batSide": "R",
+        "pitchHand": "R",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.4,
+            "avg": 0.5,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.4,
+            "avg": 0.4,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.7,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.9,
+            "lastValues": [
+              2.0,
+              1.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.8,
+            "avg": 1.2,
+            "lastValues": [
+              1.0,
+              2.0,
+              1.0,
+              1.0,
+              2.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.4,
+            "avg": 1.2,
+            "lastValues": [
+              1.0,
+              2.0,
+              1.0,
+              1.0,
+              2.0
             ]
           },
           "hrLast20": {
@@ -2949,8 +2956,8 @@
           },
           "locationHits": {
             "sample": 20,
-            "hitRate": 0.85,
-            "avg": 1.3
+            "hitRate": 0.5,
+            "avg": 0.55
           },
           "opponentHits": {
             "sample": 2,
@@ -2959,119 +2966,119 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.9166666666666666,
-            "avg": 1.42
+            "hitRate": 0.5,
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 2.5
+            "hitRate": 0.25,
+            "avg": 1.08
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.5
+            "hitRate": 0.25,
+            "avg": 1.25
           }
         },
         "projections": {
-          "H": 0.56,
-          "TB": 1.4,
-          "HRR": 1.35,
-          "K": 0.37,
-          "HR": 0.05,
-          "BB": 0.27
+          "H": 0.58,
+          "TB": 1.01,
+          "HRR": 1.46,
+          "K": 1.2,
+          "HR": 0.08,
+          "BB": 0.49
         },
         "notes": [
-          "Hit in 6/10 recent games; 0.70 H/game in that span.",
-          "Away split in logs: hit in 17/20, 1.30 H/game.",
-          "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 11/12, 1.42 H/game.",
+          "Hit in 4/10 recent games; 0.50 H/game in that span.",
+          "Home split in logs: hit in 10/20, 0.55 H/game.",
+          "Recent games vs OAK: hit in 1/2, 0.50 H/game.",
+          "Similar-game sample: hit in 6/12, 0.50 H/game.",
           "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 4/10 recent games."
+          "2+ HRR in 2/10 recent games."
         ],
-        "hotScore": 3.333,
-        "coldScore": 0.18
+        "hotScore": 2.1,
+        "coldScore": 1.135
       },
       {
-        "playerId": 608348,
-        "player": "Carson Kelly",
-        "team": "CHC",
-        "opponent": "OAK",
-        "location": "Home",
-        "context": "Order 9 • R vs R • 85°F • Wind 21",
+        "playerId": 687231,
+        "player": "Darell Hernaiz",
+        "team": "OAK",
+        "opponent": "CHC",
+        "location": "Away",
+        "context": "Order 8 • R vs L • 86°F • Wind 24",
         "batSide": "R",
-        "pitchHand": "R",
+        "pitchHand": "L",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.6,
+            "hitRate": 0.5,
+            "avg": 0.7,
             "lastValues": [
               2.0,
-              2.0,
               0.0,
               0.0,
+              1.0,
               0.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
             "hitRate": 0.4,
-            "avg": 0.8,
+            "avg": 0.6,
             "lastValues": [
               2.0,
-              2.0,
               0.0,
               0.0,
+              1.0,
               0.0
             ]
           },
           "tb2Last10": {
             "sample": 10,
             "hitRate": 0.3,
-            "avg": 0.6,
+            "avg": 0.9,
             "lastValues": [
               2.0,
+              0.0,
+              0.0,
               2.0,
-              0.0,
-              0.0,
               0.0
             ]
           },
           "hrr2Last10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.8,
+            "hitRate": 0.4,
+            "avg": 0.9,
             "lastValues": [
               2.0,
-              3.0,
               0.0,
               0.0,
+              2.0,
               0.0
             ]
           },
           "kLast10": {
             "sample": 10,
             "hitRate": 0.5,
-            "avg": 0.6,
+            "avg": 0.5,
             "lastValues": [
               0.0,
-              1.0,
               0.0,
               1.0,
-              0.0
+              1.0,
+              1.0
             ]
           },
           "k2Last10": {
             "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.6,
+            "hitRate": 0.0,
+            "avg": 0.5,
             "lastValues": [
               0.0,
-              1.0,
               0.0,
               1.0,
-              0.0
+              1.0,
+              1.0
             ]
           },
           "hrLast20": {
@@ -3087,9 +3094,9 @@
             ]
           },
           "locationHits": {
-            "sample": 20,
-            "hitRate": 0.55,
-            "avg": 0.9
+            "sample": 17,
+            "hitRate": 0.35294117647058826,
+            "avg": 0.41
           },
           "opponentHits": {
             "sample": 1,
@@ -3098,177 +3105,38 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 0.83
+            "hitRate": 0.3333333333333333,
+            "avg": 0.42
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 0.83
+            "hitRate": 0.08333333333333333,
+            "avg": 0.42
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.5
+            "hitRate": 0.16666666666666666,
+            "avg": 0.92
           }
         },
         "projections": {
-          "H": 0.5,
-          "TB": 0.85,
-          "HRR": 1.17,
-          "K": 0.61,
-          "HR": 0.02,
-          "BB": 0.32
+          "H": 0.65,
+          "TB": 1.17,
+          "HRR": 1.44,
+          "K": 0.56,
+          "HR": 0.04,
+          "BB": 0.23
         },
         "notes": [
-          "Hit in 3/10 recent games; 0.60 H/game in that span.",
-          "Home split in logs: hit in 11/20, 0.90 H/game.",
-          "Similar-game sample: hit in 6/12, 0.83 H/game.",
+          "Hit in 5/10 recent games; 0.70 H/game in that span.",
+          "Away split in logs: hit in 6/17, 0.41 H/game.",
+          "Similar-game sample: hit in 4/12, 0.42 H/game.",
           "2+ total bases in 3/10 recent games.",
-          "2+ HRR in 3/10 recent games.",
-          "Strikeout context: 0.60 K/game last 10; 2+ K in 1/10."
+          "2+ HRR in 4/10 recent games.",
+          "Strikeout context: 0.50 K/game last 10; 2+ K in 0/10."
         ],
-        "hotScore": 2.1,
-        "coldScore": 0.975
-      },
-      {
-        "playerId": 687515,
-        "player": "Colby Thomas",
-        "team": "OAK",
-        "opponent": "CHC",
-        "location": "Away",
-        "context": "Order 3 • R vs L • 85°F • Wind 21",
-        "batSide": "R",
-        "pitchHand": "L",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.2,
-            "avg": 0.2,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.6,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              4.0
-            ]
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.8,
-            "lastValues": [
-              0.0,
-              0.0,
-              1.0,
-              0.0,
-              3.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 0.5,
-            "lastValues": [
-              0.0,
-              0.0,
-              2.0,
-              1.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.5,
-            "lastValues": [
-              0.0,
-              0.0,
-              2.0,
-              1.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          },
-          "locationHits": {
-            "sample": 9,
-            "hitRate": 0.5555555555555556,
-            "avg": 0.67
-          },
-          "opponentHits": {
-            "sample": 2,
-            "hitRate": 0.5,
-            "avg": 0.5
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 0.67
-          },
-          "similarTB2": {
-            "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.08
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.42
-          }
-        },
-        "projections": {
-          "H": 0.71,
-          "TB": 1.0,
-          "HRR": 1.4,
-          "K": 0.69,
-          "HR": 0.03,
-          "BB": 0.19
-        },
-        "notes": [
-          "Hit in 2/10 recent games; 0.20 H/game in that span.",
-          "Away split in logs: hit in 5/9, 0.67 H/game.",
-          "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 6/12, 0.67 H/game.",
-          "2+ total bases in 2/10 recent games.",
-          "2+ HRR in 2/10 recent games."
-        ],
-        "hotScore": 1.564,
-        "coldScore": 1.705
+        "hotScore": 2.319,
+        "coldScore": 0.305
       },
       {
         "playerId": 703607,
@@ -3276,7 +3144,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 8 • R vs L • 85°F • Wind 21",
+        "context": "Order 1 • R vs L • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "L",
         "metrics": {
@@ -3376,37 +3244,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 0.83
+            "hitRate": 0.4166666666666667,
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.0
+            "hitRate": 0.25,
+            "avg": 0.67
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.25
+            "hitRate": 0.25,
+            "avg": 1.0
           }
         },
         "projections": {
-          "H": 0.49,
-          "TB": 1.21,
-          "HRR": 0.99,
-          "K": 0.59,
-          "HR": 0.02,
-          "BB": 0.11
+          "H": 0.7,
+          "TB": 1.23,
+          "HRR": 1.6,
+          "K": 0.63,
+          "HR": 0.06,
+          "BB": 0.12
         },
         "notes": [
           "Hit in 5/10 recent games; 0.70 H/game in that span.",
           "Away split in logs: hit in 5/9, 0.67 H/game.",
           "Recent games vs CHC: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 7/12, 0.83 H/game.",
+          "Similar-game sample: hit in 5/12, 0.50 H/game.",
           "2+ total bases in 2/10 recent games.",
           "2+ HRR in 2/10 recent games."
         ],
-        "hotScore": 2.531,
+        "hotScore": 2.398,
         "coldScore": 0.405
       },
       {
@@ -3415,7 +3283,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 5 • B vs R • 85°F • Wind 21",
+        "context": "Order 5 • B vs R • 86°F • Wind 24",
         "batSide": "B",
         "pitchHand": "R",
         "metrics": {
@@ -3530,12 +3398,12 @@
           }
         },
         "projections": {
-          "H": 0.59,
-          "TB": 1.92,
-          "HRR": 1.53,
-          "K": 1.33,
-          "HR": 0.1,
-          "BB": 0.54
+          "H": 0.79,
+          "TB": 1.93,
+          "HRR": 1.91,
+          "K": 1.31,
+          "HR": 0.25,
+          "BB": 0.49
         },
         "notes": [
           "Hit in 7/10 recent games; 1.30 H/game in that span.",
@@ -3554,7 +3422,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 9 • B vs L • 85°F • Wind 21",
+        "context": "Order 6 • B vs L • 86°F • Wind 24",
         "batSide": "B",
         "pitchHand": "L",
         "metrics": {
@@ -3669,12 +3537,12 @@
           }
         },
         "projections": {
-          "H": 0.55,
-          "TB": 1.54,
-          "HRR": 1.29,
-          "K": 0.76,
-          "HR": 0.06,
-          "BB": 0.26
+          "H": 0.77,
+          "TB": 1.57,
+          "HRR": 1.65,
+          "K": 0.74,
+          "HR": 0.23,
+          "BB": 0.28
         },
         "notes": [
           "Hit in 4/10 recent games; 0.50 H/game in that span.",
@@ -3693,7 +3561,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 7 • R vs R • 85°F • Wind 21",
+        "context": "Order 7 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -3764,10 +3632,16 @@
             ]
           },
           "hrLast20": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
+            "sample": 8,
+            "hitRate": 0.0,
+            "avg": 0.0,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
           },
           "locationHits": {
             "sample": 4,
@@ -3796,10 +3670,11 @@
           }
         },
         "projections": {
-          "H": 0.34,
-          "HRR": 0.85,
-          "K": 0.63,
-          "BB": 0.16
+          "H": 0.48,
+          "HRR": 1.24,
+          "K": 0.55,
+          "HR": 0.01,
+          "BB": 0.17
         },
         "notes": [
           "Hit in 1/8 recent games; 0.12 H/game in that span.",
@@ -3817,7 +3692,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 7 • L vs L • 85°F • Wind 21",
+        "context": "Order 4 • L vs L • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -3928,16 +3803,16 @@
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.16666666666666666,
-            "avg": 0.67
+            "avg": 0.75
           }
         },
         "projections": {
-          "H": 0.39,
-          "TB": 0.83,
-          "HRR": 0.94,
-          "K": 0.6,
-          "HR": 0.03,
-          "BB": 0.18
+          "H": 0.56,
+          "TB": 0.98,
+          "HRR": 1.17,
+          "K": 0.44,
+          "HR": 0.11,
+          "BB": 0.14
         },
         "notes": [
           "Hit in 1/10 recent games; 0.10 H/game in that span.",
@@ -3956,7 +3831,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 4 • L vs R • 85°F • Wind 21",
+        "context": "Order 3 • L vs R • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4057,33 +3932,33 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.6666666666666666,
-            "avg": 1.08
+            "avg": 0.92
           },
           "similarTB2": {
             "sample": 12,
             "hitRate": 0.4166666666666667,
-            "avg": 2.17
+            "avg": 1.83
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.0
+            "hitRate": 0.4166666666666667,
+            "avg": 1.58
           }
         },
         "projections": {
-          "H": 0.57,
-          "TB": 1.33,
-          "HRR": 1.47,
-          "K": 1.14,
-          "HR": 0.05,
-          "BB": 0.71
+          "H": 0.76,
+          "TB": 1.41,
+          "HRR": 1.85,
+          "K": 1.23,
+          "HR": 0.11,
+          "BB": 0.55
         },
         "notes": [
           "Hit in 9/10 recent games; 1.30 H/game in that span.",
           "Recent hit pace up: last 5 at 1.60 H/game vs last 10 at 1.30.",
           "Home split in logs: hit in 13/18, 1.17 H/game.",
           "Recent games vs OAK: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 8/12, 1.08 H/game.",
+          "Similar-game sample: hit in 8/12, 0.92 H/game.",
           "2+ total bases in 5/10 recent games."
         ],
         "hotScore": 4.341,
@@ -4095,7 +3970,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 8 • L vs R • 85°F • Wind 21",
+        "context": "Order 2 • L vs R • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4195,37 +4070,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.16666666666666666,
-            "avg": 0.33
+            "hitRate": 0.3333333333333333,
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.08333333333333333,
-            "avg": 0.67
+            "hitRate": 0.3333333333333333,
+            "avg": 1.25
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.16666666666666666,
-            "avg": 0.83
+            "hitRate": 0.25,
+            "avg": 1.17
           }
         },
         "projections": {
-          "H": 0.43,
-          "TB": 1.0,
-          "HRR": 1.09,
-          "K": 0.94,
-          "HR": 0.05,
-          "BB": 0.43
+          "H": 0.63,
+          "TB": 1.23,
+          "HRR": 1.68,
+          "K": 0.89,
+          "HR": 0.17,
+          "BB": 0.42
         },
         "notes": [
           "Hit in 2/10 recent games; 0.20 H/game in that span.",
           "Home split in logs: hit in 5/18, 0.39 H/game.",
-          "Similar-game sample: hit in 2/12, 0.33 H/game.",
+          "Similar-game sample: hit in 4/12, 0.50 H/game.",
           "2+ total bases in 2/10 recent games.",
           "2+ HRR in 1/10 recent games.",
           "Strikeout context: 0.80 K/game last 10; 2+ K in 2/10."
         ],
-        "hotScore": 1.026,
+        "hotScore": 1.159,
         "coldScore": 1.755
       },
       {
@@ -4234,7 +4109,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 2 • L vs L • 85°F • Wind 21",
+        "context": "Order 2 • L vs L • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -4349,12 +4224,12 @@
           }
         },
         "projections": {
-          "H": 0.81,
-          "TB": 2.81,
-          "HRR": 1.99,
-          "K": 1.24,
-          "HR": 0.26,
-          "BB": 0.58
+          "H": 1.08,
+          "TB": 2.87,
+          "HRR": 2.38,
+          "K": 1.31,
+          "HR": 0.39,
+          "BB": 0.74
         },
         "notes": [
           "Hit in 7/10 recent games; 1.20 H/game in that span.",
@@ -4373,7 +4248,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 1 • R vs R • 85°F • Wind 21",
+        "context": "Order 6 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4473,37 +4348,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.75,
-            "avg": 0.92
+            "hitRate": 0.6666666666666666,
+            "avg": 0.75
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.33
+            "hitRate": 0.3333333333333333,
+            "avg": 1.0
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 1.75
+            "hitRate": 0.5,
+            "avg": 1.5
           }
         },
         "projections": {
-          "H": 0.63,
-          "TB": 1.01,
-          "HRR": 1.57,
-          "K": 0.24,
-          "HR": 0.02,
-          "BB": 0.57
+          "H": 0.73,
+          "TB": 1.0,
+          "HRR": 1.76,
+          "K": 0.21,
+          "HR": 0.03,
+          "BB": 0.4
         },
         "notes": [
           "Hit in 8/10 recent games; 1.00 H/game in that span.",
           "Home split in logs: hit in 13/18, 0.89 H/game.",
           "Recent games vs OAK: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 9/12, 0.92 H/game.",
+          "Similar-game sample: hit in 8/12, 0.75 H/game.",
           "2+ total bases in 3/10 recent games.",
           "2+ HRR in 5/10 recent games."
         ],
-        "hotScore": 3.778,
+        "hotScore": 3.711,
         "coldScore": 0.0
       },
       {
@@ -4512,7 +4387,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 2 • L vs R • 85°F • Wind 21",
+        "context": "Order 1 • L vs R • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4612,37 +4487,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 1.0
+            "hitRate": 0.8333333333333334,
+            "avg": 1.17
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.92
+            "hitRate": 0.5,
+            "avg": 2.17
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.17
+            "hitRate": 0.6666666666666666,
+            "avg": 2.5
           }
         },
         "projections": {
-          "H": 0.64,
-          "TB": 1.61,
-          "HRR": 1.61,
-          "K": 0.97,
-          "HR": 0.07,
-          "BB": 0.46
+          "H": 0.77,
+          "TB": 1.65,
+          "HRR": 1.88,
+          "K": 1.22,
+          "HR": 0.24,
+          "BB": 0.4
         },
         "notes": [
           "Hit in 8/10 recent games; 1.20 H/game in that span.",
           "Recent hit pace up: last 5 at 1.80 H/game vs last 10 at 1.20.",
           "Home split in logs: hit in 13/18, 1.00 H/game.",
           "Recent games vs OAK: hit in 2/2, 1.50 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
+          "Similar-game sample: hit in 10/12, 1.17 H/game.",
           "2+ total bases in 5/10 recent games."
         ],
-        "hotScore": 4.031,
+        "hotScore": 4.164,
         "coldScore": 0.2
       },
       {
@@ -4651,7 +4526,7 @@
         "team": "CHC",
         "opponent": "OAK",
         "location": "Home",
-        "context": "Order 6 • R vs R • 85°F • Wind 21",
+        "context": "Order 8 • R vs R • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -4766,12 +4641,12 @@
           }
         },
         "projections": {
-          "H": 0.57,
-          "TB": 1.26,
-          "HRR": 1.37,
-          "K": 1.17,
-          "HR": 0.04,
-          "BB": 0.41
+          "H": 0.61,
+          "TB": 1.13,
+          "HRR": 1.38,
+          "K": 0.83,
+          "HR": 0.12,
+          "BB": 0.18
         },
         "notes": [
           "Hit in 5/10 recent games; 0.80 H/game in that span.",
@@ -4790,7 +4665,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 4 • R vs L • 85°F • Wind 21",
+        "context": "Order 3 • R vs L • 86°F • Wind 24",
         "batSide": "R",
         "pitchHand": "L",
         "metrics": {
@@ -4905,12 +4780,12 @@
           }
         },
         "projections": {
-          "H": 0.69,
-          "TB": 1.92,
-          "HRR": 1.79,
-          "K": 0.72,
-          "HR": 0.17,
-          "BB": 0.28
+          "H": 0.99,
+          "TB": 2.29,
+          "HRR": 2.31,
+          "K": 0.7,
+          "HR": 0.37,
+          "BB": 0.29
         },
         "notes": [
           "Hit in 5/10 recent games; 0.50 H/game in that span.",
@@ -4929,7 +4804,7 @@
         "team": "OAK",
         "opponent": "CHC",
         "location": "Away",
-        "context": "Order 6 • L vs L • 85°F • Wind 21",
+        "context": "Order 5 • L vs L • 86°F • Wind 24",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -5044,12 +4919,12 @@
           }
         },
         "projections": {
-          "H": 0.52,
-          "TB": 1.84,
-          "HRR": 1.21,
-          "K": 0.54,
-          "HR": 0.1,
-          "BB": 0.42
+          "H": 0.74,
+          "TB": 1.99,
+          "HRR": 1.77,
+          "K": 0.62,
+          "HR": 0.34,
+          "BB": 0.48
         },
         "notes": [
           "Hit in 9/10 recent games; 1.40 H/game in that span.",
@@ -5061,11 +4936,150 @@
         ],
         "hotScore": 4.269,
         "coldScore": 0.0
+      },
+      {
+        "playerId": 680869,
+        "player": "Zack Gelof",
+        "team": "OAK",
+        "opponent": "CHC",
+        "location": "Away",
+        "context": "Order 7 • R vs L • 86°F • Wind 24",
+        "batSide": "R",
+        "pitchHand": "L",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.8,
+            "avg": 1.2,
+            "lastValues": [
+              2.0,
+              1.0,
+              2.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 1.0,
+            "avg": 1.4,
+            "lastValues": [
+              2.0,
+              1.0,
+              2.0,
+              1.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.4,
+            "lastValues": [
+              2.0,
+              1.0,
+              2.0,
+              1.0,
+              2.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.7,
+            "avg": 1.7,
+            "lastValues": [
+              3.0,
+              2.0,
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.7,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              1.0,
+              2.0,
+              2.0,
+              0.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              1.0,
+              2.0,
+              2.0,
+              0.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.15,
+            "avg": 0.15,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 21,
+            "hitRate": 0.6190476190476191,
+            "avg": 0.81
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 1.0,
+            "avg": 1.0
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.6666666666666666,
+            "avg": 0.83
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 1.25
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.5833333333333334,
+            "avg": 2.0
+          }
+        },
+        "projections": {
+          "H": 0.85,
+          "TB": 1.75,
+          "HRR": 1.84,
+          "K": 1.13,
+          "HR": 0.15,
+          "BB": 0.24
+        },
+        "notes": [
+          "Hit in 8/10 recent games; 1.20 H/game in that span.",
+          "Away split in logs: hit in 13/21, 0.81 H/game.",
+          "Recent games vs CHC: hit in 2/2, 1.00 H/game.",
+          "Similar-game sample: hit in 8/12, 0.83 H/game.",
+          "2+ total bases in 5/10 recent games.",
+          "2+ HRR in 7/10 recent games."
+        ],
+        "hotScore": 3.949,
+        "coldScore": 0.46
       }
     ]
   },
   "dataCoverage": {
-    "propsAnalyzerEntries": 308,
+    "propsAnalyzerEntries": 321,
     "firstInningHistoryFound": true,
     "rawBatterSplitsFound": false
   },

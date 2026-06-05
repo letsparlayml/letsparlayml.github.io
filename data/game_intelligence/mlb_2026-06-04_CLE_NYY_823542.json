@@ -1,6 +1,6 @@
 {
   "schemaVersion": "2.9",
-  "generatedAt": "2026-06-04T12:28:09.758809+00:00",
+  "generatedAt": "2026-06-05T12:43:55.224075+00:00",
   "gameId": "mlb-823542",
   "gamePk": 823542,
   "league": "MLB",
@@ -8,54 +8,23 @@
   "awayTeam": "CLE",
   "homeTeam": "NYY",
   "headline": "CLE @ NYY matchup research",
-  "quickWriteup": "The current model score is CLE 3.82 at NYY 4.36, with a projected total of 8.18. Movement read: The side movement strengthened toward CLE: CLE moved +1.50 runs while NYY moved +0.49, changing the projected margin by +1.01 runs. The projected total climbed +2.00, which points to more offensive expectation than the earliest saved read. NRFI probability dropped -24.2%, so the first-inning read became more YRFI/early-scoring friendly. Pitching context: Carlos Rodón has the better recent run-prevention profile in the available outing logs at 1.8 ER over the last 4 outings. Batter research is strongest for Ben Rice, Cody Bellinger, Travis Bazzana, based on recent hit rates, matching location/opponent samples, or similar-game production. The cold/risk list flags Petey Halpin because the recent hit profile or strikeout trend is weaker than the projection alone would show.",
+  "quickWriteup": "The current model score is CLE 3.81 at NYY 4.27, with a projected total of 8.08. Movement read: The side movement strengthened toward CLE: CLE moved +1.50 runs while NYY moved +0.41, changing the projected margin by +1.09 runs. The projected total climbed +1.90, which points to more offensive expectation than the earliest saved read. NRFI probability dropped -23.9%, so the first-inning read became more YRFI/early-scoring friendly. Pitching context: Carlos Rodón has the better recent run-prevention profile in the available outing logs at 1.8 ER over the last 4 outings. Batter research is strongest for Ben Rice, Cody Bellinger, Travis Bazzana, based on recent hit rates, matching location/opponent samples, or similar-game production. The cold/risk list flags J.C. Escarra, Austin Hedges because the recent hit profile or strikeout trend is weaker than the projection alone would show.",
   "modelForm": {
     "CLE": {
       "team": "CLE",
       "sample": 5,
-      "availableSettledGames": 47,
+      "availableSettledGames": 48,
       "displayLimit": 5,
-      "sideCorrect": 0,
-      "sideAccuracy": 0.0,
-      "avgTeamRunError": 2.3,
-      "withinOneFiveCount": 2,
-      "withinOneFiveRate": 0.4,
-      "bigMissCount": 3,
-      "teamOverCount": 3,
-      "teamUnderCount": 1,
+      "sideCorrect": 1,
+      "sideAccuracy": 0.2,
+      "avgTeamRunError": 2.8,
+      "withinOneFiveCount": 1,
+      "withinOneFiveRate": 0.2,
+      "bigMissCount": 4,
+      "teamOverCount": 2,
+      "teamUnderCount": 2,
       "label": "",
       "games": [
-        {
-          "date": "2026-05-29",
-          "matchup": "BOS @ CLE",
-          "awayTeam": "BOS",
-          "homeTeam": "CLE",
-          "predAway": 3.8,
-          "predHome": 3.3,
-          "actualAway": 3.0,
-          "actualHome": 4.0,
-          "predFor": 3.3,
-          "predAgainst": 3.8,
-          "actualFor": 4.0,
-          "actualAgainst": 3.0,
-          "teamError": 0.7000000000000002,
-          "opponentError": 0.7999999999999998,
-          "scoreboardError": 1.5,
-          "projectedTotal": 7.1,
-          "actualTotal": 7.0,
-          "totalError": 0.1,
-          "teamDiff": 0.7,
-          "opponentDiff": -0.8,
-          "teamDiffText": "CLE scored 0.7 more runs than projected.",
-          "opponentDiffText": "CLE allowed 0.8 fewer runs than projected.",
-          "scoreboardText": "Full scoreboard miss: 1.5 total runs across both teams.",
-          "totalText": "Projected total missed by 0.1 runs.",
-          "withinOneFive": true,
-          "bigMiss": false,
-          "correctSide": false,
-          "scoreError": 1.5,
-          "overUnderTeam": "over"
-        },
         {
           "date": "2026-05-30",
           "matchup": "BOS @ CLE",
@@ -179,6 +148,37 @@
           "correctSide": false,
           "scoreError": 1.9,
           "overUnderTeam": "over"
+        },
+        {
+          "date": "2026-06-04",
+          "matchup": "CLE @ NYY",
+          "awayTeam": "CLE",
+          "homeTeam": "NYY",
+          "predAway": 3.8,
+          "predHome": 4.4,
+          "actualAway": 1.0,
+          "actualHome": 2.0,
+          "predFor": 3.8,
+          "predAgainst": 4.4,
+          "actualFor": 1.0,
+          "actualAgainst": 2.0,
+          "teamError": 2.8,
+          "opponentError": 2.4000000000000004,
+          "scoreboardError": 5.2,
+          "projectedTotal": 8.2,
+          "actualTotal": 3.0,
+          "totalError": 5.2,
+          "teamDiff": -2.8,
+          "opponentDiff": -2.4,
+          "teamDiffText": "CLE scored 2.8 fewer runs than projected.",
+          "opponentDiffText": "CLE allowed 2.4 fewer runs than projected.",
+          "scoreboardText": "Full scoreboard miss: 5.2 total runs across both teams.",
+          "totalText": "Projected total missed by 5.2 runs.",
+          "withinOneFive": false,
+          "bigMiss": true,
+          "correctSide": true,
+          "scoreError": 5.2,
+          "overUnderTeam": "under"
         }
       ],
       "coverageNote": "Stats use the same 5 settled games shown below. Model and final scores stay in away/home order; the explanation is specific to CLE."
@@ -186,49 +186,18 @@
     "NYY": {
       "team": "NYY",
       "sample": 5,
-      "availableSettledGames": 46,
+      "availableSettledGames": 47,
       "displayLimit": 5,
       "sideCorrect": 2,
       "sideAccuracy": 0.4,
-      "avgTeamRunError": 2.5,
+      "avgTeamRunError": 2.3,
       "withinOneFiveCount": 3,
       "withinOneFiveRate": 0.6,
       "bigMissCount": 2,
-      "teamOverCount": 2,
-      "teamUnderCount": 2,
+      "teamOverCount": 1,
+      "teamUnderCount": 3,
       "label": "",
       "games": [
-        {
-          "date": "2026-05-29",
-          "matchup": "NYY @ OAK",
-          "awayTeam": "NYY",
-          "homeTeam": "OAK",
-          "predAway": 4.4,
-          "predHome": 2.7,
-          "actualAway": 8.0,
-          "actualHome": 2.0,
-          "predFor": 4.4,
-          "predAgainst": 2.7,
-          "actualFor": 8.0,
-          "actualAgainst": 2.0,
-          "teamError": 3.5999999999999996,
-          "opponentError": 0.7000000000000002,
-          "scoreboardError": 4.3,
-          "projectedTotal": 7.1,
-          "actualTotal": 10.0,
-          "totalError": 2.9,
-          "teamDiff": 3.6,
-          "opponentDiff": -0.7,
-          "teamDiffText": "NYY scored 3.6 more runs than projected.",
-          "opponentDiffText": "NYY allowed 0.7 fewer runs than projected.",
-          "scoreboardText": "Full scoreboard miss: 4.3 total runs across both teams.",
-          "totalText": "Projected total missed by 2.9 runs.",
-          "withinOneFive": false,
-          "bigMiss": true,
-          "correctSide": true,
-          "scoreError": 4.3,
-          "overUnderTeam": "over"
-        },
         {
           "date": "2026-05-30",
           "matchup": "NYY @ OAK",
@@ -352,6 +321,37 @@
           "correctSide": false,
           "scoreError": 1.9,
           "overUnderTeam": "near"
+        },
+        {
+          "date": "2026-06-04",
+          "matchup": "CLE @ NYY",
+          "awayTeam": "CLE",
+          "homeTeam": "NYY",
+          "predAway": 3.8,
+          "predHome": 4.4,
+          "actualAway": 1.0,
+          "actualHome": 2.0,
+          "predFor": 4.4,
+          "predAgainst": 3.8,
+          "actualFor": 2.0,
+          "actualAgainst": 1.0,
+          "teamError": 2.4000000000000004,
+          "opponentError": 2.8,
+          "scoreboardError": 5.2,
+          "projectedTotal": 8.2,
+          "actualTotal": 3.0,
+          "totalError": 5.2,
+          "teamDiff": -2.4,
+          "opponentDiff": -2.8,
+          "teamDiffText": "NYY scored 2.4 fewer runs than projected.",
+          "opponentDiffText": "NYY allowed 2.8 fewer runs than projected.",
+          "scoreboardText": "Full scoreboard miss: 5.2 total runs across both teams.",
+          "totalText": "Projected total missed by 5.2 runs.",
+          "withinOneFive": false,
+          "bigMiss": true,
+          "correctSide": true,
+          "scoreError": 5.2,
+          "overUnderTeam": "under"
         }
       ],
       "coverageNote": "Stats use the same 5 settled games shown below. Model and final scores stay in away/home order; the explanation is specific to NYY."
@@ -363,31 +363,31 @@
     "title": "Week-to-game movement read",
     "description": "Interprets the same saved movement records shown in the main prediction movement chart.",
     "firstDate": "2026-05-28",
-    "latestDate": "2026-06-04",
+    "latestDate": "2026-06-05",
     "movements": {
-      "awayScoreDelta": 1.505,
-      "homeScoreDelta": 0.494,
-      "totalDelta": 1.999,
-      "modelSpreadDelta": -1.01,
-      "homeWinProbDelta": -0.139,
-      "awayWinProbDelta": 0.139,
-      "favoriteWinProbDelta": -0.139,
-      "favoriteCoverProbDelta": -0.108,
-      "nrfiProbDelta": -0.242,
+      "awayScoreDelta": 1.496,
+      "homeScoreDelta": 0.408,
+      "totalDelta": 1.904,
+      "modelSpreadDelta": -1.088,
+      "homeWinProbDelta": -0.145,
+      "awayWinProbDelta": 0.145,
+      "favoriteWinProbDelta": -0.145,
+      "favoriteCoverProbDelta": -0.115,
+      "nrfiProbDelta": -0.239,
       "yrfiProbDelta": null,
-      "marketOverProbDelta": 0.198
+      "marketOverProbDelta": 0.193
     },
     "movementToward": "CLE",
-    "awayMarginDelta": 1.01,
-    "analysis": "The side movement strengthened toward CLE: CLE moved +1.50 runs while NYY moved +0.49, changing the projected margin by +1.01 runs. The projected total climbed +2.00, which points to more offensive expectation than the earliest saved read. NRFI probability dropped -24.2%, so the first-inning read became more YRFI/early-scoring friendly.",
+    "awayMarginDelta": 1.088,
+    "analysis": "The side movement strengthened toward CLE: CLE moved +1.50 runs while NYY moved +0.41, changing the projected margin by +1.09 runs. The projected total climbed +1.90, which points to more offensive expectation than the earliest saved read. NRFI probability dropped -23.9%, so the first-inning read became more YRFI/early-scoring friendly.",
     "bullets": [
-      "CLE run projection moved +1.50, from 2.32 to 3.82.",
-      "NYY run projection moved +0.49, from 3.86 to 4.36.",
-      "Model spread moved from NYY -1.55 to NYY -0.53.",
-      "Projected total moved +2.00, from 6.18 to 8.18.",
-      "Win probability for the listed model favorite moved -13.9%.",
-      "Cover probability moved -10.8% across the saved movement records.",
-      "NRFI probability moved -24.2%."
+      "CLE run projection moved +1.50, from 2.32 to 3.81.",
+      "NYY run projection moved +0.41, from 3.86 to 4.27.",
+      "Model spread moved from NYY -1.55 to NYY -0.46.",
+      "Projected total moved +1.90, from 6.18 to 8.08.",
+      "Win probability for the listed model favorite moved -14.5%.",
+      "Cover probability moved -11.5% across the saved movement records.",
+      "NRFI probability moved -23.9%."
     ],
     "snapshots": [
       {
@@ -565,32 +565,32 @@
         "note": "Snapshot"
       },
       {
-        "date": "2026-06-04",
-        "predictedAway": 3.820925276899232,
-        "predictedHome": 4.355601125730055,
-        "modelHomeSpread": 0.534675848830823,
+        "date": "2026-06-05",
+        "predictedAway": 3.81209393734587,
+        "predictedHome": 4.269137166381777,
+        "modelHomeSpread": 0.4570432290359072,
         "marketSpread": 1.5,
-        "modelTotal": 8.176526402629287,
+        "modelTotal": 8.081231103727648,
         "marketTotal": 8.5,
-        "nrfiProb": 0.4119701687535554,
-        "homeWinProb": 0.5607,
-        "awayWinProb": 0.4393,
+        "nrfiProb": 0.4143523319448118,
+        "homeWinProb": 0.5542,
+        "awayWinProb": 0.4458,
         "favoriteWinLabel": "NYY win",
-        "favoriteWinProb": 0.5607,
+        "favoriteWinProb": 0.5542,
         "favoriteCoverLabel": "NYY -1.5",
-        "favoriteCoverProb": 0.369,
+        "favoriteCoverProb": 0.3628,
         "marketCoverLabel": "NYY -1.5",
-        "marketCoverProb": 0.369,
+        "marketCoverProb": 0.3628,
         "marketTotalLabel": "Over 8.5",
-        "marketOverProb": 0.416,
-        "marketUnderProb": 0.5840000000000001,
+        "marketOverProb": 0.4112,
+        "marketUnderProb": 0.5888,
         "fallbackTotalLabel": "Over 8.5",
-        "fallbackOverProb": 0.416,
-        "fallbackUnderProb": 0.5840000000000001,
-        "homeMinus1p5Prob": 0.369,
-        "awayMinus1p5Prob": 0.26,
-        "over7p5Prob": 0.5242,
-        "over8p5Prob": 0.416,
+        "fallbackOverProb": 0.4112,
+        "fallbackUnderProb": 0.5888,
+        "homeMinus1p5Prob": 0.3628,
+        "awayMinus1p5Prob": 0.2686,
+        "over7p5Prob": 0.5114,
+        "over8p5Prob": 0.4112,
         "note": "Snapshot"
       }
     ]
@@ -706,11 +706,11 @@
       "sameOpponentStarts": [],
       "projections": {
         "IP": 4.2,
-        "K": 4.96,
-        "HA": 3.91,
-        "ER": 2.81,
-        "BB": 2.16,
-        "OUTS": 14.22
+        "K": 4.93,
+        "HA": 3.94,
+        "ER": 2.78,
+        "BB": 2.13,
+        "OUTS": 14.2
       },
       "flags": [
         "First-inning run allowed in 50% of the last-4 matched recent-start sample.",
@@ -844,11 +844,11 @@
       "sameOpponentStarts": [],
       "projections": {
         "IP": 5.0,
-        "K": 3.83,
-        "HA": 5.57,
-        "ER": 2.75,
-        "BB": 1.65,
-        "OUTS": 15.66
+        "K": 3.78,
+        "HA": 5.58,
+        "ER": 2.77,
+        "BB": 1.68,
+        "OUTS": 15.72
       },
       "flags": [
         "Allowed 6+ hits in 3/5 recent starts.",
@@ -859,8 +859,8 @@
     }
   ],
   "firstInningOutlook": {
-    "nrfiProb": 0.4119701687535554,
-    "yrfiProb": 0.5880298312464446,
+    "nrfiProb": 0.4143523319448118,
+    "yrfiProb": 0.5856476680551882,
     "pitcherSamples": [
       {
         "player": "Carlos Rodón",
@@ -903,7 +903,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 1 • L vs R • 89°F • Wind 8",
+        "context": "Order 2 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1008,22 +1008,22 @@
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.17
+            "hitRate": 0.4166666666666667,
+            "avg": 1.92
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.25
+            "hitRate": 0.5,
+            "avg": 2.0
           }
         },
         "projections": {
-          "H": 0.66,
-          "TB": 2.32,
-          "HRR": 1.77,
-          "K": 0.78,
-          "HR": 0.16,
-          "BB": 0.4
+          "H": 0.97,
+          "TB": 2.51,
+          "HRR": 2.27,
+          "K": 1.01,
+          "HR": 0.27,
+          "BB": 0.38
         },
         "notes": [
           "Hit in 8/10 recent games; 1.50 H/game in that span.",
@@ -1042,7 +1042,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 4 • L vs R • 89°F • Wind 8",
+        "context": "Order 4 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1157,12 +1157,12 @@
           }
         },
         "projections": {
-          "H": 0.68,
-          "TB": 1.59,
-          "HRR": 1.78,
-          "K": 0.51,
-          "HR": 0.07,
-          "BB": 0.54
+          "H": 0.77,
+          "TB": 1.34,
+          "HRR": 1.69,
+          "K": 0.37,
+          "HR": 0.14,
+          "BB": 0.4
         },
         "notes": [
           "Hit in 7/10 recent games; 1.10 H/game in that span.",
@@ -1181,7 +1181,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 2 • L vs L • 89°F • Wind 8",
+        "context": "Order 4 • L vs L • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -1281,37 +1281,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 1.0
+            "hitRate": 0.75,
+            "avg": 1.17
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.67
+            "hitRate": 0.5,
+            "avg": 1.83
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.0
+            "hitRate": 0.5833333333333334,
+            "avg": 2.17
           }
         },
         "projections": {
-          "H": 0.68,
-          "TB": 1.42,
-          "HRR": 1.54,
-          "K": 1.09,
-          "HR": 0.04,
-          "BB": 0.31
+          "H": 0.94,
+          "TB": 1.46,
+          "HRR": 1.91,
+          "K": 0.96,
+          "HR": 0.07,
+          "BB": 0.27
         },
         "notes": [
           "Hit in 8/10 recent games; 1.20 H/game in that span.",
           "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.20.",
           "Away split in logs: hit in 10/15, 1.00 H/game.",
           "Recent games vs NYY: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
+          "Similar-game sample: hit in 9/12, 1.17 H/game.",
           "2+ total bases in 7/10 recent games."
         ],
-        "hotScore": 3.987,
+        "hotScore": 4.053,
         "coldScore": 0.7
       },
       {
@@ -1320,7 +1320,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 7 • L vs R • 89°F • Wind 8",
+        "context": "Order 5 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -1420,177 +1420,177 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 0.75
+            "hitRate": 0.75,
+            "avg": 0.83
           },
           "similarTB2": {
             "sample": 12,
             "hitRate": 0.25,
-            "avg": 1.42
+            "avg": 1.5
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.42
+            "hitRate": 0.5833333333333334,
+            "avg": 1.83
           }
         },
         "projections": {
-          "H": 0.62,
-          "TB": 1.6,
-          "HRR": 1.57,
-          "K": 1.05,
-          "HR": 0.07,
-          "BB": 0.32
+          "H": 0.89,
+          "TB": 1.82,
+          "HRR": 1.99,
+          "K": 1.25,
+          "HR": 0.29,
+          "BB": 0.27
         },
         "notes": [
           "Hit in 8/10 recent games; 1.20 H/game in that span.",
           "Home split in logs: hit in 12/18, 0.89 H/game.",
           "Recent games vs CLE: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 7/12, 0.75 H/game.",
+          "Similar-game sample: hit in 9/12, 0.83 H/game.",
           "2+ total bases in 5/10 recent games.",
           "2+ HRR in 6/10 recent games."
         ],
-        "hotScore": 3.87,
+        "hotScore": 4.003,
         "coldScore": 0.22
       },
       {
-        "playerId": 663757,
-        "player": "Trent Grisham",
+        "playerId": 502671,
+        "player": "Paul Goldschmidt",
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 3 • L vs R • 89°F • Wind 8",
-        "batSide": "L",
+        "context": "Order 3 • R vs R • 87°F • Wind 7",
+        "batSide": "R",
         "pitchHand": "R",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
-            "hitRate": 0.7,
-            "avg": 1.3,
+            "hitRate": 0.8,
+            "avg": 1.2,
             "lastValues": [
-              2.0,
-              0.0,
               1.0,
               1.0,
-              0.0
+              1.0,
+              3.0,
+              1.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
-            "hitRate": 0.6,
-            "avg": 0.8,
+            "hitRate": 1.0,
+            "avg": 1.4,
             "lastValues": [
-              2.0,
-              0.0,
               1.0,
               1.0,
-              0.0
+              1.0,
+              3.0,
+              1.0
             ]
           },
           "tb2Last10": {
             "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.8,
+            "hitRate": 0.5,
+            "avg": 2.1,
             "lastValues": [
-              2.0,
-              0.0,
+              4.0,
               1.0,
               1.0,
-              0.0
+              7.0,
+              2.0
             ]
           },
           "hrr2Last10": {
             "sample": 10,
             "hitRate": 0.6,
-            "avg": 2.3,
+            "avg": 2.7,
             "lastValues": [
+              5.0,
+              1.0,
               3.0,
-              1.0,
-              4.0,
-              1.0,
-              0.0
+              8.0,
+              2.0
             ]
           },
           "kLast10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.5,
+            "hitRate": 0.7,
+            "avg": 0.9,
             "lastValues": [
+              0.0,
+              1.0,
+              1.0,
               2.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
+              2.0
             ]
           },
           "k2Last10": {
             "sample": 10,
             "hitRate": 0.2,
-            "avg": 0.5,
+            "avg": 0.9,
             "lastValues": [
+              0.0,
+              1.0,
+              1.0,
               2.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
+              2.0
             ]
           },
           "hrLast20": {
             "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
+            "hitRate": 0.25,
+            "avg": 0.25,
             "lastValues": [
+              1.0,
               0.0,
               0.0,
-              0.0,
-              0.0,
+              1.0,
               0.0
             ]
           },
           "locationHits": {
-            "sample": 16,
-            "hitRate": 0.625,
-            "avg": 1.12
+            "sample": 19,
+            "hitRate": 0.47368421052631576,
+            "avg": 0.68
           },
           "opponentHits": {
             "sample": 2,
-            "hitRate": 0.5,
-            "avg": 0.5
+            "hitRate": 1.0,
+            "avg": 2.0
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 1.08
+            "hitRate": 0.5,
+            "avg": 0.75
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 2.0
+            "hitRate": 0.3333333333333333,
+            "avg": 1.67
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.5,
-            "avg": 2.33
+            "avg": 2.17
           }
         },
         "projections": {
-          "H": 0.59,
-          "TB": 1.51,
-          "HRR": 1.62,
-          "K": 0.59,
-          "HR": 0.06,
-          "BB": 0.56
+          "H": 0.93,
+          "TB": 2.21,
+          "HRR": 2.16,
+          "K": 0.98,
+          "HR": 0.39,
+          "BB": 0.33
         },
         "notes": [
-          "Hit in 7/10 recent games; 1.30 H/game in that span.",
-          "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.30.",
-          "Home split in logs: hit in 10/16, 1.12 H/game.",
-          "Recent games vs CLE: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 7/12, 1.08 H/game.",
-          "2+ total bases in 4/10 recent games."
+          "Hit in 8/10 recent games; 1.20 H/game in that span.",
+          "Home split in logs: hit in 9/19, 0.68 H/game.",
+          "Recent games vs CLE: hit in 2/2, 2.00 H/game.",
+          "Similar-game sample: hit in 6/12, 0.75 H/game.",
+          "2+ total bases in 5/10 recent games.",
+          "2+ HRR in 6/10 recent games."
         ],
-        "hotScore": 3.647,
-        "coldScore": 0.7
+        "hotScore": 3.649,
+        "coldScore": 0.1
       },
       {
         "playerId": 608070,
@@ -1598,7 +1598,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 1 • B vs L • 89°F • Wind 8",
+        "context": "Order 2 • B vs L • 87°F • Wind 7",
         "batSide": "B",
         "pitchHand": "L",
         "metrics": {
@@ -1713,11 +1713,11 @@
           }
         },
         "projections": {
-          "H": 0.81,
-          "TB": 1.78,
-          "HRR": 1.93,
-          "K": 0.38,
-          "HR": 0.1,
+          "H": 0.85,
+          "TB": 2.33,
+          "HRR": 2.03,
+          "K": 0.44,
+          "HR": 0.22,
           "BB": 0.47
         },
         "notes": [
@@ -1732,143 +1732,143 @@
         "coldScore": 0.0
       },
       {
-        "playerId": 502671,
-        "player": "Paul Goldschmidt",
+        "playerId": 663757,
+        "player": "Trent Grisham",
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 5 • R vs R • 89°F • Wind 8",
-        "batSide": "R",
+        "context": "Order 1 • L vs R • 87°F • Wind 7",
+        "batSide": "L",
         "pitchHand": "R",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
-            "hitRate": 0.8,
-            "avg": 1.2,
+            "hitRate": 0.7,
+            "avg": 1.3,
             "lastValues": [
+              2.0,
+              0.0,
               1.0,
               1.0,
-              1.0,
-              3.0,
-              1.0
+              0.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
-            "hitRate": 1.0,
-            "avg": 1.4,
+            "hitRate": 0.6,
+            "avg": 0.8,
             "lastValues": [
+              2.0,
+              0.0,
               1.0,
               1.0,
-              1.0,
-              3.0,
-              1.0
+              0.0
             ]
           },
           "tb2Last10": {
             "sample": 10,
-            "hitRate": 0.5,
-            "avg": 2.1,
+            "hitRate": 0.4,
+            "avg": 1.8,
             "lastValues": [
-              4.0,
+              2.0,
+              0.0,
               1.0,
               1.0,
-              7.0,
-              2.0
+              0.0
             ]
           },
           "hrr2Last10": {
             "sample": 10,
             "hitRate": 0.6,
-            "avg": 2.7,
+            "avg": 2.3,
             "lastValues": [
-              5.0,
-              1.0,
               3.0,
-              8.0,
-              2.0
+              1.0,
+              4.0,
+              1.0,
+              0.0
             ]
           },
           "kLast10": {
             "sample": 10,
-            "hitRate": 0.7,
-            "avg": 0.9,
+            "hitRate": 0.3,
+            "avg": 0.5,
             "lastValues": [
-              0.0,
-              1.0,
-              1.0,
               2.0,
-              2.0
+              0.0,
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "k2Last10": {
             "sample": 10,
             "hitRate": 0.2,
-            "avg": 0.9,
+            "avg": 0.5,
             "lastValues": [
-              0.0,
-              1.0,
-              1.0,
               2.0,
-              2.0
+              0.0,
+              0.0,
+              0.0,
+              0.0
             ]
           },
           "hrLast20": {
             "sample": 20,
-            "hitRate": 0.25,
-            "avg": 0.25,
+            "hitRate": 0.1,
+            "avg": 0.1,
             "lastValues": [
-              1.0,
               0.0,
               0.0,
-              1.0,
+              0.0,
+              0.0,
               0.0
             ]
           },
           "locationHits": {
-            "sample": 19,
-            "hitRate": 0.47368421052631576,
-            "avg": 0.68
+            "sample": 16,
+            "hitRate": 0.625,
+            "avg": 1.12
           },
           "opponentHits": {
             "sample": 2,
-            "hitRate": 1.0,
-            "avg": 2.0
+            "hitRate": 0.5,
+            "avg": 0.5
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 0.67
+            "hitRate": 0.5,
+            "avg": 0.92
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.25,
-            "avg": 1.33
+            "hitRate": 0.3333333333333333,
+            "avg": 1.58
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.67
+            "hitRate": 0.4166666666666667,
+            "avg": 1.83
           }
         },
         "projections": {
-          "H": 0.66,
-          "TB": 2.06,
-          "HRR": 1.72,
-          "K": 0.85,
-          "HR": 0.14,
-          "BB": 0.4
+          "H": 0.84,
+          "TB": 1.39,
+          "HRR": 2.01,
+          "K": 0.61,
+          "HR": 0.11,
+          "BB": 0.61
         },
         "notes": [
-          "Hit in 8/10 recent games; 1.20 H/game in that span.",
-          "Home split in logs: hit in 9/19, 0.68 H/game.",
-          "Recent games vs CLE: hit in 2/2, 2.00 H/game.",
-          "Similar-game sample: hit in 5/12, 0.67 H/game.",
-          "2+ total bases in 5/10 recent games.",
-          "2+ HRR in 6/10 recent games."
+          "Hit in 7/10 recent games; 1.30 H/game in that span.",
+          "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.30.",
+          "Home split in logs: hit in 10/16, 1.12 H/game.",
+          "Recent games vs CLE: hit in 1/2, 0.50 H/game.",
+          "Similar-game sample: hit in 6/12, 0.92 H/game.",
+          "2+ total bases in 4/10 recent games."
         ],
-        "hotScore": 3.582,
-        "coldScore": 0.1
+        "hotScore": 3.58,
+        "coldScore": 0.7
       },
       {
         "playerId": 700932,
@@ -1876,7 +1876,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 5 • L vs L • 89°F • Wind 8",
+        "context": "Order 1 • L vs L • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -1976,119 +1976,125 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 0.92
+            "hitRate": 0.6666666666666666,
+            "avg": 1.0
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.92
+            "hitRate": 0.5,
+            "avg": 2.25
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.25
+            "hitRate": 0.6666666666666666,
+            "avg": 2.5
           }
         },
         "projections": {
-          "H": 0.47,
-          "TB": 1.16,
-          "HRR": 1.1,
-          "K": 1.39,
-          "HR": 0.08,
-          "BB": 0.37
+          "H": 0.64,
+          "TB": 1.74,
+          "HRR": 1.52,
+          "K": 1.29,
+          "HR": 0.3,
+          "BB": 0.29
         },
         "notes": [
           "Hit in 6/10 recent games; 1.00 H/game in that span.",
           "Recent hit pace up: last 5 at 1.40 H/game vs last 10 at 1.00.",
           "Away split in logs: hit in 11/17, 1.00 H/game.",
           "Recent games vs NYY: hit in 2/2, 2.50 H/game.",
-          "Similar-game sample: hit in 7/12, 0.92 H/game.",
+          "Similar-game sample: hit in 8/12, 1.00 H/game.",
           "2+ total bases in 4/10 recent games."
         ],
-        "hotScore": 3.184,
+        "hotScore": 3.251,
         "coldScore": 0.6
       }
     ],
     "riskFlags": [
       {
-        "playerId": 690984,
-        "player": "Petey Halpin",
-        "team": "CLE",
-        "opponent": "NYY",
-        "location": "Away",
-        "context": "Order 9 • L vs L • 89°F • Wind 8",
+        "playerId": 641555,
+        "player": "J.C. Escarra",
+        "team": "NYY",
+        "opponent": "CLE",
+        "location": "Home",
+        "context": "Order 8 • L vs R • 87°F • Wind 7",
         "batSide": "L",
-        "pitchHand": "L",
+        "pitchHand": "R",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
             "hitRate": 0.2,
-            "avg": 0.3,
+            "avg": 0.4,
             "lastValues": [
               0.0,
-              1.0,
               0.0,
-              2.0,
+              3.0,
+              0.0,
               0.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
-            "hitRate": 0.4,
+            "hitRate": 0.2,
             "avg": 0.6,
             "lastValues": [
               0.0,
-              1.0,
               0.0,
-              2.0,
+              3.0,
+              0.0,
               0.0
             ]
           },
           "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.4,
+            "lastValues": [
+              0.0,
+              0.0,
+              3.0,
+              0.0,
+              0.0
+            ]
           },
           "hrr2Last10": {
             "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.3,
+            "hitRate": 0.2,
+            "avg": 0.8,
             "lastValues": [
-              0.0,
               1.0,
               0.0,
-              2.0,
-              0.0
+              3.0,
+              0.0,
+              1.0
             ]
           },
           "kLast10": {
             "sample": 10,
             "hitRate": 0.3,
-            "avg": 0.4,
+            "avg": 0.3,
             "lastValues": [
+              1.0,
               1.0,
               0.0,
               0.0,
-              2.0,
               0.0
             ]
           },
           "k2Last10": {
             "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.4,
+            "hitRate": 0.0,
+            "avg": 0.3,
             "lastValues": [
+              1.0,
               1.0,
               0.0,
               0.0,
-              2.0,
               0.0
             ]
           },
           "hrLast20": {
-            "sample": 18,
+            "sample": 20,
             "hitRate": 0.0,
             "avg": 0.0,
             "lastValues": [
@@ -2100,9 +2106,9 @@
             ]
           },
           "locationHits": {
-            "sample": 7,
-            "hitRate": 0.2857142857142857,
-            "avg": 0.29
+            "sample": 9,
+            "hitRate": 0.4444444444444444,
+            "avg": 0.56
           },
           "opponentHits": {
             "sample": 0,
@@ -2111,126 +2117,125 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.25,
-            "avg": 0.33
+            "hitRate": 0.4166666666666667,
+            "avg": 0.67
           },
           "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 1.0
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.25,
-            "avg": 0.67
+            "avg": 1.5
           }
         },
         "projections": {
-          "H": 0.34,
-          "HRR": 0.82,
-          "K": 0.65,
-          "HR": 0.01,
-          "BB": 0.35
+          "H": 0.92,
+          "TB": 1.26,
+          "HRR": 1.86,
+          "K": 0.68,
+          "HR": 0.05,
+          "BB": 0.33
         },
         "notes": [
-          "Hit in 2/10 recent games; 0.30 H/game in that span.",
-          "Recent hit pace up: last 5 at 0.60 H/game vs last 10 at 0.30.",
-          "Away split in logs: hit in 2/7, 0.29 H/game.",
-          "Similar-game sample: hit in 3/12, 0.33 H/game.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.40 K/game last 10; 2+ K in 1/10."
+          "Hit in 2/10 recent games; 0.40 H/game in that span.",
+          "Home split in logs: hit in 4/9, 0.56 H/game.",
+          "Similar-game sample: hit in 5/12, 0.67 H/game.",
+          "2+ total bases in 1/10 recent games.",
+          "2+ HRR in 2/10 recent games.",
+          "Strikeout context: 0.30 K/game last 10; 2+ K in 0/10."
         ],
-        "hotScore": 1.059,
-        "coldScore": 1.585
-      }
-    ],
-    "allPlayers": [
+        "hotScore": 1.479,
+        "coldScore": 1.415
+      },
       {
-        "playerId": 592450,
-        "player": "Aaron Judge",
-        "team": "NYY",
-        "opponent": "CLE",
-        "location": "Home",
-        "context": "Order 2 • R vs R • 89°F • Wind 8",
+        "playerId": 595978,
+        "player": "Austin Hedges",
+        "team": "CLE",
+        "opponent": "NYY",
+        "location": "Away",
+        "context": "Order 8 • R vs L • 87°F • Wind 7",
         "batSide": "R",
-        "pitchHand": "R",
+        "pitchHand": "L",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
-            "hitRate": 0.5,
-            "avg": 0.7,
+            "hitRate": 0.3,
+            "avg": 0.3,
             "lastValues": [
-              2.0,
-              0.0,
               1.0,
               0.0,
+              0.0,
+              1.0,
               1.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
             "hitRate": 0.6,
-            "avg": 0.8,
+            "avg": 0.6,
             "lastValues": [
-              2.0,
-              0.0,
               1.0,
               0.0,
+              0.0,
+              1.0,
               1.0
             ]
           },
           "tb2Last10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.2,
+            "hitRate": 0.0,
+            "avg": 0.3,
             "lastValues": [
-              3.0,
-              0.0,
               1.0,
               0.0,
+              0.0,
+              1.0,
               1.0
             ]
           },
           "hrr2Last10": {
             "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.8,
+            "hitRate": 0.1,
+            "avg": 0.6,
             "lastValues": [
-              3.0,
               1.0,
-              4.0,
+              0.0,
+              1.0,
               1.0,
               3.0
             ]
           },
           "kLast10": {
             "sample": 10,
-            "hitRate": 0.7,
-            "avg": 1.1,
+            "hitRate": 0.4,
+            "avg": 0.5,
             "lastValues": [
               0.0,
-              1.0,
-              1.0,
+              0.0,
+              0.0,
               0.0,
               2.0
             ]
           },
           "k2Last10": {
             "sample": 10,
-            "hitRate": 0.2,
-            "avg": 1.1,
+            "hitRate": 0.1,
+            "avg": 0.5,
             "lastValues": [
               0.0,
-              1.0,
-              1.0,
+              0.0,
+              0.0,
               0.0,
               2.0
             ]
           },
           "hrLast20": {
             "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
+            "hitRate": 0.05,
+            "avg": 0.05,
             "lastValues": [
               0.0,
               0.0,
@@ -2240,9 +2245,9 @@
             ]
           },
           "locationHits": {
-            "sample": 16,
-            "hitRate": 0.625,
-            "avg": 0.88
+            "sample": 11,
+            "hitRate": 0.5454545454545454,
+            "avg": 0.82
           },
           "opponentHits": {
             "sample": 0,
@@ -2252,45 +2257,47 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.5833333333333334,
-            "avg": 0.75
+            "avg": 0.83
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 1.92
+            "hitRate": 0.16666666666666666,
+            "avg": 1.33
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.5,
-            "avg": 2.25
+            "avg": 1.83
           }
         },
         "projections": {
-          "H": 0.68,
-          "TB": 1.98,
-          "HRR": 1.96,
-          "K": 0.98,
-          "HR": 0.15,
-          "BB": 0.65
+          "H": 0.59,
+          "TB": 0.85,
+          "HRR": 1.35,
+          "K": 0.59,
+          "HR": 0.04,
+          "BB": 0.3
         },
         "notes": [
-          "Hit in 5/10 recent games; 0.70 H/game in that span.",
-          "Home split in logs: hit in 10/16, 0.88 H/game.",
-          "Similar-game sample: hit in 7/12, 0.75 H/game.",
-          "2+ total bases in 3/10 recent games.",
-          "2+ HRR in 4/10 recent games.",
-          "Strikeout context: 1.10 K/game last 10; 2+ K in 2/10."
+          "Hit in 3/10 recent games; 0.30 H/game in that span.",
+          "Recent hit pace up: last 5 at 0.60 H/game vs last 10 at 0.30.",
+          "Away split in logs: hit in 6/11, 0.82 H/game.",
+          "Similar-game sample: hit in 7/12, 0.83 H/game.",
+          "2+ total bases in 0/10 recent games.",
+          "2+ HRR in 1/10 recent games."
         ],
-        "hotScore": 2.737,
-        "coldScore": 0.475
-      },
+        "hotScore": 1.733,
+        "coldScore": 1.335
+      }
+    ],
+    "allPlayers": [
       {
         "playerId": 682657,
         "player": "Angel Martínez",
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 7 • B vs L • 89°F • Wind 8",
+        "context": "Order 5 • B vs L • 87°F • Wind 7",
         "batSide": "B",
         "pitchHand": "L",
         "metrics": {
@@ -2391,37 +2398,176 @@
           "similarHits": {
             "sample": 12,
             "hitRate": 0.5,
-            "avg": 0.58
+            "avg": 0.83
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.42
+            "hitRate": 0.4166666666666667,
+            "avg": 1.58
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.3333333333333333,
-            "avg": 1.5
+            "avg": 1.67
           }
         },
         "projections": {
-          "H": 0.52,
-          "TB": 1.14,
-          "HRR": 1.23,
-          "K": 0.97,
-          "HR": 0.04,
-          "BB": 0.11
+          "H": 0.76,
+          "TB": 1.4,
+          "HRR": 1.76,
+          "K": 0.91,
+          "HR": 0.08,
+          "BB": 0.1
         },
         "notes": [
           "Hit in 5/10 recent games; 0.60 H/game in that span.",
           "Recent hit pace up: last 5 at 1.00 H/game vs last 10 at 0.60.",
           "Away split in logs: hit in 10/17, 0.88 H/game.",
           "Recent games vs NYY: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 6/12, 0.58 H/game.",
+          "Similar-game sample: hit in 6/12, 0.83 H/game.",
           "2+ total bases in 3/10 recent games."
         ],
         "hotScore": 2.581,
         "coldScore": 0.715
+      },
+      {
+        "playerId": 595978,
+        "player": "Austin Hedges",
+        "team": "CLE",
+        "opponent": "NYY",
+        "location": "Away",
+        "context": "Order 8 • R vs L • 87°F • Wind 7",
+        "batSide": "R",
+        "pitchHand": "L",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 0.3,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.6,
+            "avg": 0.6,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.0,
+            "avg": 0.3,
+            "lastValues": [
+              1.0,
+              0.0,
+              0.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.6,
+            "lastValues": [
+              1.0,
+              0.0,
+              1.0,
+              1.0,
+              3.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.4,
+            "avg": 0.5,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.5,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.05,
+            "avg": 0.05,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 11,
+            "hitRate": 0.5454545454545454,
+            "avg": 0.82
+          },
+          "opponentHits": {
+            "sample": 0,
+            "hitRate": null,
+            "avg": null
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.5833333333333334,
+            "avg": 0.83
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.16666666666666666,
+            "avg": 1.33
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.5,
+            "avg": 1.83
+          }
+        },
+        "projections": {
+          "H": 0.59,
+          "TB": 0.85,
+          "HRR": 1.35,
+          "K": 0.59,
+          "HR": 0.04,
+          "BB": 0.3
+        },
+        "notes": [
+          "Hit in 3/10 recent games; 0.30 H/game in that span.",
+          "Recent hit pace up: last 5 at 0.60 H/game vs last 10 at 0.30.",
+          "Away split in logs: hit in 6/11, 0.82 H/game.",
+          "Similar-game sample: hit in 7/12, 0.83 H/game.",
+          "2+ total bases in 0/10 recent games.",
+          "2+ HRR in 1/10 recent games."
+        ],
+        "hotScore": 1.733,
+        "coldScore": 1.335
       },
       {
         "playerId": 700250,
@@ -2429,7 +2575,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 1 • L vs R • 89°F • Wind 8",
+        "context": "Order 2 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -2534,22 +2680,22 @@
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.17
+            "hitRate": 0.4166666666666667,
+            "avg": 1.92
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.25
+            "hitRate": 0.5,
+            "avg": 2.0
           }
         },
         "projections": {
-          "H": 0.66,
-          "TB": 2.32,
-          "HRR": 1.77,
-          "K": 0.78,
-          "HR": 0.16,
-          "BB": 0.4
+          "H": 0.97,
+          "TB": 2.51,
+          "HRR": 2.27,
+          "K": 1.01,
+          "HR": 0.27,
+          "BB": 0.38
         },
         "notes": [
           "Hit in 8/10 recent games; 1.50 H/game in that span.",
@@ -2563,12 +2709,151 @@
         "coldScore": 0.1
       },
       {
+        "playerId": 677587,
+        "player": "Brayan Rocchio",
+        "team": "CLE",
+        "opponent": "NYY",
+        "location": "Away",
+        "context": "Order 9 • B vs L • 87°F • Wind 7",
+        "batSide": "B",
+        "pitchHand": "L",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.6,
+            "avg": 0.9,
+            "lastValues": [
+              0.0,
+              0.0,
+              2.0,
+              1.0,
+              0.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.4,
+            "avg": 0.6,
+            "lastValues": [
+              0.0,
+              0.0,
+              2.0,
+              1.0,
+              0.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 1.1,
+            "lastValues": [
+              0.0,
+              0.0,
+              3.0,
+              1.0,
+              0.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              0.0,
+              3.0,
+              3.0,
+              0.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.6,
+            "avg": 0.8,
+            "lastValues": [
+              2.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.8,
+            "lastValues": [
+              2.0,
+              0.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.05,
+            "avg": 0.05,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 17,
+            "hitRate": 0.5882352941176471,
+            "avg": 0.82
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 0.5
+          },
+          "similarHits": {
+            "sample": 12,
+            "hitRate": 0.5,
+            "avg": 0.67
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.25,
+            "avg": 1.08
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.5,
+            "avg": 1.67
+          }
+        },
+        "projections": {
+          "H": 0.65,
+          "TB": 1.19,
+          "HRR": 1.62,
+          "K": 0.83,
+          "HR": 0.05,
+          "BB": 0.27
+        },
+        "notes": [
+          "Hit in 6/10 recent games; 0.90 H/game in that span.",
+          "Recent hit pace down: last 5 at 0.60 H/game vs last 10 at 0.90.",
+          "Away split in logs: hit in 10/17, 0.82 H/game.",
+          "Recent games vs NYY: hit in 1/2, 0.50 H/game.",
+          "Similar-game sample: hit in 6/12, 0.67 H/game.",
+          "2+ total bases in 3/10 recent games."
+        ],
+        "hotScore": 2.911,
+        "coldScore": 0.7
+      },
+      {
         "playerId": 800050,
         "player": "Chase DeLauter",
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 3 • L vs L • 89°F • Wind 8",
+        "context": "Order 6 • L vs L • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -2674,21 +2959,21 @@
           "similarTB2": {
             "sample": 12,
             "hitRate": 0.3333333333333333,
-            "avg": 0.83
+            "avg": 0.75
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.25,
-            "avg": 1.08
+            "avg": 1.0
           }
         },
         "projections": {
-          "H": 0.65,
-          "TB": 1.26,
-          "HRR": 1.52,
-          "K": 0.55,
-          "HR": 0.03,
-          "BB": 0.35
+          "H": 0.74,
+          "TB": 1.05,
+          "HRR": 1.48,
+          "K": 0.47,
+          "HR": 0.05,
+          "BB": 0.2
         },
         "notes": [
           "Hit in 5/10 recent games; 0.90 H/game in that span.",
@@ -2707,7 +2992,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 4 • L vs R • 89°F • Wind 8",
+        "context": "Order 4 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -2822,12 +3107,12 @@
           }
         },
         "projections": {
-          "H": 0.68,
-          "TB": 1.59,
-          "HRR": 1.78,
-          "K": 0.51,
-          "HR": 0.07,
-          "BB": 0.54
+          "H": 0.77,
+          "TB": 1.34,
+          "HRR": 1.69,
+          "K": 0.37,
+          "HR": 0.14,
+          "BB": 0.4
         },
         "notes": [
           "Hit in 7/10 recent games; 1.10 H/game in that span.",
@@ -2841,79 +3126,85 @@
         "coldScore": 0.05
       },
       {
-        "playerId": 682177,
-        "player": "Daniel Schneemann",
-        "team": "CLE",
-        "opponent": "NYY",
-        "location": "Away",
-        "context": "Order 6 • L vs L • 89°F • Wind 8",
+        "playerId": 641555,
+        "player": "J.C. Escarra",
+        "team": "NYY",
+        "opponent": "CLE",
+        "location": "Home",
+        "context": "Order 8 • L vs R • 87°F • Wind 7",
         "batSide": "L",
-        "pitchHand": "L",
+        "pitchHand": "R",
         "metrics": {
           "hitsLast10": {
             "sample": 10,
-            "hitRate": 0.6,
-            "avg": 0.6,
+            "hitRate": 0.2,
+            "avg": 0.4,
             "lastValues": [
               0.0,
-              1.0,
-              1.0,
               0.0,
-              1.0
+              3.0,
+              0.0,
+              0.0
             ]
           },
           "hitsLast5": {
             "sample": 5,
-            "hitRate": 0.6,
+            "hitRate": 0.2,
             "avg": 0.6,
             "lastValues": [
               0.0,
+              0.0,
+              3.0,
+              0.0,
+              0.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.1,
+            "avg": 0.4,
+            "lastValues": [
+              0.0,
+              0.0,
+              3.0,
+              0.0,
+              0.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.8,
+            "lastValues": [
               1.0,
-              1.0,
+              0.0,
+              3.0,
               0.0,
               1.0
             ]
           },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.4,
-            "avg": 1.1,
-            "lastValues": [
-              0.0,
-              1.0,
-              1.0,
-              0.0,
-              2.0
-            ]
-          },
           "kLast10": {
             "sample": 10,
-            "hitRate": 0.7,
-            "avg": 1.0,
+            "hitRate": 0.3,
+            "avg": 0.3,
             "lastValues": [
+              1.0,
               1.0,
               0.0,
               0.0,
-              2.0,
-              2.0
+              0.0
             ]
           },
           "k2Last10": {
             "sample": 10,
-            "hitRate": 0.3,
-            "avg": 1.0,
+            "hitRate": 0.0,
+            "avg": 0.3,
             "lastValues": [
+              1.0,
               1.0,
               0.0,
               0.0,
-              2.0,
-              2.0
+              0.0
             ]
           },
           "hrLast20": {
@@ -2929,178 +3220,49 @@
             ]
           },
           "locationHits": {
-            "sample": 20,
-            "hitRate": 0.7,
-            "avg": 0.9
+            "sample": 9,
+            "hitRate": 0.4444444444444444,
+            "avg": 0.56
           },
           "opponentHits": {
-            "sample": 1,
-            "hitRate": 1.0,
-            "avg": 1.0
+            "sample": 0,
+            "hitRate": null,
+            "avg": null
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
+            "hitRate": 0.4166666666666667,
             "avg": 0.67
           },
           "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.25
-          }
-        },
-        "projections": {
-          "H": 0.46,
-          "HRR": 1.06,
-          "K": 0.97,
-          "HR": 0.02,
-          "BB": 0.32
-        },
-        "notes": [
-          "Hit in 6/10 recent games; 0.60 H/game in that span.",
-          "Away split in logs: hit in 14/20, 0.90 H/game.",
-          "Similar-game sample: hit in 8/12, 0.67 H/game.",
-          "2+ HRR in 4/10 recent games.",
-          "Strikeout context: 1.00 K/game last 10; 2+ K in 3/10."
-        ],
-        "hotScore": 2.853,
-        "coldScore": 0.45
-      },
-      {
-        "playerId": 681807,
-        "player": "David Fry",
-        "team": "CLE",
-        "opponent": "NYY",
-        "location": "Away",
-        "context": "Order 8 • R vs L • 89°F • Wind 8",
-        "batSide": "R",
-        "pitchHand": "L",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.6,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              3.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.4,
-            "avg": 0.8,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              3.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.8,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              0.0,
-              4.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.7,
-            "avg": 1.0,
-            "lastValues": [
-              0.0,
-              1.0,
-              2.0,
-              1.0,
-              1.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 1.0,
-            "lastValues": [
-              0.0,
-              1.0,
-              2.0,
-              1.0,
-              1.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 20,
-            "hitRate": 0.1,
-            "avg": 0.1,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 19,
-            "hitRate": 0.42105263157894735,
-            "avg": 0.58
-          },
-          "opponentHits": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 0.42
-          },
-          "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
+            "hitRate": 0.25,
+            "avg": 1.0
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.25,
-            "avg": 1.17
+            "avg": 1.5
           }
         },
         "projections": {
-          "H": 0.37,
-          "HRR": 0.9,
-          "K": 0.9,
-          "HR": 0.03,
-          "BB": 0.23
+          "H": 0.92,
+          "TB": 1.26,
+          "HRR": 1.86,
+          "K": 0.68,
+          "HR": 0.05,
+          "BB": 0.33
         },
         "notes": [
-          "Hit in 3/10 recent games; 0.60 H/game in that span.",
-          "Away split in logs: hit in 8/19, 0.58 H/game.",
-          "Similar-game sample: hit in 4/12, 0.42 H/game.",
+          "Hit in 2/10 recent games; 0.40 H/game in that span.",
+          "Home split in logs: hit in 4/9, 0.56 H/game.",
+          "Similar-game sample: hit in 5/12, 0.67 H/game.",
+          "2+ total bases in 1/10 recent games.",
           "2+ HRR in 2/10 recent games.",
-          "Strikeout context: 1.00 K/game last 10; 2+ K in 2/10."
+          "Strikeout context: 0.30 K/game last 10; 2+ K in 0/10."
         ],
-        "hotScore": 1.664,
-        "coldScore": 1.025
+        "hotScore": 1.479,
+        "coldScore": 1.415
       },
       {
         "playerId": 665862,
@@ -3108,7 +3270,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 7 • L vs R • 89°F • Wind 8",
+        "context": "Order 5 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -3208,37 +3370,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 0.75
+            "hitRate": 0.75,
+            "avg": 0.83
           },
           "similarTB2": {
             "sample": 12,
             "hitRate": 0.25,
-            "avg": 1.42
+            "avg": 1.5
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.42
+            "hitRate": 0.5833333333333334,
+            "avg": 1.83
           }
         },
         "projections": {
-          "H": 0.62,
-          "TB": 1.6,
-          "HRR": 1.57,
-          "K": 1.05,
-          "HR": 0.07,
-          "BB": 0.32
+          "H": 0.89,
+          "TB": 1.82,
+          "HRR": 1.99,
+          "K": 1.25,
+          "HR": 0.29,
+          "BB": 0.27
         },
         "notes": [
           "Hit in 8/10 recent games; 1.20 H/game in that span.",
           "Home split in logs: hit in 12/18, 0.89 H/game.",
           "Recent games vs CLE: hit in 2/2, 1.00 H/game.",
-          "Similar-game sample: hit in 7/12, 0.75 H/game.",
+          "Similar-game sample: hit in 9/12, 0.83 H/game.",
           "2+ total bases in 5/10 recent games.",
           "2+ HRR in 6/10 recent games."
         ],
-        "hotScore": 3.87,
+        "hotScore": 4.003,
         "coldScore": 0.22
       },
       {
@@ -3247,7 +3409,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 9 • R vs R • 89°F • Wind 8",
+        "context": "Order 6 • R vs R • 87°F • Wind 7",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -3347,37 +3509,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
+            "hitRate": 0.5833333333333334,
             "avg": 1.0
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.42
+            "hitRate": 0.5,
+            "avg": 1.58
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.17
+            "hitRate": 0.5,
+            "avg": 1.92
           }
         },
         "projections": {
-          "H": 0.51,
-          "TB": 1.0,
-          "HRR": 1.3,
-          "K": 0.62,
-          "HR": 0.03,
+          "H": 0.73,
+          "TB": 1.28,
+          "HRR": 1.67,
+          "K": 0.67,
+          "HR": 0.12,
           "BB": 0.25
         },
         "notes": [
           "Hit in 6/10 recent games; 0.90 H/game in that span.",
           "Home split in logs: hit in 11/18, 0.94 H/game.",
           "Recent games vs CLE: hit in 1/2, 1.00 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
+          "Similar-game sample: hit in 7/12, 1.00 H/game.",
           "2+ total bases in 3/10 recent games.",
           "2+ HRR in 5/10 recent games."
         ],
-        "hotScore": 3.162,
+        "hotScore": 3.096,
         "coldScore": 0.05
       },
       {
@@ -3386,7 +3548,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 1 • B vs L • 89°F • Wind 8",
+        "context": "Order 2 • B vs L • 87°F • Wind 7",
         "batSide": "B",
         "pitchHand": "L",
         "metrics": {
@@ -3501,11 +3663,11 @@
           }
         },
         "projections": {
-          "H": 0.81,
-          "TB": 1.78,
-          "HRR": 1.93,
-          "K": 0.38,
-          "HR": 0.1,
+          "H": 0.85,
+          "TB": 2.33,
+          "HRR": 2.03,
+          "K": 0.44,
+          "HR": 0.22,
           "BB": 0.47
         },
         "notes": [
@@ -3525,7 +3687,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 5 • L vs L • 89°F • Wind 8",
+        "context": "Order 1 • L vs L • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -3625,37 +3787,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 0.92
+            "hitRate": 0.6666666666666666,
+            "avg": 1.0
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.92
+            "hitRate": 0.5,
+            "avg": 2.25
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 2.25
+            "hitRate": 0.6666666666666666,
+            "avg": 2.5
           }
         },
         "projections": {
-          "H": 0.47,
-          "TB": 1.16,
-          "HRR": 1.1,
-          "K": 1.39,
-          "HR": 0.08,
-          "BB": 0.37
+          "H": 0.64,
+          "TB": 1.74,
+          "HRR": 1.52,
+          "K": 1.29,
+          "HR": 0.3,
+          "BB": 0.29
         },
         "notes": [
           "Hit in 6/10 recent games; 1.00 H/game in that span.",
           "Recent hit pace up: last 5 at 1.40 H/game vs last 10 at 1.00.",
           "Away split in logs: hit in 11/17, 1.00 H/game.",
           "Recent games vs NYY: hit in 2/2, 2.50 H/game.",
-          "Similar-game sample: hit in 7/12, 0.92 H/game.",
+          "Similar-game sample: hit in 8/12, 1.00 H/game.",
           "2+ total bases in 4/10 recent games."
         ],
-        "hotScore": 3.184,
+        "hotScore": 3.251,
         "coldScore": 0.6
       },
       {
@@ -3664,7 +3826,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 6 • R vs R • 89°F • Wind 8",
+        "context": "Order 9 • R vs R • 87°F • Wind 7",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -3773,11 +3935,11 @@
           }
         },
         "projections": {
-          "H": 0.4,
-          "HRR": 0.96,
-          "K": 0.5,
-          "HR": 0.01,
-          "BB": 0.21
+          "H": 0.48,
+          "HRR": 1.13,
+          "K": 0.46,
+          "HR": 0.03,
+          "BB": 0.19
         },
         "notes": [
           "Hit in 5/10 recent games; 0.50 H/game in that span.",
@@ -3795,7 +3957,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 5 • R vs R • 89°F • Wind 8",
+        "context": "Order 3 • R vs R • 87°F • Wind 7",
         "batSide": "R",
         "pitchHand": "R",
         "metrics": {
@@ -3895,170 +4057,38 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 0.67
+            "hitRate": 0.5,
+            "avg": 0.75
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.25,
-            "avg": 1.33
+            "hitRate": 0.3333333333333333,
+            "avg": 1.67
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.67
+            "hitRate": 0.5,
+            "avg": 2.17
           }
         },
         "projections": {
-          "H": 0.66,
-          "TB": 2.06,
-          "HRR": 1.72,
-          "K": 0.85,
-          "HR": 0.14,
-          "BB": 0.4
+          "H": 0.93,
+          "TB": 2.21,
+          "HRR": 2.16,
+          "K": 0.98,
+          "HR": 0.39,
+          "BB": 0.33
         },
         "notes": [
           "Hit in 8/10 recent games; 1.20 H/game in that span.",
           "Home split in logs: hit in 9/19, 0.68 H/game.",
           "Recent games vs CLE: hit in 2/2, 2.00 H/game.",
-          "Similar-game sample: hit in 5/12, 0.67 H/game.",
+          "Similar-game sample: hit in 6/12, 0.75 H/game.",
           "2+ total bases in 5/10 recent games.",
           "2+ HRR in 6/10 recent games."
         ],
-        "hotScore": 3.582,
+        "hotScore": 3.649,
         "coldScore": 0.1
-      },
-      {
-        "playerId": 690984,
-        "player": "Petey Halpin",
-        "team": "CLE",
-        "opponent": "NYY",
-        "location": "Away",
-        "context": "Order 9 • L vs L • 89°F • Wind 8",
-        "batSide": "L",
-        "pitchHand": "L",
-        "metrics": {
-          "hitsLast10": {
-            "sample": 10,
-            "hitRate": 0.2,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "hitsLast5": {
-            "sample": 5,
-            "hitRate": 0.4,
-            "avg": 0.6,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "tb2Last10": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null,
-            "lastValues": []
-          },
-          "hrr2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.3,
-            "lastValues": [
-              0.0,
-              1.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "kLast10": {
-            "sample": 10,
-            "hitRate": 0.3,
-            "avg": 0.4,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "k2Last10": {
-            "sample": 10,
-            "hitRate": 0.1,
-            "avg": 0.4,
-            "lastValues": [
-              1.0,
-              0.0,
-              0.0,
-              2.0,
-              0.0
-            ]
-          },
-          "hrLast20": {
-            "sample": 18,
-            "hitRate": 0.0,
-            "avg": 0.0,
-            "lastValues": [
-              0.0,
-              0.0,
-              0.0,
-              0.0,
-              0.0
-            ]
-          },
-          "locationHits": {
-            "sample": 7,
-            "hitRate": 0.2857142857142857,
-            "avg": 0.29
-          },
-          "opponentHits": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHits": {
-            "sample": 12,
-            "hitRate": 0.25,
-            "avg": 0.33
-          },
-          "similarTB2": {
-            "sample": 0,
-            "hitRate": null,
-            "avg": null
-          },
-          "similarHRR2": {
-            "sample": 12,
-            "hitRate": 0.25,
-            "avg": 0.67
-          }
-        },
-        "projections": {
-          "H": 0.34,
-          "HRR": 0.82,
-          "K": 0.65,
-          "HR": 0.01,
-          "BB": 0.35
-        },
-        "notes": [
-          "Hit in 2/10 recent games; 0.30 H/game in that span.",
-          "Recent hit pace up: last 5 at 0.60 H/game vs last 10 at 0.30.",
-          "Away split in logs: hit in 2/7, 0.29 H/game.",
-          "Similar-game sample: hit in 3/12, 0.33 H/game.",
-          "2+ HRR in 1/10 recent games.",
-          "Strikeout context: 0.40 K/game last 10; 2+ K in 1/10."
-        ],
-        "hotScore": 1.059,
-        "coldScore": 1.585
       },
       {
         "playerId": 656555,
@@ -4066,7 +4096,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 4 • R vs L • 89°F • Wind 8",
+        "context": "Order 3 • R vs L • 87°F • Wind 7",
         "batSide": "R",
         "pitchHand": "L",
         "metrics": {
@@ -4166,37 +4196,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 0.58
+            "hitRate": 0.4166666666666667,
+            "avg": 0.5
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.08
+            "hitRate": 0.25,
+            "avg": 0.92
           },
           "similarHRR2": {
             "sample": 12,
             "hitRate": 0.4166666666666667,
-            "avg": 1.5
+            "avg": 1.42
           }
         },
         "projections": {
-          "H": 0.45,
-          "TB": 1.11,
-          "HRR": 1.08,
-          "K": 1.29,
-          "HR": 0.09,
-          "BB": 0.52
+          "H": 0.66,
+          "TB": 1.56,
+          "HRR": 1.69,
+          "K": 1.25,
+          "HR": 0.25,
+          "BB": 0.67
         },
         "notes": [
           "Hit in 6/10 recent games; 0.70 H/game in that span.",
           "Away split in logs: hit in 11/20, 0.65 H/game.",
-          "Similar-game sample: hit in 6/12, 0.58 H/game.",
+          "Similar-game sample: hit in 5/12, 0.50 H/game.",
           "2+ total bases in 5/10 recent games.",
           "2+ HRR in 5/10 recent games.",
           "Strikeout context: 1.10 K/game last 10; 2+ K in 3/10."
         ],
-        "hotScore": 2.96,
+        "hotScore": 2.893,
         "coldScore": 0.4
       },
       {
@@ -4205,7 +4235,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 8 • L vs R • 89°F • Wind 8",
+        "context": "Order 7 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4305,13 +4335,152 @@
           },
           "similarHits": {
             "sample": 12,
+            "hitRate": 0.5833333333333334,
+            "avg": 1.0
+          },
+          "similarTB2": {
+            "sample": 12,
+            "hitRate": 0.4166666666666667,
+            "avg": 1.75
+          },
+          "similarHRR2": {
+            "sample": 12,
+            "hitRate": 0.4166666666666667,
+            "avg": 2.08
+          }
+        },
+        "projections": {
+          "H": 0.74,
+          "TB": 1.68,
+          "HRR": 1.74,
+          "K": 1.2,
+          "HR": 0.29,
+          "BB": 0.21
+        },
+        "notes": [
+          "Hit in 6/10 recent games; 0.90 H/game in that span.",
+          "Home split in logs: hit in 10/19, 0.79 H/game.",
+          "Similar-game sample: hit in 7/12, 1.00 H/game.",
+          "2+ total bases in 5/10 recent games.",
+          "2+ HRR in 4/10 recent games.",
+          "Strikeout context: 1.20 K/game last 10; 2+ K in 3/10."
+        ],
+        "hotScore": 3.078,
+        "coldScore": 0.29
+      },
+      {
+        "playerId": 680757,
+        "player": "Steven Kwan",
+        "team": "CLE",
+        "opponent": "NYY",
+        "location": "Away",
+        "context": "Order 7 • L vs L • 87°F • Wind 7",
+        "batSide": "L",
+        "pitchHand": "L",
+        "metrics": {
+          "hitsLast10": {
+            "sample": 10,
+            "hitRate": 0.5,
+            "avg": 0.8,
+            "lastValues": [
+              0.0,
+              1.0,
+              1.0,
+              2.0,
+              0.0
+            ]
+          },
+          "hitsLast5": {
+            "sample": 5,
+            "hitRate": 0.6,
+            "avg": 0.8,
+            "lastValues": [
+              0.0,
+              1.0,
+              1.0,
+              2.0,
+              0.0
+            ]
+          },
+          "tb2Last10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.8,
+            "lastValues": [
+              0.0,
+              1.0,
+              1.0,
+              2.0,
+              0.0
+            ]
+          },
+          "hrr2Last10": {
+            "sample": 10,
+            "hitRate": 0.3,
+            "avg": 1.3,
+            "lastValues": [
+              0.0,
+              3.0,
+              1.0,
+              4.0,
+              0.0
+            ]
+          },
+          "kLast10": {
+            "sample": 10,
+            "hitRate": 0.2,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "k2Last10": {
+            "sample": 10,
+            "hitRate": 0.0,
+            "avg": 0.2,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "hrLast20": {
+            "sample": 20,
+            "hitRate": 0.0,
+            "avg": 0.0,
+            "lastValues": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "locationHits": {
+            "sample": 19,
+            "hitRate": 0.47368421052631576,
+            "avg": 0.68
+          },
+          "opponentHits": {
+            "sample": 2,
+            "hitRate": 0.5,
+            "avg": 1.0
+          },
+          "similarHits": {
+            "sample": 12,
             "hitRate": 0.5,
             "avg": 0.75
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.3333333333333333,
-            "avg": 1.25
+            "hitRate": 0.25,
+            "avg": 0.83
           },
           "similarHRR2": {
             "sample": 12,
@@ -4320,23 +4489,23 @@
           }
         },
         "projections": {
-          "H": 0.53,
-          "TB": 1.7,
-          "HRR": 1.41,
-          "K": 1.1,
-          "HR": 0.12,
-          "BB": 0.22
+          "H": 0.7,
+          "TB": 0.94,
+          "HRR": 1.52,
+          "K": 0.31,
+          "HR": 0.03,
+          "BB": 0.54
         },
         "notes": [
-          "Hit in 6/10 recent games; 0.90 H/game in that span.",
-          "Home split in logs: hit in 10/19, 0.79 H/game.",
+          "Hit in 5/10 recent games; 0.80 H/game in that span.",
+          "Away split in logs: hit in 9/19, 0.68 H/game.",
+          "Recent games vs NYY: hit in 1/2, 1.00 H/game.",
           "Similar-game sample: hit in 6/12, 0.75 H/game.",
-          "2+ total bases in 5/10 recent games.",
-          "2+ HRR in 4/10 recent games.",
-          "Strikeout context: 1.20 K/game last 10; 2+ K in 3/10."
+          "2+ total bases in 2/10 recent games.",
+          "2+ HRR in 3/10 recent games."
         ],
-        "hotScore": 3.011,
-        "coldScore": 0.29
+        "hotScore": 2.509,
+        "coldScore": 0.185
       },
       {
         "playerId": 683953,
@@ -4344,7 +4513,7 @@
         "team": "CLE",
         "opponent": "NYY",
         "location": "Away",
-        "context": "Order 2 • L vs L • 89°F • Wind 8",
+        "context": "Order 4 • L vs L • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "L",
         "metrics": {
@@ -4444,37 +4613,37 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.6666666666666666,
-            "avg": 1.0
+            "hitRate": 0.75,
+            "avg": 1.17
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 1.67
+            "hitRate": 0.5,
+            "avg": 1.83
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.0
+            "hitRate": 0.5833333333333334,
+            "avg": 2.17
           }
         },
         "projections": {
-          "H": 0.68,
-          "TB": 1.42,
-          "HRR": 1.54,
-          "K": 1.09,
-          "HR": 0.04,
-          "BB": 0.31
+          "H": 0.94,
+          "TB": 1.46,
+          "HRR": 1.91,
+          "K": 0.96,
+          "HR": 0.07,
+          "BB": 0.27
         },
         "notes": [
           "Hit in 8/10 recent games; 1.20 H/game in that span.",
           "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.20.",
           "Away split in logs: hit in 10/15, 1.00 H/game.",
           "Recent games vs NYY: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 8/12, 1.00 H/game.",
+          "Similar-game sample: hit in 9/12, 1.17 H/game.",
           "2+ total bases in 7/10 recent games."
         ],
-        "hotScore": 3.987,
+        "hotScore": 4.053,
         "coldScore": 0.7
       },
       {
@@ -4483,7 +4652,7 @@
         "team": "NYY",
         "opponent": "CLE",
         "location": "Home",
-        "context": "Order 3 • L vs R • 89°F • Wind 8",
+        "context": "Order 1 • L vs R • 87°F • Wind 7",
         "batSide": "L",
         "pitchHand": "R",
         "metrics": {
@@ -4583,43 +4752,43 @@
           },
           "similarHits": {
             "sample": 12,
-            "hitRate": 0.5833333333333334,
-            "avg": 1.08
+            "hitRate": 0.5,
+            "avg": 0.92
           },
           "similarTB2": {
             "sample": 12,
-            "hitRate": 0.4166666666666667,
-            "avg": 2.0
+            "hitRate": 0.3333333333333333,
+            "avg": 1.58
           },
           "similarHRR2": {
             "sample": 12,
-            "hitRate": 0.5,
-            "avg": 2.33
+            "hitRate": 0.4166666666666667,
+            "avg": 1.83
           }
         },
         "projections": {
-          "H": 0.59,
-          "TB": 1.51,
-          "HRR": 1.62,
-          "K": 0.59,
-          "HR": 0.06,
-          "BB": 0.56
+          "H": 0.84,
+          "TB": 1.39,
+          "HRR": 2.01,
+          "K": 0.61,
+          "HR": 0.11,
+          "BB": 0.61
         },
         "notes": [
           "Hit in 7/10 recent games; 1.30 H/game in that span.",
           "Recent hit pace down: last 5 at 0.80 H/game vs last 10 at 1.30.",
           "Home split in logs: hit in 10/16, 1.12 H/game.",
           "Recent games vs CLE: hit in 1/2, 0.50 H/game.",
-          "Similar-game sample: hit in 7/12, 1.08 H/game.",
+          "Similar-game sample: hit in 6/12, 0.92 H/game.",
           "2+ total bases in 4/10 recent games."
         ],
-        "hotScore": 3.647,
+        "hotScore": 3.58,
         "coldScore": 0.7
       }
     ]
   },
   "dataCoverage": {
-    "propsAnalyzerEntries": 309,
+    "propsAnalyzerEntries": 322,
     "firstInningHistoryFound": true,
     "rawBatterSplitsFound": false
   },
