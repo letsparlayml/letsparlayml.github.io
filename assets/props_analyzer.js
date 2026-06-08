@@ -326,12 +326,18 @@ function updateAnalyzerTableLabels(entry, series) {
   }
 }
 
-function updateHero(entry, series) {
+function updateHero(entry, series, profile = null) {
+  const compLine = entryComparisonLine(entry, profile);
+  const compProb = entryComparisonProbability(entry, profile);
+  const compProp = selectedPropForEntry(profile, entry);
+  const compOptionForHero = lineOptionForProp(compProp, entry);
+  const compLabel = compOptionForHero?.isClosestAverageLine ? 'near avg' : compOptionForHero?.isComparisonLine ? 'avg' : 'line';
+  const model = entry?.pred_anchor ?? entry?.mu_cons ?? series?.modelPred ?? compProp?.modelPred ?? null;
   byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
   byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
-  byId('analyzer-hero-line').textContent = entry ? `${statDisplayLabel(entry, series)} ${fmt(entry.line, 1)}` : '—';
-  byId('analyzer-hero-model').textContent = entry ? `${fmt(entry.pred_anchor ?? entry.mu_cons ?? series?.modelPred, 1)} (${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series?.modelPred ?? 0) - (entry.line ?? 0), 1)})` : '—';
-  byId('analyzer-hero-prob').textContent = entry ? fmtPct(entry.prob_cons) : '—';
+  byId('analyzer-hero-line').textContent = entry ? `${statDisplayLabel(entry, series)} ${hasNumericValue(compLine) ? fmt(compLine, 1) : '—'}${lineOptionForProp(compProp, entry)?.isComparisonLine ? ' avg' : ''}` : '—';
+  byId('analyzer-hero-model').textContent = entry ? `${fmt(model, 1)} (${hasNumericValue(model) && hasNumericValue(compLine) ? fmtSigned(model - compLine, 1) : '—'})` : '—';
+  byId('analyzer-hero-prob').textContent = entry ? (hasNumericValue(compProb) ? fmtPct(compProb) : (lineOptionForProp(compProp, entry)?.isComparisonLine ? 'vs avg' : '—')) : '—';
 }
 
 function setStatus(html) {
@@ -368,10 +374,17 @@ function renderKpis(entry, series, view, profile = null) {
   const similarGames = v2Games.length ? v2Games : (series.similarGames || []);
   const sameOppGames = similarGames.filter(g => (g.opp || '') === (series.opp || ''));
 
-  const recentStats = calcStats(currentGames, entry.line);
-  const overallStats = calcStats(overallGames, entry.line);
-  const similarStats = calcStats(similarGames, entry.line);
-  const sameOppStats = calcStats(sameOppGames, entry.line);
+  const compLine = entryComparisonLine(entry, profile);
+  const compProb = entryComparisonProbability(entry, profile);
+  const compProp = selectedPropForEntry(profile, entry);
+  const compOption = lineOptionForProp(compProp, entry);
+  const compSource = compOption?.isComparisonLine ? (compOption.source || 'pitcher average') : 'listed line';
+  const modelValue = entry.pred_anchor ?? entry.mu_cons ?? series.modelPred ?? compProp?.modelPred ?? null;
+  const recentStats = calcStats(currentGames, compLine);
+  const overallStats = calcStats(overallGames, compLine);
+  const similarStats = calcStats(similarGames, compLine);
+  const sameOppStats = calcStats(sameOppGames, compLine);
+  const rateLabel = compOption?.isComparisonLine ? 'over avg rate' : 'hit rate';
 
   root.innerHTML = `
     <article class="hero-card kpi-card">
@@ -381,16 +394,16 @@ function renderKpis(entry, series, view, profile = null) {
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Model edge</span>
-      <strong>${fmtSigned((entry.pred_anchor ?? entry.mu_cons ?? series.modelPred ?? 0) - (entry.line ?? 0), 1)}</strong>
-      <p class="muted">Model ${fmt(entry.pred_anchor ?? entry.mu_cons ?? series.modelPred, 1)} • line ${fmt(entry.line, 1)}</p>
+      <strong>${hasNumericValue(modelValue) && hasNumericValue(compLine) ? fmtSigned(modelValue - compLine, 1) : '—'}</strong>
+      <p class="muted">Model ${fmt(modelValue, 1)} • ${escapeHtml(compSource)} ${fmt(compLine, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Recent hit rate</span>
+      <span class="stat-label">Recent ${escapeHtml(rateLabel)}</span>
       <strong>${fmtPct(recentStats.hitRate)}</strong>
       <p class="muted">${recentStats.n} games • avg ${fmt(recentStats.avg, 1)}</p>
     </article>
     <article class="hero-card kpi-card">
-      <span class="stat-label">Full-sample hit rate</span>
+      <span class="stat-label">Full-sample ${escapeHtml(rateLabel)}</span>
       <strong>${fmtPct(overallStats.hitRate)}</strong>
       <p class="muted">${overallStats.n} games • avg ${fmt(overallStats.avg, 1)}</p>
     </article>
@@ -411,8 +424,8 @@ function renderKpis(entry, series, view, profile = null) {
     </article>
     <article class="hero-card kpi-card">
       <span class="stat-label">Board context</span>
-      <strong>${fmtPct(entry.prob_cons)}</strong>
-      <p class="muted">${escapeHtml(entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text')}</p>
+      <strong>${hasNumericValue(compProb) ? fmtPct(compProb) : (compProp?.comparisonLine ? 'vs avg' : fmtPct(entry.prob_cons))}</strong>
+      <p class="muted">${escapeHtml(compOption?.isComparisonLine ? `${compOption?.isClosestAverageLine ? 'Using closest listed line to pitcher average' : 'Compared to ' + compSource}, not the lowest static prop line.` : (entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text'))}</p>
     </article>
   `;
 }
@@ -424,12 +437,13 @@ function renderSummary(entry, series, view, profile = null) {
     body.innerHTML = '<tr><td colspan="6">No analyzer entry selected.</td></tr>';
     return;
   }
-  const recentStats = calcStats(recentWindowGames(series, view), entry.line);
-  const overallStats = calcStats(filterByView(series.games || [], view), entry.line);
+  const compLine = entryComparisonLine(entry, profile);
+  const recentStats = calcStats(recentWindowGames(series, view), compLine);
+  const overallStats = calcStats(filterByView(series.games || [], view), compLine);
   const v2Games = profileSimilarityV2Games(profile, entry);
   const similarGames = v2Games.length ? v2Games : (series.similarGames || []);
-  const similarStats = calcStats(similarGames, entry.line);
-  const sameOppStats = calcStats((similarGames || []).filter(g => (g.opp || '') === (series.opp || '')), entry.line);
+  const similarStats = calcStats(similarGames, compLine);
+  const sameOppStats = calcStats((similarGames || []).filter(g => (g.opp || '') === (series.opp || '')), compLine);
   const rows = [
     ['Recent sample', recentStats],
     ['Full sample', overallStats],
@@ -450,6 +464,8 @@ function renderSummary(entry, series, view, profile = null) {
 
 function renderTableRows(rootId, games, line, entry = null, series = null, profile = null) {
   const body = byId(rootId);
+  const compLine = entryComparisonLine(entry, profile);
+  if (hasNumericValue(compLine)) line = compLine;
   if (!body) return;
   if (!(games || []).length) {
     body.innerHTML = '<tr><td colspan="7">No samples available for this view.</td></tr>';
@@ -491,8 +507,8 @@ function renderChart(entry, series, view, profile = null) {
   const height = 320;
   const margin = { top: 18, right: 18, bottom: 48, left: 48 };
   const values = games.map(g => Number(g.value)).filter(Number.isFinite);
-  const line = Number(entry.line);
-  const topValue = Math.max(...values, line, 0);
+  const line = Number(entryComparisonLine(entry, profile));
+  const topValue = Math.max(...values, Number.isFinite(line) ? line : 0, 0);
   const y0 = 0;
   let y1 = Math.max(1, Math.ceil(topValue));
   if ((y1 - topValue) < 0.6) y1 += 1;
@@ -533,11 +549,11 @@ function renderChart(entry, series, view, profile = null) {
     </g>`;
   }).join('');
 
-  const lineY = y(line);
+  const lineY = Number.isFinite(line) ? y(line) : null;
   root.innerHTML = `
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Recent prop trend chart">
       ${grid}
-      <line x1="${margin.left}" x2="${width - margin.right}" y1="${lineY}" y2="${lineY}" stroke="#ff7e79" stroke-width="2" stroke-dasharray="7 6"></line>
+      ${Number.isFinite(lineY) ? `<line x1="${margin.left}" x2="${width - margin.right}" y1="${lineY}" y2="${lineY}" stroke="#ff7e79" stroke-width="2" stroke-dasharray="7 6"></line>` : ''}
       <polyline fill="none" stroke="#59b4ff" stroke-width="3" points="${poly}"></polyline>
       ${dots}
     </svg>
@@ -568,7 +584,105 @@ function sortProfileProps(props) {
   });
 }
 
+
+function isPitcherProfile(profile) {
+  if (String(profile?.playerType || '').toLowerCase() === 'pitcher') return true;
+  const stats = new Set((profile?.availableProps || []).map(prop => normalizeStatToken(prop?.stat)));
+  return stats.has('HA') || stats.has('IP') || stats.has('OUTS') || stats.has('ER');
+}
+
+function isPitcherProp(prop) {
+  const display = String(prop?.statDisplay || prop?.stat_display || '').toLowerCase();
+  if (String(prop?.playerType || '').toLowerCase() === 'pitcher') return true;
+  if (display.includes('pitcher')) return true;
+  const stat = normalizeStatToken(prop?.stat);
+  return ['HA', 'IP', 'OUTS'].includes(stat) || (['K', 'BB', 'ER'].includes(stat) && display.includes('pitcher'));
+}
+
+function pitcherAverageLineForProp(prop) {
+  if (!isPitcherProp(prop)) return null;
+  if (hasNumericValue(Number(prop?.comparisonLine))) {
+    return {
+      line: Number(prop.comparisonLine),
+      probability: hasNumericValue(Number(prop?.comparisonProbability)) ? Number(prop.comparisonProbability) : null,
+      source: prop?.comparisonLineSource || 'pitcher average',
+    };
+  }
+  if (hasNumericValue(Number(prop?.allGamesAvg))) {
+    return { line: Number(prop.allGamesAvg), probability: null, source: 'full sample average' };
+  }
+  if (hasNumericValue(Number(prop?.recent5Avg))) {
+    return { line: Number(prop.recent5Avg), probability: null, source: 'recent average' };
+  }
+  return null;
+}
+
+function patchPitcherLineControl(entry, profile) {
+  if (!entry || !isPitcherProfile(profile)) return;
+  const lineSelect = byId('analyzer-line');
+  if (!lineSelect) return;
+  const prop = selectedPropForEntry(profile, entry);
+  const avg = pitcherAverageLineForProp(prop);
+  if (!prop || !avg || !hasNumericValue(avg.line)) return;
+  const option = lineOptionForProp(prop, entry);
+  const label = option?.isClosestAverageLine
+    ? `${statDisplayLabel(entry, null)} ${fmt(option.line, 1)} • closest to ${avg.source} ${fmt(avg.line, 1)}`
+    : `${statDisplayLabel(entry, null)} avg ${fmt(avg.line, 1)} • ${avg.source}`;
+  lineSelect.innerHTML = `<option value="${escapeHtml(String(entry.line ?? ''))}">${escapeHtml(label)}</option>`;
+}
+
+
+function closestListedLineToAverage(prop, averageLine) {
+  const options = (Array.isArray(prop?.lineOptions) ? prop.lineOptions : [])
+    .map(opt => ({
+      ...opt,
+      lineNumber: Number(opt.line),
+      probabilityNumber: Number(opt.probability),
+    }))
+    .filter(opt => hasNumericValue(opt.lineNumber));
+
+  if (!options.length || !hasNumericValue(averageLine)) return null;
+
+  return options.sort((a, b) => {
+    const distance = Math.abs(a.lineNumber - averageLine) - Math.abs(b.lineNumber - averageLine);
+    if (distance) return distance;
+    const aProb = hasNumericValue(a.probabilityNumber) ? a.probabilityNumber : -1;
+    const bProb = hasNumericValue(b.probabilityNumber) ? b.probabilityNumber : -1;
+    return bProb - aProb;
+  })[0];
+}
+
 function lineOptionForProp(prop, selectedEntry = null) {
+  // Pitcher pages use the listed line closest to the pitcher's own average.
+  // This avoids comparing everything to the lowest alt line while preserving
+  // a real model probability from the existing lineOptions.
+  const pitcherAverage = pitcherAverageLineForProp(prop);
+  if (pitcherAverage && hasNumericValue(pitcherAverage.line)) {
+    const closest = closestListedLineToAverage(prop, pitcherAverage.line);
+    if (closest) {
+      return {
+        ...closest,
+        line: Number(closest.lineNumber),
+        probability: hasNumericValue(closest.probabilityNumber) ? Number(closest.probabilityNumber) : null,
+        side: 'closest listed line to pitcher average',
+        source: `closest listed line to ${pitcherAverage.source || 'pitcher average'}`,
+        averageReference: Number(pitcherAverage.line),
+        averageSource: pitcherAverage.source || 'pitcher average',
+        isComparisonLine: true,
+        isClosestAverageLine: true,
+      };
+    }
+    return {
+      line: pitcherAverage.line,
+      probability: pitcherAverage.probability,
+      side: 'vs pitcher average',
+      source: pitcherAverage.source || 'pitcher average',
+      averageReference: Number(pitcherAverage.line),
+      averageSource: pitcherAverage.source || 'pitcher average',
+      isComparisonLine: true,
+    };
+  }
+
   const options = Array.isArray(prop?.lineOptions) ? prop.lineOptions : [];
   const selectedStat = normalizeStatToken(selectedEntry?.stat);
   const propStat = normalizeStatToken(prop?.stat);
@@ -596,6 +710,30 @@ function lineForProfileProp(prop, selectedEntry = null) {
 function probabilityForProfileProp(prop, selectedEntry = null) {
   const option = lineOptionForProp(prop, selectedEntry);
   return hasNumericValue(Number(option?.probability)) ? Number(option.probability) : null;
+}
+
+function comparisonLineLabel(prop, selectedEntry = null) {
+  const option = lineOptionForProp(prop, selectedEntry);
+  if (option?.isComparisonLine) return option.source || 'pitcher average';
+  return 'listed line';
+}
+
+function selectedPropForEntry(profile, entry) {
+  if (!profile || !entry) return null;
+  const wanted = normalizeStatToken(entry?.stat);
+  return (profile.availableProps || []).find(prop => normalizeStatToken(prop.stat) === wanted) || null;
+}
+
+function entryComparisonLine(entry, profile = null) {
+  const prop = selectedPropForEntry(profile, entry);
+  const line = prop ? lineForProfileProp(prop, entry) : null;
+  return hasNumericValue(line) ? line : (hasNumericValue(Number(entry?.line)) ? Number(entry.line) : null);
+}
+
+function entryComparisonProbability(entry, profile = null) {
+  const prop = selectedPropForEntry(profile, entry);
+  const prob = prop ? probabilityForProfileProp(prop, entry) : null;
+  return hasNumericValue(prob) ? prob : (hasNumericValue(Number(entry?.prob_cons)) ? Number(entry.prob_cons) : null);
 }
 
 function selectedProfileProp(profile, selectedEntry = null) {
@@ -668,6 +806,149 @@ function matchupReadinessText(profile) {
   if (!next.length) return 'Current context is structured. Historical handedness, pitch mix, park, and weather are still the next inputs.';
   return next.slice(0, 2).join(' • ');
 }
+
+
+function pitcherLineupContext(profile) {
+  const ctx = profile?.pitcherLineupContext;
+  return ctx && ctx.available ? ctx : null;
+}
+
+function handCountText(counts) {
+  counts = counts || {};
+  const parts = [];
+  if (hasNumericValue(Number(counts.R))) parts.push(`${Number(counts.R)} RHB`);
+  if (hasNumericValue(Number(counts.L))) parts.push(`${Number(counts.L)} LHB`);
+  if (hasNumericValue(Number(counts.S))) parts.push(`${Number(counts.S)} switch`);
+  if (!parts.length && hasNumericValue(Number(counts.Unknown))) parts.push(`${Number(counts.Unknown)} unknown`);
+  return parts.join(' • ') || 'lineup hands pending';
+}
+
+function pressureLabel(value) {
+  const text = String(value || 'unknown').toLowerCase();
+  if (text === 'high') return 'High';
+  if (text === 'medium') return 'Medium';
+  if (text === 'low') return 'Low';
+  return 'Pending';
+}
+
+function pressureClass(value) {
+  const text = String(value || '').toLowerCase();
+  if (text === 'high') return 'is-risk';
+  if (text === 'medium') return 'is-medium';
+  if (text === 'low') return 'is-safe';
+  return 'is-muted';
+}
+
+function lineupPlayerList(players, emptyText = 'No clear standouts') {
+  const rows = Array.isArray(players) ? players.filter(Boolean).slice(0, 4) : [];
+  if (!rows.length) return `<span class="pitcher-lineup-empty">${escapeHtml(emptyText)}</span>`;
+  return rows.map(p => {
+    const hand = p.hand ? ` • ${p.hand}` : '';
+    const metric = hasNumericValue(Number(p.metric)) ? ` (${fmt(Number(p.metric), 2)})` : '';
+    const order = p.order ? `#${p.order} ` : '';
+    return `<span>${escapeHtml(`${order}${p.player || 'Player'}${hand}${metric}`)}</span>`;
+  }).join('');
+}
+
+function pitcherLineupSummary(profile) {
+  const ctx = pitcherLineupContext(profile);
+  if (!ctx) return '';
+  const pitcher = profile?.player || ctx.pitcher || 'This pitcher';
+  const opp = ctx.opponentTeam || 'the opposing lineup';
+  const hand = ctx.pitcherHand ? `${ctx.pitcherHand}HP` : 'pitcher';
+  const counts = handCountText(ctx.lineupHandCounts);
+  const side = ctx.sideAdvantageCounts || {};
+  const pressure = ctx.lineupPressure || {};
+  const pieces = [
+    `${pitcher} is a ${hand} facing ${opp}.`,
+    `Projected lineup mix: ${counts}.`,
+  ];
+  if (hasNumericValue(Number(side.opposite)) || hasNumericValue(Number(side.switch))) {
+    pieces.push(`${Number(side.opposite || 0)} opposite-side bats and ${Number(side.switch || 0)} switch bats in the projected lineup.`);
+  }
+  const pressureBits = [];
+  if (pressure.contact) pressureBits.push(`contact pressure ${pressureLabel(pressure.contact).toLowerCase()}`);
+  if (pressure.power) pressureBits.push(`power pressure ${pressureLabel(pressure.power).toLowerCase()}`);
+  if (pressure.strikeoutOpportunity) pressureBits.push(`K opportunity ${pressureLabel(pressure.strikeoutOpportunity).toLowerCase()}`);
+  if (pressureBits.length) pieces.push(pressureBits.join(' • ') + '.');
+  return pieces.join(' ');
+}
+
+function renderPitcherLineupMatchup(profile) {
+  const ctx = pitcherLineupContext(profile);
+  if (!ctx) return '';
+  const pressure = ctx.lineupPressure || {};
+  const side = ctx.sideAdvantageCounts || {};
+  const topSide = ctx.topThirdSideAdvantageCounts || {};
+  return `
+    <article class="pitcher-lineup-panel">
+      <div class="pitcher-lineup-head">
+        <div>
+          <span class="stat-label">Opposing lineup matchup</span>
+          <strong>${escapeHtml(ctx.pitcherHand ? `${ctx.pitcherHand}HP vs ${ctx.opponentTeam || 'opponent'} projected lineup` : `${ctx.opponentTeam || 'Opponent'} projected lineup`)}</strong>
+          <p class="muted">${escapeHtml(handCountText(ctx.lineupHandCounts))}${ctx.lineupSize ? ` • ${ctx.lineupSize} projected bats` : ''}</p>
+        </div>
+        <div class="pitcher-lineup-counts">
+          <span><b>${escapeHtml(String(side.opposite ?? 0))}</b><small>opp-side</small></span>
+          <span><b>${escapeHtml(String(side.same ?? 0))}</b><small>same-side</small></span>
+          <span><b>${escapeHtml(String(side.switch ?? 0))}</b><small>switch</small></span>
+        </div>
+      </div>
+      <div class="pitcher-pressure-grid">
+        <span class="pitcher-pressure-chip ${pressureClass(pressure.contact)}"><em>Contact pressure</em><b>${escapeHtml(pressureLabel(pressure.contact))}</b></span>
+        <span class="pitcher-pressure-chip ${pressureClass(pressure.power)}"><em>Power pressure</em><b>${escapeHtml(pressureLabel(pressure.power))}</b></span>
+        <span class="pitcher-pressure-chip ${pressureClass(pressure.strikeoutOpportunity)}"><em>K opportunity</em><b>${escapeHtml(pressureLabel(pressure.strikeoutOpportunity))}</b></span>
+        <span class="pitcher-pressure-chip ${pressureClass(pressure.walkRisk)}"><em>Walk risk</em><b>${escapeHtml(pressureLabel(pressure.walkRisk))}</b></span>
+      </div>
+      <div class="pitcher-lineup-splits">
+        <div><span class="stat-label">Top third</span><strong>${escapeHtml(handCountText(ctx.topThirdHandCounts))}</strong><small>${escapeHtml(`${Number(topSide.opposite || 0)} opp-side • ${Number(topSide.switch || 0)} switch`)}</small></div>
+        <div><span class="stat-label">Middle third</span><strong>${escapeHtml(handCountText(ctx.middleThirdHandCounts))}</strong></div>
+        <div><span class="stat-label">Bottom third</span><strong>${escapeHtml(handCountText(ctx.bottomThirdHandCounts))}</strong></div>
+      </div>
+      <div class="pitcher-lineup-threats">
+        <div><span class="stat-label">Contact threats</span>${lineupPlayerList(ctx.contactThreats)}</div>
+        <div><span class="stat-label">Power threats</span>${lineupPlayerList(ctx.powerThreats)}</div>
+        <div><span class="stat-label">K targets</span>${lineupPlayerList(ctx.strikeoutTargets)}</div>
+        <div><span class="stat-label">Walk-risk bats</span>${lineupPlayerList(ctx.walkRiskBats)}</div>
+      </div>
+      <p class="pitcher-lineup-read">${escapeHtml(pitcherLineupSummary(profile))}</p>
+    </article>
+  `;
+}
+
+function pitcherPropReadableSummary(profile, prop, entry) {
+  const name = playerFirstName(profile, entry);
+  const stat = normalizeStatToken(prop?.stat);
+  const line = lineForProfileProp(prop, entry);
+  const prob = probabilityForProfileProp(prop, entry);
+  const lineSource = lineOptionForProp(prop, entry)?.isComparisonLine ? (lineOptionForProp(prop, entry)?.source || 'pitcher average') : 'line';
+  const model = hasNumericValue(Number(prop?.modelPred)) ? Number(prop.modelPred) : null;
+  const sim = prop?.similarityV2 || {};
+  const simAvg = hasNumericValue(Number(sim?.avgValue)) ? Number(sim.avgValue) : null;
+  const simCount = hasNumericValue(Number(sim?.count)) ? Number(sim.count) : null;
+  const ctx = pitcherLineupContext(profile);
+  const pressure = ctx?.lineupPressure || {};
+  const pieces = [];
+
+  if (stat === 'K') {
+    if (hasNumericValue(simAvg)) pieces.push(`${name} has averaged ${fmt(simAvg, 2)} strikeouts across ${simCount || 'the top'} similar starts${hasNumericValue(line) ? (simAvg >= line ? `, above the ${lineSource} ${fmt(line, 1)}` : `, below the ${lineSource} ${fmt(line, 1)}`) : ''}.`);
+    if (hasNumericValue(model) && hasNumericValue(line)) pieces.push(`The model projects ${fmt(model, 2)} Ks vs ${lineSource} ${fmt(line, 1)}${hasNumericValue(prob) ? ` (${fmtPct(prob)} probability)` : ''}.`);
+    if (pressure.strikeoutOpportunity) pieces.push(`Opposing lineup K opportunity grades ${pressureLabel(pressure.strikeoutOpportunity).toLowerCase()}.`);
+  } else if (['HA', 'ER', 'BB'].includes(stat)) {
+    const label = stat === 'HA' ? 'hits allowed' : stat === 'ER' ? 'earned runs allowed' : 'walks allowed';
+    if (hasNumericValue(simAvg)) pieces.push(`${name} has allowed ${fmt(simAvg, 2)} ${label} across ${simCount || 'the top'} similar starts${hasNumericValue(line) ? (simAvg >= line ? `, over the ${lineSource} ${fmt(line, 1)}` : `, under the ${lineSource} ${fmt(line, 1)}`) : ''}.`);
+    if (hasNumericValue(model) && hasNumericValue(line)) pieces.push(`The model is ${model >= line ? 'above' : 'below'} the line at ${fmt(model, 2)} vs ${lineSource} ${fmt(line, 1)}${hasNumericValue(prob) ? ` (${fmtPct(prob)} probability)` : ''}.`);
+    if (stat === 'HA' && pressure.contact) pieces.push(`Lineup contact pressure grades ${pressureLabel(pressure.contact).toLowerCase()}.`);
+    if (stat === 'ER' && pressure.power) pieces.push(`Lineup power/run-production pressure grades ${pressureLabel(pressure.power).toLowerCase()}.`);
+    if (stat === 'BB' && pressure.walkRisk) pieces.push(`Lineup walk pressure grades ${pressureLabel(pressure.walkRisk).toLowerCase()}.`);
+  } else if (['IP', 'OUTS'].includes(stat)) {
+    if (hasNumericValue(simAvg)) pieces.push(`${name} has averaged ${fmt(simAvg, 2)} ${readableStatName(prop).toLowerCase()} across ${simCount || 'the top'} similar starts.`);
+    if (hasNumericValue(model) && hasNumericValue(line)) pieces.push(`The workload model is ${model >= line ? 'above' : 'below'} the line at ${fmt(model, 2)} vs ${lineSource} ${fmt(line, 1)}${hasNumericValue(prob) ? ` (${fmtPct(prob)} probability)` : ''}.`);
+    if (pressure.contact || pressure.power) pieces.push(`Lineup pressure: contact ${pressureLabel(pressure.contact).toLowerCase()}, power ${pressureLabel(pressure.power).toLowerCase()}.`);
+  }
+  return pieces.filter(Boolean).slice(0, 3).join(' ') || '';
+}
+
 
 
 function readableStatName(propOrStat) {
@@ -788,6 +1069,10 @@ function propSupportScore(prop, entry) {
 }
 
 function propReadableSummary(profile, prop, entry) {
+  if (String(profile?.playerType || '').toLowerCase() === 'pitcher') {
+    const pitcherSummary = pitcherPropReadableSummary(profile, prop, entry);
+    if (pitcherSummary) return pitcherSummary;
+  }
   const name = playerFirstName(profile, entry);
   const stat = normalizeStatToken(prop?.stat);
   const statName = readableStatName(prop).toLowerCase();
@@ -825,7 +1110,9 @@ function propReadableSummary(profile, prop, entry) {
 
 function buildOverallMatchupRead(profile, selectedProps, entry) {
   const name = playerFullName(profile, entry);
-  const ctxLine = lineupNarrative(profile);
+  const ctxLine = String(profile?.playerType || '').toLowerCase() === 'pitcher'
+    ? pitcherLineupSummary(profile)
+    : lineupNarrative(profile);
   const scored = (selectedProps || [])
     .map(prop => ({ prop, score: propSupportScore(prop, entry) }))
     .sort((a, b) => b.score - a.score);
@@ -843,9 +1130,14 @@ function buildOverallMatchupRead(profile, selectedProps, entry) {
     if (hasNumericValue(model) && hasNumericValue(line)) support.push(`model ${fmt(model, 2)} vs ${fmt(line, 1)}`);
     if (hasNumericValue(prob)) support.push(`${fmtPct(prob)} probability`);
     if (hasNumericValue(simAvg)) support.push(`similar-game avg ${fmt(simAvg, 2)}`);
-    parts.push(`${name}'s strongest selected read is ${statName}${support.length ? ` (${support.join(' • ')})` : ''}.`);
+    if (String(profile?.playerType || '').toLowerCase() === 'pitcher') {
+      const pitcherRead = pitcherPropReadableSummary(profile, best, entry);
+      parts.push(pitcherRead || `${name}'s strongest selected read is ${statName}${support.length ? ` (${support.join(' • ')})` : ''}.`);
+    } else {
+      parts.push(`${name}'s strongest selected read is ${statName}${support.length ? ` (${support.join(' • ')})` : ''}.`);
+    }
   }
-  if (pitch) parts.push(pitch);
+  if (pitch && String(profile?.playerType || '').toLowerCase() !== 'pitcher') parts.push(pitch);
   return parts.join(' ');
 }
 
@@ -1069,6 +1361,7 @@ function renderProfileSummary(entry, profile, league) {
       <p class="muted">${escapeHtml(matchupReadinessText(profile))}</p>
       ${missingForTrueSimilarity.length ? `<p class="muted multi-prop-warning">Planned historical inputs: ${escapeHtml(missingForTrueSimilarity.join(', '))}</p>` : ''}
     </article>
+    ${renderPitcherLineupMatchup(profile)}
   `;
 }
 
@@ -1201,10 +1494,10 @@ function renderMultiPropProfile(entry, profile, view, selectedStats, league) {
     return `
       <article class="multi-prop-card is-selected">
         <span class="stat-label">${escapeHtml(prop.statDisplay || stat)}</span>
-        <strong>${hasNumericValue(line) ? `${escapeHtml(prop.statDisplay || stat)} ${fmt(line, 1)}` : 'Line pending'}</strong>
+        <strong>${hasNumericValue(line) ? `${escapeHtml(prop.statDisplay || stat)} ${fmt(line, 1)}${lineOptionForProp(prop, entry)?.isComparisonLine ? ' avg' : ''}` : 'Line pending'}</strong>
         <div class="prop-meta">
           <span class="prop-chip">Model ${fmt(prop.modelPred, 2)}</span>
-          <span class="prop-chip">Prob ${fmtPct(prob)}</span>
+          <span class="prop-chip">${lineOptionForProp(prop, entry)?.isComparisonLine ? 'Vs avg' : 'Prob'} ${hasNumericValue(prob) ? fmtPct(prob) : '—'}</span>
           <span class="prop-chip">L5 avg ${fmt(prop.recent5Avg, 2)}</span>
           <span class="prop-chip">Similarity v2 avg ${fmt(similar.avgValue, 2)}</span>
           <span class="prop-chip">${prop.gameCount ?? 0} games</span>
@@ -1223,9 +1516,9 @@ function renderMultiPropProfile(entry, profile, view, selectedStats, league) {
       <article class="multi-prop-chart-card">
         <h3>${escapeHtml(prop.statDisplay || stat)}</h3>
         <div class="prop-meta">
-          <span class="prop-chip">Line ${hasNumericValue(line) ? fmt(line, 1) : '—'}</span>
+          <span class="prop-chip">${lineOptionForProp(prop, entry)?.isClosestAverageLine ? 'Near avg' : lineOptionForProp(prop, entry)?.isComparisonLine ? 'Avg' : 'Line'} ${hasNumericValue(line) ? fmt(line, 1) : '—'}</span>${lineOptionForProp(prop, entry)?.isClosestAverageLine && hasNumericValue(Number(lineOptionForProp(prop, entry)?.averageReference)) ? `<span class="prop-chip">Avg ref ${fmt(Number(lineOptionForProp(prop, entry).averageReference), 1)}</span>` : ''}
           <span class="prop-chip">Model ${fmt(prop.modelPred, 2)}</span>
-          <span class="prop-chip">Prob ${fmtPct(prob)}</span>
+          <span class="prop-chip">${lineOptionForProp(prop, entry)?.isComparisonLine ? 'Vs avg' : 'Prob'} ${hasNumericValue(prob) ? fmtPct(prob) : '—'}</span>
         </div>
         ${renderSmallProfileChart(profile, prop, line, view)}
       </article>
@@ -1541,8 +1834,9 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
 
     const normalizedProfileStats = profile ? normalizeProfileSelectedStats(profile, state.profileStats) : [];
     if (profile) state.profileStats = normalizedProfileStats;
+    patchPitcherLineControl(entry, profile);
 
-    updateHero(entry, series);
+    updateHero(entry, series, profile);
     renderStatus(entry, series);
     if (!series) {
       renderKpis(entry, {

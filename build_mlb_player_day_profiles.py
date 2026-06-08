@@ -997,6 +997,37 @@ def summarize_similar_games(detail: Dict[str, Any]) -> Dict[str, Any]:
             for g in games[:5]
         ],
     }
+
+PITCHER_AVERAGE_LINE_STATS = {"K", "ER", "HA", "IP", "OUTS", "BB"}
+
+
+def normal_over_probability(mean: Optional[float], sigma: Optional[float], line: Optional[float]) -> Optional[float]:
+    if mean is None or line is None:
+        return None
+    if sigma is None or not math.isfinite(sigma) or sigma <= 0:
+        return None
+    z = (line - mean) / sigma
+    return round(1.0 - (0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))), 6)
+
+
+def comparison_line_for_prop(stat: str, player_type: Any, all_games_avg: Optional[float], recent5_avg: Optional[float]) -> Tuple[Optional[float], Optional[str]]:
+    """Use a pitcher average as the comparison line for pitcher prop pages.
+
+    The user grades pitcher props against the pitcher's average, not against the
+    lowest static prop line. Batter props keep the board/book line behavior.
+    """
+    if str(player_type or "").lower() == "pitcher":
+        if all_games_avg is not None:
+            return round(float(all_games_avg), 4), "full sample average"
+        if recent5_avg is not None:
+            return round(float(recent5_avg), 4), "recent average"
+    return None, None
+
+
+def normalize_stat(stat: Any) -> str:
+    return str(stat or "").upper().strip()
+
+
 def build_available_prop(
     stat: str,
     detail: Dict[str, Any],
@@ -1012,6 +1043,14 @@ def build_available_prop(
     all_values = [v for v in all_values if v is not None]
     samples = detail.get("samples") if isinstance(detail.get("samples"), dict) else {}
     model_pred = safe_float(detail.get("modelPred") or detail.get("modelMu"))
+    model_sigma = safe_float(detail.get("modelSigma"))
+    recent5_avg = round(sum(recent_values) / len(recent_values), 4) if recent_values else None
+    all_games_avg = round(sum(all_values) / len(all_values), 4) if all_values else None
+    player_type = detail.get("playerType")
+    if not player_type and (str(detail_filename or "").lower().startswith("pitcher_") or normalize_stat(stat) in {"HA", "IP", "OUTS"}):
+        player_type = "pitcher"
+    comparison_line, comparison_source = comparison_line_for_prop(stat, player_type, all_games_avg, recent5_avg)
+    comparison_probability = normal_over_probability(model_pred, model_sigma, comparison_line)
 
     return {
         "stat": stat,
@@ -1019,14 +1058,19 @@ def build_available_prop(
         "detailFile": detail_filename,
         "sampleType": detail.get("sampleType"),
         "recentWindow": detail.get("recentWindow"),
+        "playerType": player_type,
         "modelPred": model_pred,
         "modelPredDisplay": f"{model_pred:.2f}" if model_pred is not None else None,
-        "modelSigma": safe_float(detail.get("modelSigma")),
+        "modelSigma": model_sigma,
         "contextMetricLabel": detail.get("contextMetricLabel"),
         "contextMetricValue": safe_float(detail.get("contextMetricValue")),
         "samples": samples,
-        "recent5Avg": round(sum(recent_values) / len(recent_values), 4) if recent_values else None,
-        "allGamesAvg": round(sum(all_values) / len(all_values), 4) if all_values else None,
+        "recent5Avg": recent5_avg,
+        "allGamesAvg": all_games_avg,
+        "comparisonLine": comparison_line,
+        "comparisonLineSource": comparison_source,
+        "comparisonProbability": comparison_probability,
+        "comparisonMode": "pitcher_average" if comparison_line is not None else "listed_line",
         "gameCount": len(games),
         "lineOptions": prop_lines_from_rows(board_rows),
         "similarity": summarize_similar_games(detail),
@@ -1083,17 +1127,31 @@ def quality_flags(profile: Dict[str, Any]) -> Dict[str, Any]:
             if stat not in available_stats:
                 warnings.append(f"missing {stat} detail")
     ctx = profile.get("matchupContext") or {}
-    if not ctx.get("handednessText"):
-        warnings.append("current handedness not parsed")
-    if ctx.get("temperatureF") is None:
-        warnings.append("current temperature not parsed")
-    if ctx.get("windMph") is None:
-        warnings.append("current wind not parsed")
-    coverage = profile.get("matchupFeatureSummary", {}).get("featureCoverage", {}) or {}
-    if not coverage.get("historicalHandedness"):
-        warnings.append("historical handedness not available yet")
-    if not coverage.get("historicalPitchMix"):
-        warnings.append("historical pitch mix not available yet")
+    pitcher_lineup_ctx = profile.get("pitcherLineupContext") or {}
+    if player_type == "pitcher":
+        if not pitcher_lineup_ctx:
+            warnings.append("current opposing lineup handedness not matched yet")
+        if ctx.get("temperatureF") is None:
+            warnings.append("current temperature not parsed")
+        if ctx.get("windMph") is None:
+            warnings.append("current wind not parsed")
+        coverage = profile.get("matchupFeatureSummary", {}).get("featureCoverage", {}) or {}
+        if not coverage.get("historicalHandedness"):
+            warnings.append("historical opposing-lineup handedness not available in pitcher start rows yet")
+        if not coverage.get("historicalPitchMix"):
+            warnings.append("historical pitcher pitch mix not available in start rows yet")
+    else:
+        if not ctx.get("handednessText"):
+            warnings.append("current handedness not parsed")
+        if ctx.get("temperatureF") is None:
+            warnings.append("current temperature not parsed")
+        if ctx.get("windMph") is None:
+            warnings.append("current wind not parsed")
+        coverage = profile.get("matchupFeatureSummary", {}).get("featureCoverage", {}) or {}
+        if not coverage.get("historicalHandedness"):
+            warnings.append("historical handedness not available yet")
+        if not coverage.get("historicalPitchMix"):
+            warnings.append("historical pitch mix not available yet")
 
     return {
         "multiPropReady": len(available_stats) >= 2,
@@ -1103,6 +1161,320 @@ def quality_flags(profile: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+
+
+def first_present(row: Dict[str, Any], keys: Iterable[str]) -> Any:
+    for key in keys:
+        if isinstance(row, dict) and key in row and row.get(key) not in [None, ""]:
+            return row.get(key)
+    return None
+
+
+def normalize_hand(value: Any) -> str:
+    text = str(value or "").strip().upper()
+    if not text:
+        return ""
+    if text.startswith("SW") or text in {"B", "S"}:
+        return "S"
+    if text.startswith("R"):
+        return "R"
+    if text.startswith("L"):
+        return "L"
+    return text[:1]
+
+
+def resolve_site_json_path(data_dir: Path, value: Any) -> Optional[Path]:
+    if not value:
+        return None
+    raw = str(value).strip()
+    if not raw:
+        return None
+    p = Path(raw)
+    candidates: List[Path] = []
+    if p.is_absolute():
+        candidates.append(p)
+    else:
+        candidates.extend([
+            data_dir.parent / p,
+            data_dir / p,
+            data_dir / raw.replace("data/", "", 1),
+        ])
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def bucket_label(value: Optional[float], low: float, high: float) -> str:
+    if value is None or not math.isfinite(value):
+        return "unknown"
+    if value >= high:
+        return "high"
+    if value >= low:
+        return "medium"
+    return "low"
+
+
+def mean_numeric(rows: List[Dict[str, Any]], keys: Iterable[str]) -> Optional[float]:
+    vals: List[float] = []
+    for row in rows:
+        val = safe_float(first_present(row, keys))
+        if val is not None:
+            vals.append(val)
+    return round(sum(vals) / len(vals), 4) if vals else None
+
+
+def batter_metric(row: Dict[str, Any], keys: Iterable[str]) -> Optional[float]:
+    return safe_float(first_present(row, keys))
+
+
+def compact_lineup_player(row: Dict[str, Any], metric_keys: Iterable[str], metric_label: str) -> Dict[str, Any]:
+    metric = batter_metric(row, metric_keys)
+    order = safe_int(first_present(row, ["order", "lineupOrder", "battingOrder", "projectedLineupOrder"]))
+    return {
+        "playerId": normalize_player_id(first_present(row, ["playerId", "PLAYER_ID", "batterId", "mlbamId"])),
+        "player": str(first_present(row, ["player", "name", "PLAYER_NAME", "batter"]) or "").strip(),
+        "team": str(first_present(row, ["team", "TEAM_ABBR", "teamAbbr"]) or "").strip(),
+        "order": order,
+        "hand": normalize_hand(first_present(row, ["batSide", "batterHand", "hand", "stand", "bats"])),
+        "metric": metric,
+        "metricLabel": metric_label,
+    }
+
+
+def top_lineup_players(rows: List[Dict[str, Any]], metric_keys: Iterable[str], metric_label: str, limit: int = 4, reverse: bool = True) -> List[Dict[str, Any]]:
+    enriched = []
+    for row in rows:
+        metric = batter_metric(row, metric_keys)
+        if metric is None:
+            continue
+        enriched.append((metric, row))
+    enriched.sort(key=lambda x: x[0], reverse=reverse)
+    return [compact_lineup_player(row, metric_keys, metric_label) for _, row in enriched[:limit]]
+
+
+def lineup_count_by_hand(rows: List[Dict[str, Any]]) -> Dict[str, int]:
+    counts = {"R": 0, "L": 0, "S": 0, "Unknown": 0}
+    for row in rows:
+        hand = normalize_hand(first_present(row, ["batSide", "batterHand", "hand", "stand", "bats"]))
+        if hand in {"R", "L", "S"}:
+            counts[hand] += 1
+        else:
+            counts["Unknown"] += 1
+    return counts
+
+
+def lineup_band_rows(rows: List[Dict[str, Any]], lo: int, hi: int) -> List[Dict[str, Any]]:
+    out = []
+    for row in rows:
+        order = safe_int(first_present(row, ["order", "lineupOrder", "battingOrder", "projectedLineupOrder"]))
+        if order is not None and lo <= order <= hi:
+            out.append(row)
+    return out
+
+
+def side_advantage_counts(rows: List[Dict[str, Any]], pitcher_hand: str) -> Dict[str, int]:
+    pitcher_hand = normalize_hand(pitcher_hand)
+    counts = {"opposite": 0, "same": 0, "switch": 0, "unknown": 0}
+    for row in rows:
+        hand = normalize_hand(first_present(row, ["batSide", "batterHand", "hand", "stand", "bats"]))
+        if hand == "S":
+            counts["switch"] += 1
+        elif hand in {"R", "L"} and pitcher_hand in {"R", "L"}:
+            if hand == pitcher_hand:
+                counts["same"] += 1
+            else:
+                counts["opposite"] += 1
+        else:
+            counts["unknown"] += 1
+    return counts
+
+
+def build_pitcher_lineup_context_for_game(game: Dict[str, Any], detail: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Dict[str, Any]]]:
+    batters = [b for b in (detail.get("batters") or detail.get("projectedBatters") or []) if isinstance(b, dict)]
+    pitchers = [p for p in (detail.get("pitchers") or detail.get("projectedPitchers") or []) if isinstance(p, dict)]
+    if not batters or not pitchers:
+        return []
+
+    away_team = str(first_present(game, ["awayTeam", "away"]) or first_present(detail, ["awayTeam", "away"]) or "").strip()
+    home_team = str(first_present(game, ["homeTeam", "home"]) or first_present(detail, ["homeTeam", "home"]) or "").strip()
+    game_id = str(first_present(game, ["id", "gameId", "gamePk"]) or first_present(detail, ["id", "gameId", "gamePk"]) or "").strip()
+    matchup = f"{away_team} @ {home_team}".strip(" @")
+
+    out: List[Tuple[Tuple[str, str], Dict[str, Any]]] = []
+    for pitcher in pitchers:
+        pitcher_id = normalize_player_id(first_present(pitcher, ["playerId", "PLAYER_ID", "pitcherId", "mlbamId"]))
+        pitcher_name = str(first_present(pitcher, ["player", "name", "PLAYER_NAME", "pitcher"]) or "").strip()
+        pitcher_team = str(first_present(pitcher, ["team", "TEAM_ABBR", "teamAbbr"]) or "").strip()
+        pitcher_hand = normalize_hand(first_present(pitcher, ["hand", "pitcherHand", "throws", "throwHand"]))
+        if not pitcher_team and pitcher.get("isHome") is not None:
+            pitcher_team = home_team if int(pitcher.get("isHome")) == 1 else away_team
+        opp_team = ""
+        if pitcher_team and away_team and home_team:
+            opp_team = home_team if pitcher_team == away_team else away_team if pitcher_team == home_team else ""
+        if not opp_team:
+            opp_team = str(first_present(pitcher, ["opp", "opponent", "opponentTeam"]) or "").strip()
+
+        opp_rows = []
+        for batter in batters:
+            bteam = str(first_present(batter, ["team", "TEAM_ABBR", "teamAbbr"]) or "").strip()
+            if opp_team and bteam == opp_team:
+                opp_rows.append(batter)
+            elif pitcher_team and bteam and bteam != pitcher_team and not opp_team:
+                opp_rows.append(batter)
+        if not opp_rows:
+            continue
+
+        ordered_rows = sorted(
+            opp_rows,
+            key=lambda r: safe_int(first_present(r, ["order", "lineupOrder", "battingOrder", "projectedLineupOrder"])) or 99,
+        )
+        top_third = lineup_band_rows(ordered_rows, 1, 3)
+        middle_third = lineup_band_rows(ordered_rows, 4, 6)
+        bottom_third = lineup_band_rows(ordered_rows, 7, 9)
+        hand_counts = lineup_count_by_hand(ordered_rows)
+        top_counts = lineup_count_by_hand(top_third)
+        side_counts = side_advantage_counts(ordered_rows, pitcher_hand)
+        top_side_counts = side_advantage_counts(top_third, pitcher_hand)
+
+        avg_hit_prob = mean_numeric(ordered_rows, ["probHit", "hitProb", "probH", "probabilityHit"])
+        avg_hits = mean_numeric(ordered_rows, ["predHits", "hitsPred", "modelHits"])
+        avg_tb_prob = mean_numeric(ordered_rows, ["probTB2Plus", "probTB", "tbProb", "probTotalBases"])
+        avg_tb = mean_numeric(ordered_rows, ["predTB", "predTotalBases", "totalBasesPred"])
+        avg_hr_prob = mean_numeric(ordered_rows, ["probHR", "hrProb"])
+        avg_hrr_prob = mean_numeric(ordered_rows, ["probHRR2Plus", "probHRR", "hrrProb"])
+        avg_k = mean_numeric(ordered_rows, ["predK", "predStrikeouts", "strikeoutPred"])
+        avg_bb = mean_numeric(ordered_rows, ["predBB", "predWalks", "walkPred", "probBB", "bbProb"])
+
+        contact_pressure_value = avg_hit_prob if avg_hit_prob is not None else (avg_hits / 1.2 if avg_hits is not None else None)
+        power_pressure_value = avg_tb_prob if avg_tb_prob is not None else (avg_tb / 2.0 if avg_tb is not None else None)
+        if avg_hrr_prob is not None and power_pressure_value is not None:
+            power_pressure_value = max(power_pressure_value, avg_hrr_prob)
+        if avg_hr_prob is not None and power_pressure_value is not None:
+            power_pressure_value = max(power_pressure_value, avg_hr_prob * 2.0)
+        k_pressure_value = avg_k if avg_k is not None else None
+        walk_pressure_value = avg_bb if avg_bb is not None else None
+
+        contact_threats = top_lineup_players(ordered_rows, ["probHit", "predHits", "hitProb"], "contact", 4)
+        power_threats = top_lineup_players(ordered_rows, ["probTB2Plus", "predTB", "probHRR2Plus", "probHR", "predHR"], "power", 4)
+        strikeout_targets = top_lineup_players(ordered_rows, ["predK", "probK", "strikeoutPred"], "K risk", 4)
+        walk_risk_bats = top_lineup_players(ordered_rows, ["predBB", "probBB", "walkPred"], "walk risk", 4)
+
+        context = {
+            "available": True,
+            "gameId": game_id,
+            "matchup": matchup,
+            "pitcherId": pitcher_id,
+            "pitcher": pitcher_name,
+            "pitcherTeam": pitcher_team,
+            "pitcherHand": pitcher_hand,
+            "opponentTeam": opp_team,
+            "lineupSize": len(ordered_rows),
+            "lineupHandCounts": hand_counts,
+            "topThirdHandCounts": top_counts,
+            "middleThirdHandCounts": lineup_count_by_hand(middle_third),
+            "bottomThirdHandCounts": lineup_count_by_hand(bottom_third),
+            "sideAdvantageCounts": side_counts,
+            "topThirdSideAdvantageCounts": top_side_counts,
+            "lineupPressure": {
+                "contact": bucket_label(contact_pressure_value, 0.55, 0.64),
+                "power": bucket_label(power_pressure_value, 0.35, 0.52),
+                "strikeoutOpportunity": bucket_label(k_pressure_value, 0.75, 1.05),
+                "walkRisk": bucket_label(walk_pressure_value, 0.28, 0.45),
+                "contactValue": contact_pressure_value,
+                "powerValue": power_pressure_value,
+                "strikeoutValue": k_pressure_value,
+                "walkValue": walk_pressure_value,
+            },
+            "contactThreats": contact_threats,
+            "powerThreats": power_threats,
+            "strikeoutTargets": strikeout_targets,
+            "walkRiskBats": walk_risk_bats,
+            "summaryPieces": [
+                f"{opp_team} projected lineup" if opp_team else "Opposing projected lineup",
+                f"{hand_counts.get('R',0)} RHB",
+                f"{hand_counts.get('L',0)} LHB",
+                f"{hand_counts.get('S',0)} switch",
+                f"{side_counts.get('opposite',0)} opposite-side bats" if pitcher_hand else "",
+            ],
+        }
+        keys = []
+        if pitcher_id:
+            keys.append((pitcher_id, pitcher_team))
+        if pitcher_name:
+            keys.append((f"name:{pitcher_name.lower()}|{pitcher_team.lower()}", pitcher_team))
+        for key in keys:
+            out.append((key, context))
+    return out
+
+
+def load_pitcher_lineup_contexts(data_dir: Path, target_date: str) -> Dict[Tuple[str, str], Dict[str, Any]]:
+    """Build a pitcher -> opposing projected lineup context from game detail files.
+
+    Uses data/games.json detailPath entries when available. This is additive and safe:
+    if detail files or batter handedness fields are missing, pitcher profiles simply
+    omit pitcherLineupContext.
+    """
+    index: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    games_path = data_dir / "games.json"
+    game_rows: List[Dict[str, Any]] = []
+    if games_path.exists():
+        try:
+            payload = load_json(games_path)
+            if isinstance(payload, list):
+                game_rows = [g for g in payload if isinstance(g, dict)]
+            elif isinstance(payload, dict):
+                for key in ["games", "rows", "data"]:
+                    if isinstance(payload.get(key), list):
+                        game_rows.extend([g for g in payload[key] if isinstance(g, dict)])
+        except Exception:
+            game_rows = []
+
+    for game in game_rows:
+        gdate = str(first_present(game, ["gameDate", "date", "targetDate"]) or "")[:10]
+        if gdate and gdate != target_date:
+            continue
+        detail_path = resolve_site_json_path(data_dir, first_present(game, ["detailPath", "mlbDetailPath", "path"]))
+        if not detail_path:
+            continue
+        try:
+            detail = load_json(detail_path)
+        except Exception:
+            continue
+        if not isinstance(detail, dict):
+            continue
+        for key, context in build_pitcher_lineup_context_for_game(game, detail):
+            index[key] = context
+
+    # Fallback: scan common detail folders if games.json did not expose a detailPath.
+    if not index:
+        candidates = []
+        for pattern in [
+            f"mlb_game_details/{target_date}*.json",
+            f"mlb_game_details/{target_date}/*.json",
+            f"derived/mlb_game_details/{target_date}*.json",
+            f"derived/mlb_game_details/{target_date}/*.json",
+        ]:
+            candidates.extend(data_dir.glob(pattern))
+        for detail_path in candidates:
+            try:
+                detail = load_json(detail_path)
+            except Exception:
+                continue
+            if not isinstance(detail, dict):
+                continue
+            game = {
+                "gameDate": target_date,
+                "awayTeam": detail.get("awayTeam"),
+                "homeTeam": detail.get("homeTeam"),
+                "id": detail.get("id") or detail.get("gameId") or detail.get("gamePk"),
+            }
+            for key, context in build_pitcher_lineup_context_for_game(game, detail):
+                index[key] = context
+
+    return index
+
+
 def build_profile(
     profile_key: str,
     file_key: str,
@@ -1110,6 +1482,7 @@ def build_profile(
     detail_filenames_by_stat: Dict[str, str],
     board_index: Dict[Tuple[str, str], List[Dict[str, Any]]],
     target_date: str,
+    pitcher_lineup_index: Optional[Dict[Tuple[str, str], Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     stats_sorted = sorted(details_by_stat, key=lambda s: (STAT_SORT_ORDER.get(s, 999), s))
     primary = details_by_stat[stats_sorted[0]]
@@ -1117,6 +1490,12 @@ def build_profile(
     player_name = str(primary.get("player") or "").strip()
     team = str(primary.get("team") or "").strip()
     name_key = f"name:{player_name.lower()}|{team.lower()}" if player_name else ""
+    pitcher_lineup_context = None
+    if str(primary.get("playerType") or "").lower() == "pitcher" and pitcher_lineup_index:
+        if player_id:
+            pitcher_lineup_context = pitcher_lineup_index.get((player_id, team))
+        if not pitcher_lineup_context and name_key:
+            pitcher_lineup_context = pitcher_lineup_index.get((name_key, team))
 
     context_text = primary.get("driverSummary") or primary.get("boardContext") or ""
     if not context_text:
@@ -1176,6 +1555,7 @@ def build_profile(
         "boardContext": primary.get("boardContext") or primary.get("driverSummary"),
         "driverSummary": primary.get("driverSummary") or primary.get("boardContext"),
         "matchupContext": matchup_context,
+        "pitcherLineupContext": pitcher_lineup_context,
         "matchupFeatureSummary": {
             "currentFeatures": matchup_context.get("currentFeatures") or [],
             "summaryPieces": matchup_context.get("summaryPieces") or [],
@@ -1210,6 +1590,7 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
 
     board_rows = load_analyzer_rows(data_dir)
     board_index = make_board_row_index(board_rows, target_date)
+    pitcher_lineup_index = load_pitcher_lineup_contexts(data_dir, target_date)
 
     grouped: Dict[str, Dict[str, Dict[str, Any]]] = defaultdict(dict)
     grouped_file_keys: Dict[str, str] = {}
@@ -1261,6 +1642,7 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
     current_handedness_ready = 0
     current_weather_ready = 0
     current_lineup_ready = 0
+    pitcher_lineup_ready = 0
 
     for pkey, details_by_stat in sorted(grouped.items()):
         profile = build_profile(
@@ -1270,6 +1652,7 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
             detail_filenames_by_stat=grouped_filenames[pkey],
             board_index=board_index,
             target_date=target_date,
+            pitcher_lineup_index=pitcher_lineup_index,
         )
         filename = f"{re.sub(r'[^A-Za-z0-9_.-]+', '_', pkey)}.json"
         rel_path = f"player_profiles/{filename}"
@@ -1289,6 +1672,8 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
             current_weather_ready += 1
         if ctx_cov.get("lineupOrder"):
             current_lineup_ready += 1
+        if profile.get("pitcherLineupContext"):
+            pitcher_lineup_ready += 1
         for warning in q.get("warnings") or []:
             warning_counter[warning] += 1
 
@@ -1331,6 +1716,8 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
         "currentHandednessReadyProfiles": current_handedness_ready,
         "currentWeatherReadyProfiles": current_weather_ready,
         "currentLineupReadyProfiles": current_lineup_ready,
+        "pitcherLineupReadyProfiles": pitcher_lineup_ready,
+        "pitcherLineupContextsAvailable": len(pitcher_lineup_index),
         "statCoverage": dict(sorted(stat_counter.items())),
         "warningCounts": dict(sorted(warning_counter.items())),
         "skipped": dict(sorted(skipped.items())),
@@ -1352,6 +1739,8 @@ def write_summary_csv(path: Path, summaries: List[Dict[str, Any]]) -> None:
         "currentHandednessReadyProfiles",
         "currentWeatherReadyProfiles",
         "currentLineupReadyProfiles",
+        "pitcherLineupReadyProfiles",
+        "pitcherLineupContextsAvailable",
         "outputDir",
         "indexFile",
     ]
