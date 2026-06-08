@@ -1,0 +1,6071 @@
+{
+  "generatedAt": "2026-06-08T15:31:32+00:00",
+  "inputs": {
+    "mlbDataDir": "C:\\python\\mlb_data",
+    "mlbOutputDir": "C:\\python\\mlb_model_outputs",
+    "sampleRows": 500,
+    "sourcesScanned": 228
+  },
+  "shortRead": {
+    "batterGameLogsFound": true,
+    "pitcherGameLogsFound": true,
+    "joinableContextSources": 27,
+    "topJoinableSource": {
+      "source": "C:\\python\\mlb_model_outputs\\history\\batter_prediction_history.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "pitcher_hand",
+        "starter_identity",
+        "weather_temp",
+        "weather_wind",
+        "pitch_mix",
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "pitcher_hand": [
+          "opp_pitch_hand"
+        ],
+        "starter_identity": [
+          "opp_sp_starter_starts_season_to_date",
+          "opp_starter_id",
+          "opp_starter_team_fallback_found",
+          "opposing_starter_confidence_score"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "opp_catcher_opp_sb_attempts_allowed_game_r10",
+          "opp_catcher_opp_sb_attempts_allowed_game_r5",
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior",
+          "opp_sb_attempts_allowed_game_r10",
+          "opp_sb_attempts_allowed_game_r5",
+          "opp_sp_static_sp_ev_attempts",
+          "prior_team_run_opp_sb_attempts_allowed_game_prior",
+          "static_bat_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "batter_pitch_mix_barrel_score",
+          "batter_pitch_mix_coverage",
+          "batter_pitch_mix_launch_score",
+          "batter_pitch_mix_power_score",
+          "batter_pitch_mix_whiff_risk",
+          "hr_pitch_mix_factor",
+          "opp_sp_static_sp_pct_curve_spin",
+          "opp_sp_static_sp_spin_active_spin_changeup",
+          "opp_sp_static_sp_spin_active_spin_curve",
+          "opp_sp_static_sp_spin_active_spin_cutter",
+          "opp_sp_static_sp_spin_active_spin_sinker",
+          "opp_sp_static_sp_spin_active_spin_slider",
+          "opp_sp_static_sp_spin_active_spin_sweeper",
+          "pitch_mix_adjustment_coverage",
+          "pitch_mix_feature_available",
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score",
+          "pitch_mix_pitch_types_matched",
+          "pitch_mix_tb_factor",
+          "pitch_mix_usage_coverage",
+          "pitcher_pitch_mix_damage_allowed_score",
+          "pitcher_pitch_mix_movement_score",
+          "pitcher_pitch_mix_spin_score",
+          "pitcher_pitch_mix_velocity_score",
+          "pitcher_pitch_mix_whiff_score",
+          "pred_k_pitch_mix_delta",
+          "pred_k_pre_pitch_mix_adjustment",
+          "pred_total_bases_pitch_mix_delta",
+          "pred_total_bases_pre_pitch_mix_adjustment",
+          "statsapi_pitch_mix_batter_coverage",
+          "statsapi_pitch_mix_feature_available",
+          "statsapi_pitch_mix_launch_score",
+          "statsapi_pitch_mix_pitch_types_matched",
+          "statsapi_pitch_mix_power_score",
+          "statsapi_pitch_mix_usage_coverage",
+          "statsapi_pitch_mix_whiff_risk"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      }
+    }
+  },
+  "batterGameLogs": [
+    {
+      "source": "C:\\python\\mlb_data\\batter_game_logs\\batter_game_logs_latest.parquet",
+      "fileName": "batter_game_logs_latest.parquet",
+      "parent": "batter_game_logs",
+      "suffix": ".parquet",
+      "rows": 20749,
+      "columnCount": 28,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "team_context": [
+          "opponent",
+          "team",
+          "team_side"
+        ],
+        "lineup_context": [
+          "batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823244",
+              "823244"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "SF",
+              "SF"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "NYY",
+              "NYY"
+            ]
+          },
+          "team_side": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "AWAY",
+              "AWAY",
+              "AWAY"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "500",
+              "200",
+              "300"
+            ]
+          }
+        }
+      },
+      "sourceScore": 7,
+      "modifiedTime": "2026-06-08T06:19:50.944273+00:00"
+    }
+  ],
+  "pitcherGameLogs": [
+    {
+      "source": "C:\\python\\mlb_data\\pitcher_game_logs\\pitcher_game_logs_latest.parquet",
+      "fileName": "pitcher_game_logs_latest.parquet",
+      "parent": "pitcher_game_logs",
+      "suffix": ".parquet",
+      "rows": 8279,
+      "columnCount": 24,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "team_context": [
+          "opponent",
+          "team",
+          "team_side"
+        ],
+        "lineup_context": [
+          "batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823244",
+              "823244"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "SF",
+              "NYY"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "NYY",
+              "SF"
+            ]
+          },
+          "team_side": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "AWAY",
+              "AWAY",
+              "HOME"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 3,
+            "sampleRows": 500,
+            "examples": [
+              "601",
+              "802",
+              "402"
+            ]
+          }
+        }
+      },
+      "sourceScore": 9,
+      "modifiedTime": "2026-06-08T06:19:51.062768+00:00"
+    }
+  ],
+  "joinableContextSources": [
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\batter_prediction_history.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "pitcher_hand",
+        "starter_identity",
+        "weather_temp",
+        "weather_wind",
+        "pitch_mix",
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "pitcher_hand": [
+          "opp_pitch_hand"
+        ],
+        "starter_identity": [
+          "opp_sp_starter_starts_season_to_date",
+          "opp_starter_id",
+          "opp_starter_team_fallback_found",
+          "opposing_starter_confidence_score"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "opp_catcher_opp_sb_attempts_allowed_game_r10",
+          "opp_catcher_opp_sb_attempts_allowed_game_r5",
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior",
+          "opp_sb_attempts_allowed_game_r10",
+          "opp_sb_attempts_allowed_game_r5",
+          "opp_sp_static_sp_ev_attempts",
+          "prior_team_run_opp_sb_attempts_allowed_game_prior",
+          "static_bat_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "batter_pitch_mix_barrel_score",
+          "batter_pitch_mix_coverage",
+          "batter_pitch_mix_launch_score",
+          "batter_pitch_mix_power_score",
+          "batter_pitch_mix_whiff_risk",
+          "hr_pitch_mix_factor",
+          "opp_sp_static_sp_pct_curve_spin",
+          "opp_sp_static_sp_spin_active_spin_changeup",
+          "opp_sp_static_sp_spin_active_spin_curve",
+          "opp_sp_static_sp_spin_active_spin_cutter",
+          "opp_sp_static_sp_spin_active_spin_sinker",
+          "opp_sp_static_sp_spin_active_spin_slider",
+          "opp_sp_static_sp_spin_active_spin_sweeper",
+          "pitch_mix_adjustment_coverage",
+          "pitch_mix_feature_available",
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score",
+          "pitch_mix_pitch_types_matched",
+          "pitch_mix_tb_factor",
+          "pitch_mix_usage_coverage",
+          "pitcher_pitch_mix_damage_allowed_score",
+          "pitcher_pitch_mix_movement_score",
+          "pitcher_pitch_mix_spin_score",
+          "pitcher_pitch_mix_velocity_score",
+          "pitcher_pitch_mix_whiff_score",
+          "pred_k_pitch_mix_delta",
+          "pred_k_pre_pitch_mix_adjustment",
+          "pred_total_bases_pitch_mix_delta",
+          "pred_total_bases_pre_pitch_mix_adjustment",
+          "statsapi_pitch_mix_batter_coverage",
+          "statsapi_pitch_mix_feature_available",
+          "statsapi_pitch_mix_launch_score",
+          "statsapi_pitch_mix_pitch_types_matched",
+          "statsapi_pitch_mix_power_score",
+          "statsapi_pitch_mix_usage_coverage",
+          "statsapi_pitch_mix_whiff_risk"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\batter_predictions_20260608_to_20260615.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "pitcher_hand",
+        "starter_identity",
+        "weather_temp",
+        "weather_wind",
+        "pitch_mix",
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "pitcher_hand": [
+          "opp_pitch_hand"
+        ],
+        "starter_identity": [
+          "opp_sp_starter_starts_season_to_date",
+          "opp_starter_id",
+          "opp_starter_team_fallback_found",
+          "opposing_starter_confidence_score"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "opp_catcher_opp_sb_attempts_allowed_game_r10",
+          "opp_catcher_opp_sb_attempts_allowed_game_r5",
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior",
+          "opp_sb_attempts_allowed_game_r10",
+          "opp_sb_attempts_allowed_game_r5",
+          "opp_sp_static_sp_ev_attempts",
+          "prior_team_run_opp_sb_attempts_allowed_game_prior",
+          "static_bat_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "batter_pitch_mix_barrel_score",
+          "batter_pitch_mix_coverage",
+          "batter_pitch_mix_launch_score",
+          "batter_pitch_mix_power_score",
+          "batter_pitch_mix_whiff_risk",
+          "hr_pitch_mix_factor",
+          "opp_sp_static_sp_pct_curve_spin",
+          "opp_sp_static_sp_spin_active_spin_changeup",
+          "opp_sp_static_sp_spin_active_spin_curve",
+          "opp_sp_static_sp_spin_active_spin_cutter",
+          "opp_sp_static_sp_spin_active_spin_sinker",
+          "opp_sp_static_sp_spin_active_spin_slider",
+          "opp_sp_static_sp_spin_active_spin_sweeper",
+          "pitch_mix_adjustment_coverage",
+          "pitch_mix_feature_available",
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score",
+          "pitch_mix_pitch_types_matched",
+          "pitch_mix_tb_factor",
+          "pitch_mix_usage_coverage",
+          "pitcher_pitch_mix_damage_allowed_score",
+          "pitcher_pitch_mix_movement_score",
+          "pitcher_pitch_mix_spin_score",
+          "pitcher_pitch_mix_velocity_score",
+          "pitcher_pitch_mix_whiff_score",
+          "pred_k_pitch_mix_delta",
+          "pred_k_pre_pitch_mix_adjustment",
+          "pred_total_bases_pitch_mix_delta",
+          "pred_total_bases_pre_pitch_mix_adjustment",
+          "statsapi_pitch_mix_batter_coverage",
+          "statsapi_pitch_mix_feature_available",
+          "statsapi_pitch_mix_launch_score",
+          "statsapi_pitch_mix_pitch_types_matched",
+          "statsapi_pitch_mix_power_score",
+          "statsapi_pitch_mix_usage_coverage",
+          "statsapi_pitch_mix_whiff_risk"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\pitcher_prediction_history.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "pitcher_hand",
+        "starter_identity",
+        "park",
+        "weather_temp",
+        "weather_wind",
+        "pitch_mix"
+      ],
+      "bestFields": {
+        "pitcher_hand": [
+          "pitchHand"
+        ],
+        "starter_identity": [
+          "probable_pitcher_missing",
+          "starter_current_season_weight",
+          "starter_projection_confidence",
+          "starter_projection_confidence_score",
+          "starter_projection_low_confidence",
+          "starter_projection_source",
+          "starter_snapshot_found",
+          "starter_starts_season_to_date",
+          "starter_team_fallback_found"
+        ],
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "static_sp_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "static_sp_pct_curve_spin",
+          "static_sp_spin_active_spin_changeup",
+          "static_sp_spin_active_spin_curve",
+          "static_sp_spin_active_spin_cutter",
+          "static_sp_spin_active_spin_sinker",
+          "static_sp_spin_active_spin_slider",
+          "static_sp_spin_active_spin_sweeper"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\pitcher_predictions_20260608_to_20260615.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "pitcher_hand",
+        "starter_identity",
+        "park",
+        "weather_temp",
+        "weather_wind",
+        "pitch_mix"
+      ],
+      "bestFields": {
+        "pitcher_hand": [
+          "pitchHand"
+        ],
+        "starter_identity": [
+          "probable_pitcher_missing",
+          "starter_current_season_weight",
+          "starter_projection_confidence",
+          "starter_projection_confidence_score",
+          "starter_projection_low_confidence",
+          "starter_projection_source",
+          "starter_snapshot_found",
+          "starter_starts_season_to_date",
+          "starter_team_fallback_found"
+        ],
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "static_sp_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "static_sp_pct_curve_spin",
+          "static_sp_spin_active_spin_changeup",
+          "static_sp_spin_active_spin_curve",
+          "static_sp_spin_active_spin_cutter",
+          "static_sp_spin_active_spin_sinker",
+          "static_sp_spin_active_spin_slider",
+          "static_sp_spin_active_spin_sweeper"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\top_mlb_true_matchup_edges_batter_edges.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "starter_identity",
+        "pitch_mix",
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "starter_identity": [
+          "opposing_starter",
+          "opposing_starter_hand"
+        ],
+        "pitch_mix": [
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\plate_appearances\\plate_appearances_latest.parquet",
+      "rows": 74304,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "pitcher_hand",
+        "starter_identity",
+        "batter_hand"
+      ],
+      "bestFields": {
+        "pitcher_hand": [
+          "pitch_hand"
+        ],
+        "starter_identity": [
+          "pitcher_id",
+          "pitcher_name"
+        ],
+        "batter_hand": [
+          "bat_side"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\games\\games_latest.parquet",
+      "rows": 992,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "park",
+        "weather_temp",
+        "weather_wind"
+      ],
+      "bestFields": {
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "weather_temp_f"
+        ],
+        "weather_wind": [
+          "wind"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\statcast_pitch_level\\statcast_pitch_level_latest.parquet",
+      "rows": 284520,
+      "joinColumns": [
+        "game_pk"
+      ],
+      "usableGroups": [
+        "pitch_mix",
+        "batter_hand"
+      ],
+      "bestFields": {
+        "pitch_mix": [
+          "pitch_type"
+        ],
+        "batter_hand": [
+          "stand"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\schedule\\schedule_latest.parquet",
+      "rows": 992,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "starter_identity",
+        "park"
+      ],
+      "bestFields": {
+        "starter_identity": [
+          "away_probable_pitcher",
+          "away_probable_pitcher_id",
+          "home_probable_pitcher",
+          "home_probable_pitcher_id"
+        ],
+        "park": [
+          "venue_name"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\game_weather\\game_weather_latest.parquet",
+      "rows": 990,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "weather_temp",
+        "weather_wind"
+      ],
+      "bestFields": {
+        "weather_temp": [
+          "apparent_temperature",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "wind_direction_10m",
+          "wind_gusts_10m",
+          "wind_speed_10m"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\game_prediction_history.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "starter_identity",
+        "weather_temp"
+      ],
+      "bestFields": {
+        "starter_identity": [
+          "away_model_post_starter_runs",
+          "away_pitcher_post_starter_runs",
+          "away_starter_layer_confidence",
+          "home_model_post_starter_runs",
+          "home_pitcher_post_starter_runs",
+          "home_starter_layer_confidence",
+          "starter_combined_pred_er",
+          "starter_min_pred_outs"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\snapshots\\game_predictions_20260608_to_20260615_full_20260608_060530.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "starter_identity",
+        "weather_temp"
+      ],
+      "bestFields": {
+        "starter_identity": [
+          "away_model_post_starter_runs",
+          "away_pitcher_post_starter_runs",
+          "away_starter_layer_confidence",
+          "home_model_post_starter_runs",
+          "home_pitcher_post_starter_runs",
+          "home_starter_layer_confidence",
+          "starter_combined_pred_er",
+          "starter_min_pred_outs"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\game_predictions_20260608_to_20260615.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "starter_identity",
+        "weather_temp"
+      ],
+      "bestFields": {
+        "starter_identity": [
+          "away_model_post_starter_runs",
+          "away_pitcher_post_starter_runs",
+          "away_starter_layer_confidence",
+          "home_model_post_starter_runs",
+          "home_pitcher_post_starter_runs",
+          "home_starter_layer_confidence",
+          "starter_combined_pred_er",
+          "starter_min_pred_outs"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\projected_lineup_history.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\projected_lineups_20260608_to_20260615.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\projected_lineups_20260607_to_20260607.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "batter_hand",
+        "lineup_context"
+      ],
+      "bestFields": {
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\batter_game_logs\\batter_game_logs_latest.parquet",
+      "rows": 20749,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "lineup_context"
+      ],
+      "bestFields": {
+        "lineup_context": [
+          "batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_data\\pitcher_game_logs\\pitcher_game_logs_latest.parquet",
+      "rows": 8279,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "lineup_context"
+      ],
+      "bestFields": {
+        "lineup_context": [
+          "batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\snapshots\\game_betting_recommendations_20260608_to_20260615_full_20260608_060530.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "weather_temp"
+      ],
+      "bestFields": {
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\game_betting_recommendations_20260608_to_20260615.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "weather_temp"
+      ],
+      "bestFields": {
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\game_betting_recommendations_20260607_to_20260607.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "weather_temp"
+      ],
+      "bestFields": {
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\top_batter_picks_all.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "lineup_context"
+      ],
+      "bestFields": {
+        "lineup_context": [
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\top_hrr.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "lineup_context"
+      ],
+      "bestFields": {
+        "lineup_context": [
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\top_tb2plus.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "lineup_context"
+      ],
+      "bestFields": {
+        "lineup_context": [
+          "projected_batting_order"
+        ]
+      }
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\top_hr.csv",
+      "rows": null,
+      "joinColumns": [
+        "gamePk"
+      ],
+      "usableGroups": [
+        "lineup_context"
+      ],
+      "bestFields": {
+        "lineup_context": [
+          "projected_batting_order"
+        ]
+      }
+    }
+  ],
+  "topSources": [
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\pitcher_prediction_history.csv",
+      "fileName": "pitcher_prediction_history.csv",
+      "parent": "history",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 1018,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "pitcher_hand": [
+          "pitchHand"
+        ],
+        "starter_identity": [
+          "probable_pitcher_missing",
+          "starter_current_season_weight",
+          "starter_projection_confidence",
+          "starter_projection_confidence_score",
+          "starter_projection_low_confidence",
+          "starter_projection_source",
+          "starter_snapshot_found",
+          "starter_starts_season_to_date",
+          "starter_team_fallback_found"
+        ],
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "static_sp_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "static_sp_pct_curve_spin",
+          "static_sp_spin_active_spin_changeup",
+          "static_sp_spin_active_spin_curve",
+          "static_sp_spin_active_spin_cutter",
+          "static_sp_spin_active_spin_sinker",
+          "static_sp_spin_active_spin_slider",
+          "static_sp_spin_active_spin_sweeper"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822755",
+              "822755",
+              "822832"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06",
+              "2026-04-06",
+              "2026-04-06"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 207,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 22:45:00+00:00",
+              "2026-04-06 22:45:00+00:00",
+              "2026-04-06 23:07:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "WSN",
+              "STL",
+              "TOR"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "STL",
+              "WSN",
+              "LAD"
+            ]
+          }
+        },
+        "pitcher_hand": {
+          "pitchHand": {
+            "sampleNonEmpty": 293,
+            "sampleRows": 500,
+            "examples": [
+              "R",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "starter_identity": {
+          "probable_pitcher_missing": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_current_season_weight": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_projection_confidence": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_projection_confidence_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_projection_low_confidence": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_projection_source": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_snapshot_found": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_starts_season_to_date": {
+            "sampleNonEmpty": 289,
+            "sampleRows": 500,
+            "examples": [
+              "3.0",
+              "31.0",
+              "5.0"
+            ]
+          },
+          "starter_team_fallback_found": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "park": {
+          "venue_name": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "weather_temp": {
+          "apparent_temperature": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "11.3",
+              "11.3",
+              "-0.9"
+            ]
+          },
+          "static_sp_ev_attempts": {
+            "sampleNonEmpty": 130,
+            "sampleRows": 500,
+            "examples": [
+              "31.0",
+              "23.0",
+              "34.0"
+            ]
+          },
+          "temperature_2m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "16.0",
+              "16.0",
+              "1.8"
+            ]
+          }
+        },
+        "weather_wind": {
+          "env_directional_wind_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "env_opp_pull_wind_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "env_pull_wind_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_angle_to_cf_deg": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_cross_cf_abs_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_cross_cf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_crosswind_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_direction_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "297.0",
+              "297.0",
+              "102.0"
+            ]
+          },
+          "wind_effective_speed": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_gusts_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "27.0",
+              "27.0",
+              "5.8"
+            ]
+          },
+          "wind_in_cf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_in_from_cf_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_in_lf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_in_rf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_opp_pull_in_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_opp_pull_out_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_cf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_lf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_rf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_to_cf_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_park_sensitivity": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_pull_in_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_pull_out_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_roof_attenuation": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_speed_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "15.3",
+              "15.3",
+              "5.2"
+            ]
+          },
+          "wind_to_deg": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "pitch_mix": {
+          "static_sp_pct_curve_spin": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_sp_spin_active_spin_changeup": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_sp_spin_active_spin_curve": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_sp_spin_active_spin_cutter": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_sp_spin_active_spin_sinker": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_sp_spin_active_spin_slider": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_sp_spin_active_spin_sweeper": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        }
+      },
+      "sourceScore": 21,
+      "modifiedTime": "2026-06-08T12:06:05.104805+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\pitcher_predictions_20260608_to_20260615.csv",
+      "fileName": "pitcher_predictions_20260608_to_20260615.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 1014,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "pitcher_hand": [
+          "pitchHand"
+        ],
+        "starter_identity": [
+          "probable_pitcher_missing",
+          "starter_current_season_weight",
+          "starter_projection_confidence",
+          "starter_projection_confidence_score",
+          "starter_projection_low_confidence",
+          "starter_projection_source",
+          "starter_snapshot_found",
+          "starter_starts_season_to_date",
+          "starter_team_fallback_found"
+        ],
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "static_sp_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "static_sp_pct_curve_spin",
+          "static_sp_spin_active_spin_changeup",
+          "static_sp_spin_active_spin_curve",
+          "static_sp_spin_active_spin_cutter",
+          "static_sp_spin_active_spin_sinker",
+          "static_sp_spin_active_spin_slider",
+          "static_sp_spin_active_spin_sweeper"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "822806",
+              "822806",
+              "822972"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 22:40:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "TOR",
+              "PHI",
+              "TBR"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "PHI",
+              "TOR",
+              "BOS"
+            ]
+          }
+        },
+        "pitcher_hand": {
+          "pitchHand": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "L",
+              "L",
+              "L"
+            ]
+          }
+        },
+        "starter_identity": {
+          "probable_pitcher_missing": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "starter_current_season_weight": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0.82",
+              "0.82",
+              "0.82"
+            ]
+          },
+          "starter_projection_confidence": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "high",
+              "high",
+              "high"
+            ]
+          },
+          "starter_projection_confidence_score": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "starter_projection_low_confidence": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "starter_projection_source": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "named_starter",
+              "named_starter",
+              "named_starter"
+            ]
+          },
+          "starter_snapshot_found": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1",
+              "1",
+              "1"
+            ]
+          },
+          "starter_starts_season_to_date": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "13.0",
+              "10.0",
+              "11.0"
+            ]
+          },
+          "starter_team_fallback_found": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          }
+        },
+        "park": {
+          "venue_name": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "Rogers Centre",
+              "Rogers Centre",
+              "Tropicana Field"
+            ]
+          }
+        },
+        "weather_temp": {
+          "apparent_temperature": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "17.9",
+              "17.9",
+              "32.8"
+            ]
+          },
+          "static_sp_ev_attempts": {
+            "sampleNonEmpty": 193,
+            "sampleRows": 202,
+            "examples": [
+              "211.0",
+              "157.0",
+              "170.0"
+            ]
+          },
+          "temperature_2m": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "19.3",
+              "19.3",
+              "32.5"
+            ]
+          }
+        },
+        "weather_wind": {
+          "env_directional_wind_factor": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1.0001556771895497",
+              "1.0001556771895497",
+              "1.0"
+            ]
+          },
+          "env_opp_pull_wind_factor": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1.001996157689226",
+              "0.9980251234802592",
+              "1.0"
+            ]
+          },
+          "env_pull_wind_factor": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1.0000591780226178",
+              "1.0000591780226178",
+              "1.0"
+            ]
+          },
+          "wind_angle_to_cf_deg": {
+            "sampleNonEmpty": 196,
+            "sampleRows": 202,
+            "examples": [
+              "-95.10000000000002",
+              "-95.10000000000002",
+              "88.0"
+            ]
+          },
+          "wind_cross_cf_abs_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "7.868923624958162",
+              "7.868923624958162",
+              "0.0"
+            ]
+          },
+          "wind_cross_cf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "-7.868923624958162",
+              "-7.868923624958162",
+              "0.0"
+            ]
+          },
+          "wind_crosswind_flag": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1",
+              "1",
+              "0"
+            ]
+          },
+          "wind_direction_10m": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "69",
+              "69",
+              "317"
+            ]
+          },
+          "wind_effective_speed": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "7.900200000000001",
+              "7.900200000000001",
+              "0.0"
+            ]
+          },
+          "wind_gusts_10m": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "25.2",
+              "25.2",
+              "23.8"
+            ]
+          },
+          "wind_in_cf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0.7022827241042645",
+              "0.7022827241042645",
+              "-0.0"
+            ]
+          },
+          "wind_in_from_cf_flag": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "wind_in_lf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_in_rf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "5.397999466833051",
+              "5.397999466833051",
+              "-0.0"
+            ]
+          },
+          "wind_opp_pull_in_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2.3991108741480223",
+              "2.9988885926850286",
+              "0.0"
+            ]
+          },
+          "wind_opp_pull_out_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2.3839926608334925",
+              "1.9071941286667935",
+              "0.0"
+            ]
+          },
+          "wind_out_cf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_out_lf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "4.291186789500286",
+              "4.291186789500286",
+              "-0.0"
+            ]
+          },
+          "wind_out_rf_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_out_to_cf_flag": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "wind_park_sensitivity": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "wind_pull_in_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2.698999733416525",
+              "2.698999733416525",
+              "0.0"
+            ]
+          },
+          "wind_pull_out_component": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "2.145593394750143",
+              "2.145593394750143",
+              "0.0"
+            ]
+          },
+          "wind_roof_attenuation": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "0.45",
+              "0.45",
+              "0.0"
+            ]
+          },
+          "wind_speed_10m": {
+            "sampleNonEmpty": 202,
+            "sampleRows": 202,
+            "examples": [
+              "15.4",
+              "15.4",
+              "16.3"
+            ]
+          },
+          "wind_to_deg": {
+            "sampleNonEmpty": 196,
+            "sampleRows": 202,
+            "examples": [
+              "249.0",
+              "249.0",
+              "137.0"
+            ]
+          }
+        },
+        "pitch_mix": {
+          "static_sp_pct_curve_spin": {
+            "sampleNonEmpty": 165,
+            "sampleRows": 202,
+            "examples": [
+              "27.0",
+              "50.0",
+              "84.0"
+            ]
+          },
+          "static_sp_spin_active_spin_changeup": {
+            "sampleNonEmpty": 184,
+            "sampleRows": 202,
+            "examples": [
+              "85.6340425531915",
+              "97.3121212121212",
+              "85.35111111111111"
+            ]
+          },
+          "static_sp_spin_active_spin_curve": {
+            "sampleNonEmpty": 174,
+            "sampleRows": 202,
+            "examples": [
+              "67.34222222222222",
+              "80.70208333333333",
+              "53.37708333333334"
+            ]
+          },
+          "static_sp_spin_active_spin_cutter": {
+            "sampleNonEmpty": 165,
+            "sampleRows": 202,
+            "examples": [
+              "29.58484848484849",
+              "47.82380952380953",
+              "45.93061224489796"
+            ]
+          },
+          "static_sp_spin_active_spin_sinker": {
+            "sampleNonEmpty": 190,
+            "sampleRows": 202,
+            "examples": [
+              "93.4872340425532",
+              "84.72727272727273",
+              "91.25333333333334"
+            ]
+          },
+          "static_sp_spin_active_spin_slider": {
+            "sampleNonEmpty": 173,
+            "sampleRows": 202,
+            "examples": [
+              "30.96170212765957",
+              "22.618181818181817",
+              "36.502222222222215"
+            ]
+          },
+          "static_sp_spin_active_spin_sweeper": {
+            "sampleNonEmpty": 157,
+            "sampleRows": 202,
+            "examples": [
+              "41.41578947368421",
+              "32.32142857142858",
+              "43.06530612244899"
+            ]
+          }
+        }
+      },
+      "sourceScore": 21,
+      "modifiedTime": "2026-06-08T12:04:16.547027+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\games\\games_latest.parquet",
+      "fileName": "games_latest.parquet",
+      "parent": "games",
+      "suffix": ".parquet",
+      "rows": 992,
+      "columnCount": 48,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "weather_temp_f"
+        ],
+        "weather_wind": [
+          "wind"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823649",
+              "823812"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-26 00:05:00",
+              "2026-03-26 17:15:00",
+              "2026-03-26 18:10:00"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "PIT",
+              "CWS"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "NYM",
+              "MIL"
+            ]
+          }
+        },
+        "park": {
+          "venue_name": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Oracle Park",
+              "Citi Field",
+              "American Family Field"
+            ]
+          }
+        },
+        "weather_temp": {
+          "weather_temp_f": {
+            "sampleNonEmpty": 497,
+            "sampleRows": 500,
+            "examples": [
+              "63",
+              "67",
+              "65"
+            ]
+          }
+        },
+        "weather_wind": {
+          "wind": {
+            "sampleNonEmpty": 497,
+            "sampleRows": 500,
+            "examples": [
+              "19 mph, Out To CF",
+              "4 mph, Out To CF",
+              "0 mph, None"
+            ]
+          }
+        }
+      },
+      "sourceScore": 20,
+      "modifiedTime": "2026-06-08T06:19:50.550564+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\batter_prediction_history.csv",
+      "fileName": "batter_prediction_history.csv",
+      "parent": "history",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 1848,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "pitcher_hand": [
+          "opp_pitch_hand"
+        ],
+        "starter_identity": [
+          "opp_sp_starter_starts_season_to_date",
+          "opp_starter_id",
+          "opp_starter_team_fallback_found",
+          "opposing_starter_confidence_score"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "opp_catcher_opp_sb_attempts_allowed_game_r10",
+          "opp_catcher_opp_sb_attempts_allowed_game_r5",
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior",
+          "opp_sb_attempts_allowed_game_r10",
+          "opp_sb_attempts_allowed_game_r5",
+          "opp_sp_static_sp_ev_attempts",
+          "prior_team_run_opp_sb_attempts_allowed_game_prior",
+          "static_bat_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "batter_pitch_mix_barrel_score",
+          "batter_pitch_mix_coverage",
+          "batter_pitch_mix_launch_score",
+          "batter_pitch_mix_power_score",
+          "batter_pitch_mix_whiff_risk",
+          "hr_pitch_mix_factor",
+          "opp_sp_static_sp_pct_curve_spin",
+          "opp_sp_static_sp_spin_active_spin_changeup",
+          "opp_sp_static_sp_spin_active_spin_curve",
+          "opp_sp_static_sp_spin_active_spin_cutter",
+          "opp_sp_static_sp_spin_active_spin_sinker",
+          "opp_sp_static_sp_spin_active_spin_slider",
+          "opp_sp_static_sp_spin_active_spin_sweeper",
+          "pitch_mix_adjustment_coverage",
+          "pitch_mix_feature_available",
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score",
+          "pitch_mix_pitch_types_matched",
+          "pitch_mix_tb_factor",
+          "pitch_mix_usage_coverage",
+          "pitcher_pitch_mix_damage_allowed_score",
+          "pitcher_pitch_mix_movement_score",
+          "pitcher_pitch_mix_spin_score",
+          "pitcher_pitch_mix_velocity_score",
+          "pitcher_pitch_mix_whiff_score",
+          "pred_k_pitch_mix_delta",
+          "pred_k_pre_pitch_mix_adjustment",
+          "pred_total_bases_pitch_mix_delta",
+          "pred_total_bases_pre_pitch_mix_adjustment",
+          "statsapi_pitch_mix_batter_coverage",
+          "statsapi_pitch_mix_feature_available",
+          "statsapi_pitch_mix_launch_score",
+          "statsapi_pitch_mix_pitch_types_matched",
+          "statsapi_pitch_mix_power_score",
+          "statsapi_pitch_mix_usage_coverage",
+          "statsapi_pitch_mix_whiff_risk"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822755",
+              "822755",
+              "822755"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06",
+              "2026-04-06",
+              "2026-04-06"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "WSN",
+              "WSN",
+              "WSN"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "STL",
+              "STL",
+              "STL"
+            ]
+          }
+        },
+        "batter_hand": {
+          "batSide": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "pitcher_hand": {
+          "opp_pitch_hand": {
+            "sampleNonEmpty": 482,
+            "sampleRows": 500,
+            "examples": [
+              "R",
+              "R",
+              "R"
+            ]
+          }
+        },
+        "starter_identity": {
+          "opp_sp_starter_starts_season_to_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "31.0",
+              "31.0",
+              "31.0"
+            ]
+          },
+          "opp_starter_id": {
+            "sampleNonEmpty": 491,
+            "sampleRows": 500,
+            "examples": [
+              "641793.0",
+              "641793.0",
+              "641793.0"
+            ]
+          },
+          "opp_starter_team_fallback_found": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opposing_starter_confidence_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "weather_temp": {
+          "apparent_temperature": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "11.3",
+              "11.3",
+              "11.3"
+            ]
+          },
+          "opp_catcher_opp_sb_attempts_allowed_game_r10": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_catcher_opp_sb_attempts_allowed_game_r5": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sb_attempts_allowed_game_r10": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sb_attempts_allowed_game_r5": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_ev_attempts": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "prior_team_run_opp_sb_attempts_allowed_game_prior": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "static_bat_ev_attempts": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "temperature_2m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "16.0",
+              "16.0",
+              "16.0"
+            ]
+          }
+        },
+        "weather_wind": {
+          "env_directional_wind_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "env_opp_pull_wind_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "env_pull_wind_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_angle_to_cf_deg": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_cross_cf_abs_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_cross_cf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_crosswind_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_direction_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "297.0",
+              "297.0",
+              "297.0"
+            ]
+          },
+          "wind_effective_speed": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_gusts_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "27.0",
+              "27.0",
+              "27.0"
+            ]
+          },
+          "wind_in_cf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_in_from_cf_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_in_lf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_in_rf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_opp_pull_in_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_opp_pull_out_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_cf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_lf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_rf_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_out_to_cf_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_park_sensitivity": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_pull_in_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_pull_out_component": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_roof_attenuation": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "wind_speed_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "15.3",
+              "15.3",
+              "15.3"
+            ]
+          },
+          "wind_to_deg": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "pitch_mix": {
+          "batter_pitch_mix_barrel_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "batter_pitch_mix_coverage": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "batter_pitch_mix_launch_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "batter_pitch_mix_power_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "batter_pitch_mix_whiff_risk": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "hr_pitch_mix_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_pct_curve_spin": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_spin_active_spin_changeup": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_spin_active_spin_curve": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_spin_active_spin_cutter": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_spin_active_spin_sinker": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_spin_active_spin_slider": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "opp_sp_static_sp_spin_active_spin_sweeper": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_adjustment_coverage": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_feature_available": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_k_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_matchup_power_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_pitch_types_matched": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_tb_factor": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitch_mix_usage_coverage": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitcher_pitch_mix_damage_allowed_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitcher_pitch_mix_movement_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitcher_pitch_mix_spin_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitcher_pitch_mix_velocity_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pitcher_pitch_mix_whiff_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pred_k_pitch_mix_delta": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pred_k_pre_pitch_mix_adjustment": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pred_total_bases_pitch_mix_delta": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "pred_total_bases_pre_pitch_mix_adjustment": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_batter_coverage": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_feature_available": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_launch_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_pitch_types_matched": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_power_score": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_usage_coverage": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "statsapi_pitch_mix_whiff_risk": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          },
+          "projected_batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        }
+      },
+      "sourceScore": 19,
+      "modifiedTime": "2026-06-08T12:15:27.280813+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\batter_predictions_20260608_to_20260615.csv",
+      "fileName": "batter_predictions_20260608_to_20260615.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 1842,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "pitcher_hand": [
+          "opp_pitch_hand"
+        ],
+        "starter_identity": [
+          "opp_sp_starter_starts_season_to_date",
+          "opp_starter_id",
+          "opp_starter_team_fallback_found",
+          "opposing_starter_confidence_score"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "opp_catcher_opp_sb_attempts_allowed_game_r10",
+          "opp_catcher_opp_sb_attempts_allowed_game_r5",
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior",
+          "opp_sb_attempts_allowed_game_r10",
+          "opp_sb_attempts_allowed_game_r5",
+          "opp_sp_static_sp_ev_attempts",
+          "prior_team_run_opp_sb_attempts_allowed_game_prior",
+          "static_bat_ev_attempts",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "env_directional_wind_factor",
+          "env_opp_pull_wind_factor",
+          "env_pull_wind_factor",
+          "wind_angle_to_cf_deg",
+          "wind_cross_cf_abs_component",
+          "wind_cross_cf_component",
+          "wind_crosswind_flag",
+          "wind_direction_10m",
+          "wind_effective_speed",
+          "wind_gusts_10m",
+          "wind_in_cf_component",
+          "wind_in_from_cf_flag",
+          "wind_in_lf_component",
+          "wind_in_rf_component",
+          "wind_opp_pull_in_component",
+          "wind_opp_pull_out_component",
+          "wind_out_cf_component",
+          "wind_out_lf_component",
+          "wind_out_rf_component",
+          "wind_out_to_cf_flag",
+          "wind_park_sensitivity",
+          "wind_pull_in_component",
+          "wind_pull_out_component",
+          "wind_roof_attenuation",
+          "wind_speed_10m",
+          "wind_to_deg"
+        ],
+        "pitch_mix": [
+          "batter_pitch_mix_barrel_score",
+          "batter_pitch_mix_coverage",
+          "batter_pitch_mix_launch_score",
+          "batter_pitch_mix_power_score",
+          "batter_pitch_mix_whiff_risk",
+          "hr_pitch_mix_factor",
+          "opp_sp_static_sp_pct_curve_spin",
+          "opp_sp_static_sp_spin_active_spin_changeup",
+          "opp_sp_static_sp_spin_active_spin_curve",
+          "opp_sp_static_sp_spin_active_spin_cutter",
+          "opp_sp_static_sp_spin_active_spin_sinker",
+          "opp_sp_static_sp_spin_active_spin_slider",
+          "opp_sp_static_sp_spin_active_spin_sweeper",
+          "pitch_mix_adjustment_coverage",
+          "pitch_mix_feature_available",
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score",
+          "pitch_mix_pitch_types_matched",
+          "pitch_mix_tb_factor",
+          "pitch_mix_usage_coverage",
+          "pitcher_pitch_mix_damage_allowed_score",
+          "pitcher_pitch_mix_movement_score",
+          "pitcher_pitch_mix_spin_score",
+          "pitcher_pitch_mix_velocity_score",
+          "pitcher_pitch_mix_whiff_score",
+          "pred_k_pitch_mix_delta",
+          "pred_k_pre_pitch_mix_adjustment",
+          "pred_total_bases_pitch_mix_delta",
+          "pred_total_bases_pre_pitch_mix_adjustment",
+          "statsapi_pitch_mix_batter_coverage",
+          "statsapi_pitch_mix_feature_available",
+          "statsapi_pitch_mix_launch_score",
+          "statsapi_pitch_mix_pitch_types_matched",
+          "statsapi_pitch_mix_power_score",
+          "statsapi_pitch_mix_usage_coverage",
+          "statsapi_pitch_mix_whiff_risk"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822806",
+              "822806",
+              "822806"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 23:07:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "TOR",
+              "TOR",
+              "TOR"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "PHI",
+              "PHI",
+              "PHI"
+            ]
+          }
+        },
+        "batter_hand": {
+          "batSide": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "pitcher_hand": {
+          "opp_pitch_hand": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "L",
+              "L"
+            ]
+          }
+        },
+        "starter_identity": {
+          "opp_sp_starter_starts_season_to_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "10.0",
+              "10.0",
+              "10.0"
+            ]
+          },
+          "opp_starter_id": {
+            "sampleNonEmpty": 464,
+            "sampleRows": 500,
+            "examples": [
+              "571578.0",
+              "571578.0",
+              "571578.0"
+            ]
+          },
+          "opp_starter_team_fallback_found": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "opposing_starter_confidence_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.8600000000000001",
+              "0.8600000000000001",
+              "0.8600000000000001"
+            ]
+          }
+        },
+        "weather_temp": {
+          "apparent_temperature": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "17.9",
+              "17.9",
+              "17.9"
+            ]
+          },
+          "opp_catcher_opp_sb_attempts_allowed_game_r10": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "opp_catcher_opp_sb_attempts_allowed_game_r5": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.8",
+              "0.8",
+              "0.8"
+            ]
+          },
+          "opp_catcher_prior_catcher_run_opp_sb_attempts_allowed_game_prior": {
+            "sampleNonEmpty": 131,
+            "sampleRows": 500,
+            "examples": [
+              "0.831081081081081",
+              "0.831081081081081",
+              "0.831081081081081"
+            ]
+          },
+          "opp_sb_attempts_allowed_game_r10": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.5",
+              "1.5",
+              "1.5"
+            ]
+          },
+          "opp_sb_attempts_allowed_game_r5": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.8",
+              "0.8",
+              "0.8"
+            ]
+          },
+          "opp_sp_static_sp_ev_attempts": {
+            "sampleNonEmpty": 437,
+            "sampleRows": 500,
+            "examples": [
+              "157.0",
+              "157.0",
+              "157.0"
+            ]
+          },
+          "prior_team_run_opp_sb_attempts_allowed_game_prior": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.9479166666666666",
+              "0.9479166666666666",
+              "0.9479166666666666"
+            ]
+          },
+          "static_bat_ev_attempts": {
+            "sampleNonEmpty": 378,
+            "sampleRows": 500,
+            "examples": [
+              "128.0",
+              "183.0",
+              "164.0"
+            ]
+          },
+          "temperature_2m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "19.3",
+              "19.3",
+              "19.3"
+            ]
+          }
+        },
+        "weather_wind": {
+          "env_directional_wind_factor": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.00034594931011",
+              "1.00034594931011",
+              "1.00034594931011"
+            ]
+          },
+          "env_opp_pull_wind_factor": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0034972993888702",
+              "1.0034972993888702",
+              "1.0034972993888702"
+            ]
+          },
+          "env_pull_wind_factor": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.956714637342984",
+              "1.043548376090873",
+              "0.956714637342984"
+            ]
+          },
+          "wind_angle_to_cf_deg": {
+            "sampleNonEmpty": 482,
+            "sampleRows": 500,
+            "examples": [
+              "-95.10000000000002",
+              "-95.10000000000002",
+              "-95.10000000000002"
+            ]
+          },
+          "wind_cross_cf_abs_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "17.486496944351472",
+              "17.486496944351472",
+              "17.486496944351472"
+            ]
+          },
+          "wind_cross_cf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "-17.486496944351472",
+              "-17.486496944351472",
+              "-17.486496944351472"
+            ]
+          },
+          "wind_crosswind_flag": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "1",
+              "1"
+            ]
+          },
+          "wind_direction_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "69",
+              "69",
+              "69"
+            ]
+          },
+          "wind_effective_speed": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "17.556",
+              "17.556",
+              "17.556"
+            ]
+          },
+          "wind_gusts_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "25.2",
+              "25.2",
+              "25.2"
+            ]
+          },
+          "wind_in_cf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.5606282757872545",
+              "1.5606282757872545",
+              "1.5606282757872545"
+            ]
+          },
+          "wind_in_from_cf_flag": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "wind_in_lf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_in_rf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "11.995554370740113",
+              "11.995554370740113",
+              "11.995554370740113"
+            ]
+          },
+          "wind_opp_pull_in_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_opp_pull_out_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_out_cf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_out_lf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "9.535970643333968",
+              "9.535970643333968",
+              "9.535970643333968"
+            ]
+          },
+          "wind_out_rf_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0",
+              "0.0",
+              "0.0"
+            ]
+          },
+          "wind_out_to_cf_flag": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "wind_park_sensitivity": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "wind_pull_in_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "11.995554370740113",
+              "0.0",
+              "11.995554370740113"
+            ]
+          },
+          "wind_pull_out_component": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0",
+              "9.535970643333968",
+              "0.0"
+            ]
+          },
+          "wind_roof_attenuation": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "wind_speed_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "15.4",
+              "15.4",
+              "15.4"
+            ]
+          },
+          "wind_to_deg": {
+            "sampleNonEmpty": 482,
+            "sampleRows": 500,
+            "examples": [
+              "249.0",
+              "249.0",
+              "249.0"
+            ]
+          }
+        },
+        "pitch_mix": {
+          "batter_pitch_mix_barrel_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.2204542258533695",
+              "1.0605098570805878",
+              "1.1158857341474346"
+            ]
+          },
+          "batter_pitch_mix_coverage": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.8010254919870465",
+              "0.6069085775969443",
+              "0.8010254919870465"
+            ]
+          },
+          "batter_pitch_mix_launch_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "batter_pitch_mix_power_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.2057211349231056",
+              "0.9656022549319762",
+              "1.216963549061996"
+            ]
+          },
+          "batter_pitch_mix_whiff_risk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.1339486575289686",
+              "0.97117184904827",
+              "1.0296729019553033"
+            ]
+          },
+          "hr_pitch_mix_factor": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.073994686889497",
+              "1.0125130309162629",
+              "1.067674672959409"
+            ]
+          },
+          "opp_sp_static_sp_pct_curve_spin": {
+            "sampleNonEmpty": 266,
+            "sampleRows": 500,
+            "examples": [
+              "27.0",
+              "27.0",
+              "27.0"
+            ]
+          },
+          "opp_sp_static_sp_spin_active_spin_changeup": {
+            "sampleNonEmpty": 405,
+            "sampleRows": 500,
+            "examples": [
+              "97.3121212121212",
+              "97.3121212121212",
+              "97.3121212121212"
+            ]
+          },
+          "opp_sp_static_sp_spin_active_spin_curve": {
+            "sampleNonEmpty": 320,
+            "sampleRows": 500,
+            "examples": [
+              "67.34222222222222",
+              "67.34222222222222",
+              "67.34222222222222"
+            ]
+          },
+          "opp_sp_static_sp_spin_active_spin_cutter": {
+            "sampleNonEmpty": 306,
+            "sampleRows": 500,
+            "examples": [
+              "29.58484848484849",
+              "29.58484848484849",
+              "29.58484848484849"
+            ]
+          },
+          "opp_sp_static_sp_spin_active_spin_sinker": {
+            "sampleNonEmpty": 410,
+            "sampleRows": 500,
+            "examples": [
+              "84.72727272727273",
+              "84.72727272727273",
+              "84.72727272727273"
+            ]
+          },
+          "opp_sp_static_sp_spin_active_spin_slider": {
+            "sampleNonEmpty": 297,
+            "sampleRows": 500,
+            "examples": [
+              "22.618181818181817",
+              "22.618181818181817",
+              "22.618181818181817"
+            ]
+          },
+          "opp_sp_static_sp_spin_active_spin_sweeper": {
+            "sampleNonEmpty": 302,
+            "sampleRows": 500,
+            "examples": [
+              "32.32142857142858",
+              "32.32142857142858",
+              "32.32142857142858"
+            ]
+          },
+          "pitch_mix_adjustment_coverage": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.9303589221954662",
+              "0.8624180021589305",
+              "0.9303589221954662"
+            ]
+          },
+          "pitch_mix_feature_available": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "1",
+              "1"
+            ]
+          },
+          "pitch_mix_k_factor": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0213124785723624",
+              "0.9954901402201332",
+              "1.0049306211099978"
+            ]
+          },
+          "pitch_mix_matchup_power_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.2780773888357384",
+              "1.0169389515543337",
+              "1.2701713073949057"
+            ]
+          },
+          "pitch_mix_pitch_types_matched": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "6.0",
+              "6.0",
+              "6.0"
+            ]
+          },
+          "pitch_mix_tb_factor": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0550705522727089",
+              "1.0095859151080864",
+              "1.0478044442557677"
+            ]
+          },
+          "pitch_mix_usage_coverage": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "pitcher_pitch_mix_damage_allowed_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.9984060249260588",
+              "0.9984060249260588",
+              "0.9984060249260588"
+            ]
+          },
+          "pitcher_pitch_mix_movement_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.7381051233081457",
+              "1.7381051233081457",
+              "1.7381051233081457"
+            ]
+          },
+          "pitcher_pitch_mix_spin_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "pitcher_pitch_mix_velocity_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.9214831888242756",
+              "0.9214831888242756",
+              "0.9214831888242756"
+            ]
+          },
+          "pitcher_pitch_mix_whiff_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0001238478784358",
+              "1.0001238478784358",
+              "1.0001238478784358"
+            ]
+          },
+          "pred_k_pitch_mix_delta": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.0311878007299617",
+              "-0.0034720383025629",
+              "0.0043280381984487"
+            ]
+          },
+          "pred_k_pre_pitch_mix_adjustment": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.463358690265408",
+              "0.7698772183700626",
+              "0.8777876259185344"
+            ]
+          },
+          "pred_total_bases_pitch_mix_delta": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "0.1122825439364625",
+              "0.0131674121737086",
+              "0.0817413339393209"
+            ]
+          },
+          "pred_total_bases_pre_pitch_mix_adjustment": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2.038885380710195",
+              "1.3736207785317212",
+              "1.709910766914915"
+            ]
+          },
+          "statsapi_pitch_mix_batter_coverage": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "0.9135249398103902",
+              "1.0"
+            ]
+          },
+          "statsapi_pitch_mix_feature_available": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "1",
+              "1"
+            ]
+          },
+          "statsapi_pitch_mix_launch_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0060796748170138",
+              "0.8436821758859694",
+              "0.815412384071205"
+            ]
+          },
+          "statsapi_pitch_mix_pitch_types_matched": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "8.0",
+              "8.0",
+              "8.0"
+            ]
+          },
+          "statsapi_pitch_mix_power_score": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.1992420248130384",
+              "0.8706977798275042",
+              "0.8450294115777647"
+            ]
+          },
+          "statsapi_pitch_mix_usage_coverage": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.0",
+              "1.0",
+              "1.0"
+            ]
+          },
+          "statsapi_pitch_mix_whiff_risk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1.11963985137382",
+              "1.0698425659857889",
+              "1.1279515938566402"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          },
+          "projected_batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        }
+      },
+      "sourceScore": 19,
+      "modifiedTime": "2026-06-08T12:04:58.541683+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\game_weather\\game_weather_latest.parquet",
+      "fileName": "game_weather_latest.parquet",
+      "parent": "game_weather",
+      "suffix": ".parquet",
+      "rows": 990,
+      "columnCount": 21,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "wind_direction_10m",
+          "wind_gusts_10m",
+          "wind_speed_10m"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822727",
+              "822728",
+              "822729"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-03 17:05:00",
+              "2026-06-02 22:45:00",
+              "2026-05-31 17:35:00"
+            ]
+          }
+        },
+        "weather_temp": {
+          "apparent_temperature": {
+            "sampleNonEmpty": 442,
+            "sampleRows": 500,
+            "examples": [
+              "27.0",
+              "20.9",
+              "25.6"
+            ]
+          },
+          "temperature_2m": {
+            "sampleNonEmpty": 442,
+            "sampleRows": 500,
+            "examples": [
+              "27.8",
+              "24.5",
+              "25.0"
+            ]
+          }
+        },
+        "weather_wind": {
+          "wind_direction_10m": {
+            "sampleNonEmpty": 442,
+            "sampleRows": 500,
+            "examples": [
+              "17.0",
+              "47.0",
+              "230.0"
+            ]
+          },
+          "wind_gusts_10m": {
+            "sampleNonEmpty": 442,
+            "sampleRows": 500,
+            "examples": [
+              "32.4",
+              "32.8",
+              "16.6"
+            ]
+          },
+          "wind_speed_10m": {
+            "sampleNonEmpty": 442,
+            "sampleRows": 500,
+            "examples": [
+              "11.3",
+              "10.3",
+              "1.4"
+            ]
+          }
+        }
+      },
+      "sourceScore": 18,
+      "modifiedTime": "2026-06-08T06:19:56.897830+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\schedule\\schedule_latest.parquet",
+      "fileName": "schedule_latest.parquet",
+      "parent": "schedule",
+      "suffix": ".parquet",
+      "rows": 992,
+      "columnCount": 18,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "starter_identity": [
+          "away_probable_pitcher",
+          "away_probable_pitcher_id",
+          "home_probable_pitcher",
+          "home_probable_pitcher_id"
+        ],
+        "park": [
+          "venue_name"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823649",
+              "823812"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-26 00:05:00",
+              "2026-03-26 17:15:00",
+              "2026-03-26 18:10:00"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "PIT",
+              "CWS"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "NYM",
+              "MIL"
+            ]
+          }
+        },
+        "starter_identity": {
+          "away_probable_pitcher": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Max Fried",
+              "Paul Skenes",
+              "Shane Smith"
+            ]
+          },
+          "away_probable_pitcher_id": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "608331.0",
+              "694973.0",
+              "681343.0"
+            ]
+          },
+          "home_probable_pitcher": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Logan Webb",
+              "Freddy Peralta",
+              "Jacob Misiorowski"
+            ]
+          },
+          "home_probable_pitcher_id": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "657277.0",
+              "642547.0",
+              "694819.0"
+            ]
+          }
+        },
+        "park": {
+          "venue_name": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Oracle Park",
+              "Citi Field",
+              "American Family Field"
+            ]
+          }
+        }
+      },
+      "sourceScore": 17,
+      "modifiedTime": "2026-06-08T06:19:50.503733+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\game_prediction_history.csv",
+      "fileName": "game_prediction_history.csv",
+      "parent": "history",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 212,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "starter_identity": [
+          "away_model_post_starter_runs",
+          "away_pitcher_post_starter_runs",
+          "away_starter_layer_confidence",
+          "home_model_post_starter_runs",
+          "home_pitcher_post_starter_runs",
+          "home_starter_layer_confidence",
+          "starter_combined_pred_er",
+          "starter_min_pred_outs"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822755",
+              "822832",
+              "823002"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06",
+              "2026-04-06",
+              "2026-04-06"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 22:45:00+00:00",
+              "2026-04-06 23:07:00+00:00",
+              "2026-04-06 20:10:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "STL",
+              "LAD",
+              "CHC"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "WSN",
+              "TOR",
+              "TBR"
+            ]
+          }
+        },
+        "starter_identity": {
+          "away_model_post_starter_runs": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "away_pitcher_post_starter_runs": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "away_starter_layer_confidence": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "home_model_post_starter_runs": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "home_pitcher_post_starter_runs": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "home_starter_layer_confidence": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_combined_pred_er": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "starter_min_pred_outs": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        },
+        "weather_temp": {
+          "temporary_rule_flag": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        }
+      },
+      "sourceScore": 17,
+      "modifiedTime": "2026-06-08T12:05:33.896770+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\snapshots\\game_predictions_20260608_to_20260615_full_20260608_060530.csv",
+      "fileName": "game_predictions_20260608_to_20260615_full_20260608_060530.csv",
+      "parent": "snapshots",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 208,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "starter_identity": [
+          "away_model_post_starter_runs",
+          "away_pitcher_post_starter_runs",
+          "away_starter_layer_confidence",
+          "home_model_post_starter_runs",
+          "home_pitcher_post_starter_runs",
+          "home_starter_layer_confidence",
+          "starter_combined_pred_er",
+          "starter_min_pred_outs"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "822806",
+              "822972",
+              "823218"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 22:40:00+00:00",
+              "2026-06-09 01:45:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "PHI",
+              "BOS",
+              "WSN"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "TOR",
+              "TBR",
+              "SFG"
+            ]
+          }
+        },
+        "starter_identity": {
+          "away_model_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "1.175057540184958",
+              "3.403303749863743",
+              "2.619263051116989"
+            ]
+          },
+          "away_pitcher_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "3.2369311062717814",
+              "4.215705162231523",
+              "3.3708909596708225"
+            ]
+          },
+          "away_starter_layer_confidence": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.8849885758337263",
+              "0.5232",
+              "0.9119550011442016"
+            ]
+          },
+          "home_model_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.5508227733802495",
+              "1.1778855606740506",
+              "1.9929776621188893"
+            ]
+          },
+          "home_pitcher_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.7832046287682397",
+              "0.8960385847576773",
+              "3.119032001631715"
+            ]
+          },
+          "home_starter_layer_confidence": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.8825666183455517",
+              "0.8600638941394801",
+              "0.8766984176576399"
+            ]
+          },
+          "starter_combined_pred_er": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "4.800839386699786",
+              "3.244108678124496",
+              "5.941479640166624"
+            ]
+          },
+          "starter_min_pred_outs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "15.437355017329333",
+              "4.620153846153846",
+              "14.693520142734986"
+            ]
+          }
+        },
+        "weather_temp": {
+          "temporary_rule_flag": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "large_margin_caution",
+              "low_margin_caution",
+              "low_margin_caution"
+            ]
+          }
+        }
+      },
+      "sourceScore": 17,
+      "modifiedTime": "2026-06-08T12:05:30.528886+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\game_predictions_20260608_to_20260615.csv",
+      "fileName": "game_predictions_20260608_to_20260615.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 208,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "starter_identity": [
+          "away_model_post_starter_runs",
+          "away_pitcher_post_starter_runs",
+          "away_starter_layer_confidence",
+          "home_model_post_starter_runs",
+          "home_pitcher_post_starter_runs",
+          "home_starter_layer_confidence",
+          "starter_combined_pred_er",
+          "starter_min_pred_outs"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "822806",
+              "822972",
+              "823218"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 22:40:00+00:00",
+              "2026-06-09 01:45:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "PHI",
+              "BOS",
+              "WSN"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "TOR",
+              "TBR",
+              "SFG"
+            ]
+          }
+        },
+        "starter_identity": {
+          "away_model_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "1.175057540184958",
+              "3.403303749863743",
+              "2.619263051116989"
+            ]
+          },
+          "away_pitcher_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "3.2369311062717814",
+              "4.215705162231523",
+              "3.3708909596708225"
+            ]
+          },
+          "away_starter_layer_confidence": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.8849885758337263",
+              "0.5232",
+              "0.9119550011442016"
+            ]
+          },
+          "home_model_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.5508227733802495",
+              "1.1778855606740506",
+              "1.9929776621188893"
+            ]
+          },
+          "home_pitcher_post_starter_runs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.7832046287682397",
+              "0.8960385847576773",
+              "3.119032001631715"
+            ]
+          },
+          "home_starter_layer_confidence": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "0.8825666183455517",
+              "0.8600638941394801",
+              "0.8766984176576399"
+            ]
+          },
+          "starter_combined_pred_er": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "4.800839386699786",
+              "3.244108678124496",
+              "5.941479640166624"
+            ]
+          },
+          "starter_min_pred_outs": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "15.437355017329333",
+              "4.620153846153846",
+              "14.693520142734986"
+            ]
+          }
+        },
+        "weather_temp": {
+          "temporary_rule_flag": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "large_margin_caution",
+              "low_margin_caution",
+              "low_margin_caution"
+            ]
+          }
+        }
+      },
+      "sourceScore": 17,
+      "modifiedTime": "2026-06-08T12:04:14.753496+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\top_mlb_true_matchup_edges_batter_edges.csv",
+      "fileName": "top_mlb_true_matchup_edges_batter_edges.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 56,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "starter_identity": [
+          "opposing_starter",
+          "opposing_starter_hand"
+        ],
+        "pitch_mix": [
+          "pitch_mix_k_factor",
+          "pitch_mix_matchup_power_score"
+        ],
+        "lineup_context": [
+          "projected_batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "824427",
+              "823218",
+              "824025"
+            ]
+          }
+        },
+        "date": {
+          "target_game_date": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "NYY",
+              "SFG",
+              "HOU"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "CLE",
+              "WSN",
+              "LAA"
+            ]
+          }
+        },
+        "batter_hand": {
+          "batSide": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "B",
+              "L",
+              "R"
+            ]
+          }
+        },
+        "starter_identity": {
+          "opposing_starter": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "Will Warren",
+              "Logan Webb",
+              "Spencer Arrighetti"
+            ]
+          },
+          "opposing_starter_hand": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "R",
+              "R",
+              "R"
+            ]
+          }
+        },
+        "pitch_mix": {
+          "pitch_mix_k_factor": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "0.9763816374020664",
+              "0.9828357735535692",
+              "0.9692457436059408"
+            ]
+          },
+          "pitch_mix_matchup_power_score": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "1.252616483030564",
+              "1.622518373414891",
+              "1.299312035544122"
+            ]
+          }
+        },
+        "lineup_context": {
+          "projected_batting_order": {
+            "sampleNonEmpty": 160,
+            "sampleRows": 160,
+            "examples": [
+              "2",
+              "1",
+              "2"
+            ]
+          }
+        }
+      },
+      "sourceScore": 16,
+      "modifiedTime": "2026-06-08T12:13:46.820343+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\snapshots\\game_betting_recommendations_20260608_to_20260615_full_20260608_060530.csv",
+      "fileName": "game_betting_recommendations_20260608_to_20260615_full_20260608_060530.csv",
+      "parent": "snapshots",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 78,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "824025",
+              "824829",
+              "823218"
+            ]
+          }
+        },
+        "date": {
+          "game_date": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "HOU",
+              "SEA",
+              "WSN"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "LAA",
+              "BAL",
+              "SFG"
+            ]
+          }
+        },
+        "weather_temp": {
+          "temporary_rule_flag": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "away_0p75_to_1p99",
+              "away_0p75_to_1p99",
+              "low_margin_caution"
+            ]
+          }
+        }
+      },
+      "sourceScore": 16,
+      "modifiedTime": "2026-06-08T12:05:30.553365+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\game_betting_recommendations_20260608_to_20260615.csv",
+      "fileName": "game_betting_recommendations_20260608_to_20260615.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 78,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "824025",
+              "824829",
+              "823218"
+            ]
+          }
+        },
+        "date": {
+          "game_date": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "HOU",
+              "SEA",
+              "WSN"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "LAA",
+              "BAL",
+              "SFG"
+            ]
+          }
+        },
+        "weather_temp": {
+          "temporary_rule_flag": {
+            "sampleNonEmpty": 101,
+            "sampleRows": 101,
+            "examples": [
+              "away_0p75_to_1p99",
+              "away_0p75_to_1p99",
+              "low_margin_caution"
+            ]
+          }
+        }
+      },
+      "sourceScore": 16,
+      "modifiedTime": "2026-06-08T12:04:58.673514+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\game_betting_recommendations_20260607_to_20260607.csv",
+      "fileName": "game_betting_recommendations_20260607_to_20260607.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 78,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "weather_temp": [
+          "temporary_rule_flag"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 15,
+            "sampleRows": 15,
+            "examples": [
+              "825074",
+              "824670",
+              "824268"
+            ]
+          }
+        },
+        "date": {
+          "game_date": {
+            "sampleNonEmpty": 15,
+            "sampleRows": 15,
+            "examples": [
+              "2026-06-07",
+              "2026-06-07",
+              "2026-06-07"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 15,
+            "sampleRows": 15,
+            "examples": [
+              "WSN",
+              "SFG",
+              "SEA"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 15,
+            "sampleRows": 15,
+            "examples": [
+              "ARI",
+              "CHC",
+              "DET"
+            ]
+          }
+        },
+        "weather_temp": {
+          "temporary_rule_flag": {
+            "sampleNonEmpty": 15,
+            "sampleRows": 15,
+            "examples": [
+              "away_0p75_to_1p99",
+              "away_0p75_to_1p99",
+              "away_0p75_to_1p99"
+            ]
+          }
+        }
+      },
+      "sourceScore": 16,
+      "modifiedTime": "2026-06-07T20:21:38.492422+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\plate_appearances\\plate_appearances_latest.parquet",
+      "fileName": "plate_appearances_latest.parquet",
+      "parent": "plate_appearances",
+      "suffix": ".parquet",
+      "rows": 74304,
+      "columnCount": 23,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "batter_hand": [
+          "bat_side"
+        ],
+        "pitcher_hand": [
+          "pitch_hand"
+        ],
+        "starter_identity": [
+          "pitcher_id",
+          "pitcher_name"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822727",
+              "822727",
+              "822727"
+            ]
+          }
+        },
+        "batter_hand": {
+          "bat_side": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "R",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "pitcher_hand": {
+          "pitch_hand": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "L",
+              "L"
+            ]
+          }
+        },
+        "starter_identity": {
+          "pitcher_id": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "674841",
+              "674841",
+              "674841"
+            ]
+          },
+          "pitcher_name": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Andrew Alvarez",
+              "Andrew Alvarez",
+              "Andrew Alvarez"
+            ]
+          }
+        }
+      },
+      "sourceScore": 14,
+      "modifiedTime": "2026-06-08T06:19:52.113960+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\pitcher_game_logs\\pitcher_game_logs_latest.parquet",
+      "fileName": "pitcher_game_logs_latest.parquet",
+      "parent": "pitcher_game_logs",
+      "suffix": ".parquet",
+      "rows": 8279,
+      "columnCount": 24,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "team_context": [
+          "opponent",
+          "team",
+          "team_side"
+        ],
+        "lineup_context": [
+          "batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823244",
+              "823244"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "SF",
+              "NYY"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "NYY",
+              "SF"
+            ]
+          },
+          "team_side": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "AWAY",
+              "AWAY",
+              "HOME"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 3,
+            "sampleRows": 500,
+            "examples": [
+              "601",
+              "802",
+              "402"
+            ]
+          }
+        }
+      },
+      "sourceScore": 9,
+      "modifiedTime": "2026-06-08T06:19:51.062768+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\batter_game_logs\\batter_game_logs_latest.parquet",
+      "fileName": "batter_game_logs_latest.parquet",
+      "parent": "batter_game_logs",
+      "suffix": ".parquet",
+      "rows": 20749,
+      "columnCount": 28,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "gameDate"
+        ],
+        "team_context": [
+          "opponent",
+          "team",
+          "team_side"
+        ],
+        "lineup_context": [
+          "batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823244",
+              "823244"
+            ]
+          }
+        },
+        "date": {
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00",
+              "2026-03-26 00:05:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "SF",
+              "SF"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "NYY",
+              "NYY"
+            ]
+          },
+          "team_side": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "AWAY",
+              "AWAY",
+              "AWAY"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "500",
+              "200",
+              "300"
+            ]
+          }
+        }
+      },
+      "sourceScore": 7,
+      "modifiedTime": "2026-06-08T06:19:50.944273+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\statcast_pitch_level\\statcast_pitch_level_latest.parquet",
+      "fileName": "statcast_pitch_level_latest.parquet",
+      "parent": "statcast_pitch_level",
+      "suffix": ".parquet",
+      "rows": 284520,
+      "columnCount": 118,
+      "candidateColumns": {
+        "join_game_id": [
+          "game_pk"
+        ],
+        "date": [
+          "game_date"
+        ],
+        "team_context": [
+          "away_team",
+          "home_team"
+        ],
+        "batter_hand": [
+          "stand"
+        ],
+        "pitch_mix": [
+          "pitch_type"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "game_pk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "823244",
+              "823244",
+              "823244"
+            ]
+          }
+        },
+        "date": {
+          "game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-03-25 00:00:00",
+              "2026-03-25 00:00:00",
+              "2026-03-25 00:00:00"
+            ]
+          }
+        },
+        "team_context": {
+          "away_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "NYY",
+              "NYY",
+              "NYY"
+            ]
+          },
+          "home_team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SF",
+              "SF",
+              "SF"
+            ]
+          }
+        },
+        "batter_hand": {
+          "stand": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "L",
+              "L"
+            ]
+          }
+        },
+        "pitch_mix": {
+          "pitch_type": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SI",
+              "CH",
+              "FF"
+            ]
+          }
+        }
+      },
+      "sourceScore": 7,
+      "modifiedTime": "2026-06-08T06:20:02.394494+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\sc_pitcher_pitch_movement\\sc_pitcher_pitch_movement_latest.parquet",
+      "fileName": "sc_pitcher_pitch_movement_latest.parquet",
+      "parent": "sc_pitcher_pitch_movement",
+      "suffix": ".parquet",
+      "rows": 71723,
+      "columnCount": 25,
+      "candidateColumns": {
+        "team_context": [
+          "team_name"
+        ],
+        "pitcher_hand": [
+          "pitch_hand"
+        ],
+        "starter_identity": [
+          "pitcher_id"
+        ],
+        "pitch_mix": [
+          "pitch_type"
+        ]
+      },
+      "sampleCoverage": {
+        "team_context": {
+          "team_name": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Brewers",
+              "D-backs",
+              "Giants"
+            ]
+          }
+        },
+        "pitcher_hand": {
+          "pitch_hand": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "R",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "starter_identity": {
+          "pitcher_id": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "694819",
+              "669194",
+              "592662"
+            ]
+          }
+        },
+        "pitch_mix": {
+          "pitch_type": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "FF",
+              "FF",
+              "FF"
+            ]
+          }
+        }
+      },
+      "sourceScore": 6,
+      "modifiedTime": "2026-06-02T17:27:18.463072+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\history\\projected_lineup_history.csv",
+      "fileName": "projected_lineup_history.csv",
+      "parent": "history",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 38,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822755",
+              "822755",
+              "822755"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06",
+              "2026-04-06",
+              "2026-04-06"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 22:45:00+00:00",
+              "2026-04-06 22:45:00+00:00",
+              "2026-04-06 22:45:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00",
+              "2026-04-06 00:00:00+00:00"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "WSN",
+              "WSN",
+              "WSN"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "STL",
+              "STL",
+              "STL"
+            ]
+          }
+        },
+        "batter_hand": {
+          "batSide": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          },
+          "projected_batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        }
+      },
+      "sourceScore": 6,
+      "modifiedTime": "2026-06-08T12:15:35.260317+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\projected_lineups_20260608_to_20260615.csv",
+      "fileName": "projected_lineups_20260608_to_20260615.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 36,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822806",
+              "822806",
+              "822806"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47",
+              "2026-06-08 06:30:47"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 23:07:00+00:00",
+              "2026-06-08 23:07:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "TOR",
+              "TOR",
+              "TOR"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "PHI",
+              "PHI",
+              "PHI"
+            ]
+          }
+        },
+        "batter_hand": {
+          "batSide": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "L",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          },
+          "projected_batting_order": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        }
+      },
+      "sourceScore": 6,
+      "modifiedTime": "2026-06-08T12:04:58.657209+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\projected_lineups_20260607_to_20260607.csv",
+      "fileName": "projected_lineups_20260607_to_20260607.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 38,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "forecast_generated_date",
+          "gameDate",
+          "target_game_date"
+        ],
+        "team_context": [
+          "opponent",
+          "team"
+        ],
+        "batter_hand": [
+          "batSide"
+        ],
+        "lineup_context": [
+          "batting_order",
+          "projected_batting_order"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "822807",
+              "822807",
+              "822807"
+            ]
+          }
+        },
+        "date": {
+          "forecast_generated_date": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "2026-06-07 18:27:15",
+              "2026-06-07 18:27:15",
+              "2026-06-07 18:27:15"
+            ]
+          },
+          "gameDate": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "2026-06-07 17:37:00+00:00",
+              "2026-06-07 17:37:00+00:00",
+              "2026-06-07 17:37:00+00:00"
+            ]
+          },
+          "target_game_date": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "2026-06-07",
+              "2026-06-07",
+              "2026-06-07"
+            ]
+          }
+        },
+        "team_context": {
+          "opponent": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "TOR",
+              "TOR",
+              "TOR"
+            ]
+          },
+          "team": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "BAL",
+              "BAL",
+              "BAL"
+            ]
+          }
+        },
+        "batter_hand": {
+          "batSide": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "R",
+              "L",
+              "B"
+            ]
+          }
+        },
+        "lineup_context": {
+          "batting_order": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          },
+          "projected_batting_order": {
+            "sampleNonEmpty": 270,
+            "sampleRows": 270,
+            "examples": [
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        }
+      },
+      "sourceScore": 6,
+      "modifiedTime": "2026-06-07T20:21:38.488425+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\weather_hourly\\weather_hourly_latest.parquet",
+      "fileName": "weather_hourly_latest.parquet",
+      "parent": "weather_hourly",
+      "suffix": ".parquet",
+      "rows": 39744,
+      "columnCount": 17,
+      "candidateColumns": {
+        "park": [
+          "venue_name"
+        ],
+        "weather_temp": [
+          "apparent_temperature",
+          "temperature_2m"
+        ],
+        "weather_wind": [
+          "wind_direction_10m",
+          "wind_gusts_10m",
+          "wind_speed_10m"
+        ]
+      },
+      "sampleCoverage": {
+        "park": {
+          "venue_name": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "Angel Stadium",
+              "Angel Stadium",
+              "Angel Stadium"
+            ]
+          }
+        },
+        "weather_temp": {
+          "apparent_temperature": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "20.2",
+              "19.7",
+              "19.4"
+            ]
+          },
+          "temperature_2m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "19.2",
+              "19.0",
+              "18.6"
+            ]
+          }
+        },
+        "weather_wind": {
+          "wind_direction_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "217",
+              "221",
+              "221"
+            ]
+          },
+          "wind_gusts_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "26.3",
+              "17.3",
+              "18.7"
+            ]
+          },
+          "wind_speed_10m": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "6.8",
+              "7.1",
+              "5.7"
+            ]
+          }
+        }
+      },
+      "sourceScore": 5,
+      "modifiedTime": "2026-06-08T06:19:56.855828+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_model_outputs\\lineup_availability_audit.csv",
+      "fileName": "lineup_availability_audit.csv",
+      "parent": "mlb_model_outputs",
+      "suffix": ".csv",
+      "rows": null,
+      "columnCount": 12,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "date": [
+          "target_game_date"
+        ],
+        "team_context": [
+          "team"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "824829",
+              "824829",
+              "824829"
+            ]
+          }
+        },
+        "date": {
+          "target_game_date": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "2026-06-08",
+              "2026-06-08",
+              "2026-06-08"
+            ]
+          }
+        },
+        "team_context": {
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "BAL",
+              "BAL",
+              "BAL"
+            ]
+          }
+        }
+      },
+      "sourceScore": 5,
+      "modifiedTime": "2026-06-08T11:43:51.705219+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\game_team_box\\game_team_box_latest.parquet",
+      "fileName": "game_team_box_latest.parquet",
+      "parent": "game_team_box",
+      "suffix": ".parquet",
+      "rows": 1984,
+      "columnCount": 17,
+      "candidateColumns": {
+        "join_game_id": [
+          "gamePk"
+        ],
+        "team_context": [
+          "team",
+          "team_side"
+        ]
+      },
+      "sampleCoverage": {
+        "join_game_id": {
+          "gamePk": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "822727",
+              "822727",
+              "822728"
+            ]
+          }
+        },
+        "team_context": {
+          "team": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "MIA",
+              "WSN",
+              "MIA"
+            ]
+          },
+          "team_side": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "AWAY",
+              "HOME",
+              "AWAY"
+            ]
+          }
+        }
+      },
+      "sourceScore": 4,
+      "modifiedTime": "2026-06-08T06:19:50.597345+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\sc_pitcher_active_spin\\sc_pitcher_active_spin_latest.parquet",
+      "fileName": "sc_pitcher_active_spin_latest.parquet",
+      "parent": "sc_pitcher_active_spin",
+      "suffix": ".parquet",
+      "rows": 4144,
+      "columnCount": 13,
+      "candidateColumns": {
+        "pitcher_hand": [
+          "pitch_hand"
+        ],
+        "pitch_mix": [
+          "active_spin_changeup",
+          "active_spin_curve",
+          "active_spin_cutter",
+          "active_spin_sinker",
+          "active_spin_slider",
+          "active_spin_sweeper"
+        ]
+      },
+      "sampleCoverage": {
+        "pitcher_hand": {
+          "pitch_hand": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "R",
+              "R",
+              "L"
+            ]
+          }
+        },
+        "pitch_mix": {
+          "active_spin_changeup": {
+            "sampleNonEmpty": 287,
+            "sampleRows": 500,
+            "examples": [
+              "94.3",
+              "93.4",
+              "82.5"
+            ]
+          },
+          "active_spin_curve": {
+            "sampleNonEmpty": 249,
+            "sampleRows": 500,
+            "examples": [
+              "82.7",
+              "73.6",
+              "86.0"
+            ]
+          },
+          "active_spin_cutter": {
+            "sampleNonEmpty": 196,
+            "sampleRows": 500,
+            "examples": [
+              "57.9",
+              "46.4",
+              "39.8"
+            ]
+          },
+          "active_spin_sinker": {
+            "sampleNonEmpty": 331,
+            "sampleRows": 500,
+            "examples": [
+              "86.2",
+              "70.7",
+              "84.9"
+            ]
+          },
+          "active_spin_slider": {
+            "sampleNonEmpty": 282,
+            "sampleRows": 500,
+            "examples": [
+              "33.3",
+              "30.0",
+              "16.8"
+            ]
+          },
+          "active_spin_sweeper": {
+            "sampleNonEmpty": 199,
+            "sampleRows": 500,
+            "examples": [
+              "53.3",
+              "26.8",
+              "68.0"
+            ]
+          }
+        }
+      },
+      "sourceScore": 4,
+      "modifiedTime": "2026-06-02T17:27:18.495749+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\sc_pitcher_arsenal_stats\\sc_pitcher_arsenal_stats_latest.parquet",
+      "fileName": "sc_pitcher_arsenal_stats_latest.parquet",
+      "parent": "sc_pitcher_arsenal_stats",
+      "suffix": ".parquet",
+      "rows": 4990,
+      "columnCount": 21,
+      "candidateColumns": {
+        "pitch_mix": [
+          "pitch_type"
+        ]
+      },
+      "sampleCoverage": {
+        "pitch_mix": {
+          "pitch_type": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "SI",
+              "CH",
+              "FF"
+            ]
+          }
+        }
+      },
+      "sourceScore": 3,
+      "modifiedTime": "2026-06-02T17:27:18.165895+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\sc_pitcher_ev_barrels\\sc_pitcher_ev_barrels_latest.parquet",
+      "fileName": "sc_pitcher_ev_barrels_latest.parquet",
+      "parent": "sc_pitcher_ev_barrels",
+      "suffix": ".parquet",
+      "rows": 5026,
+      "columnCount": 19,
+      "candidateColumns": {
+        "weather_temp": [
+          "attempts"
+        ]
+      },
+      "sampleCoverage": {
+        "weather_temp": {
+          "attempts": {
+            "sampleNonEmpty": 500,
+            "sampleRows": 500,
+            "examples": [
+              "6",
+              "6",
+              "5"
+            ]
+          }
+        }
+      },
+      "sourceScore": 3,
+      "modifiedTime": "2026-06-02T17:27:18.043092+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\sc_pitcher_percentiles\\sc_pitcher_percentiles_latest.parquet",
+      "fileName": "sc_pitcher_percentiles_latest.parquet",
+      "parent": "sc_pitcher_percentiles",
+      "suffix": ".parquet",
+      "rows": 15179,
+      "columnCount": 23,
+      "candidateColumns": {
+        "pitch_mix": [
+          "curve_spin"
+        ]
+      },
+      "sampleCoverage": {
+        "pitch_mix": {
+          "curve_spin": {
+            "sampleNonEmpty": 0,
+            "sampleRows": 500,
+            "examples": []
+          }
+        }
+      },
+      "sourceScore": 3,
+      "modifiedTime": "2026-06-02T17:27:18.617826+00:00"
+    },
+    {
+      "source": "C:\\python\\mlb_data\\venues\\venues_latest.parquet",
+      "fileName": "venues_latest.parquet",
+      "parent": "venues",
+      "suffix": ".parquet",
+      "rows": 32,
+      "columnCount": 18,
+      "candidateColumns": {
+        "park": [
+          "venue_name"
+        ]
+      },
+      "sampleCoverage": {
+        "park": {
+          "venue_name": {
+            "sampleNonEmpty": 32,
+            "sampleRows": 32,
+            "examples": [
+              "Angel Stadium",
+              "Oriole Park at Camden Yards",
+              "Fenway Park"
+            ]
+          }
+        }
+      },
+      "sourceScore": 3,
+      "modifiedTime": "2026-06-08T06:19:56.430446+00:00"
+    }
+  ],
+  "recommendedNextStep": "If joinableContextSources has a source with gamePk plus starter/weather/park fields, patch build_mlb_props_analyzer_json.py to enrich historical logs by gamePk. If not, patch the upstream scraper/model output to add those fields to batter_game_logs and pitcher_game_logs before the props analyzer builder runs."
+}

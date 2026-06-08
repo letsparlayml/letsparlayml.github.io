@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Props Analyzer</title>
-  <link rel="stylesheet" href="assets/style.css?v=7" />
+  <link rel="stylesheet" href="assets/style.css?v=14" />
 </head>
 <body>
   <header class="site-header compact-header">
@@ -31,8 +31,20 @@
     <section class="panel">
       <div class="section-heading">
         <div>
+          <p class="eyebrow">Context</p>
+          <h2>At-a-glance view</h2>
+          <p class="muted">Start here for the matchup, model edge, recent form, and board context before changing the selected prop.</p>
+        </div>
+      </div>
+      <div id="analyzer-kpis" class="analyzer-kpi-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
           <p class="eyebrow">Selection</p>
           <h2>Find a prop</h2>
+          <p class="muted">These controls update the selected player, prop line, trend chart, splits, and MLB multi-prop board below.</p>
         </div>
       </div>
       <div class="control-grid analyzer-control-grid">
@@ -75,14 +87,22 @@
       <div id="analyzer-status"></div>
     </section>
 
-    <section class="panel">
+
+    <section class="panel" id="analyzer-multi-prop-panel" hidden>
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Context</p>
-          <h2>At-a-glance view</h2>
+          <p class="eyebrow">MLB multi-prop view</p>
+          <h2>Player prop board</h2>
+          <p class="muted">Select multiple props for the same player to compare model edge, recent form, similar-game support, and game-log results together.</p>
         </div>
       </div>
-      <div id="analyzer-kpis" class="analyzer-kpi-grid"></div>
+      <div id="analyzer-profile-summary" class="profile-summary-grid"></div>
+      <div id="analyzer-matchup-read" class="matchup-read-panel"></div>
+      <div id="analyzer-multi-prop-controls" class="multi-prop-controls"></div>
+      <div id="analyzer-multi-prop-cards" class="multi-prop-card-grid"></div>
+      <div id="analyzer-similarity-v2" class="similarity-v2-section"></div>
+      <div id="analyzer-multi-prop-charts" class="multi-prop-chart-grid"></div>
+      <div id="analyzer-combined-log-table" class="table-wrap multi-prop-log-table"></div>
     </section>
 
     <section class="panel">
@@ -127,7 +147,7 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="analyzer-game-log-panel">
       <div class="section-heading">
         <div>
           <p class="eyebrow" id="analyzer-game-log-eyebrow">Game log</p>
@@ -178,6 +198,6 @@
     </section>
   </main>
 
-  <script src="assets/props_analyzer.js?v=4"></script>
+  <script src="assets/props_analyzer.js?v=11"></script>
 </body>
 </html>

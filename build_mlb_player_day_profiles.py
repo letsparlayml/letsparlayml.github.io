@@ -42,7 +42,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-SCHEMA_VERSION = "mlb-player-day-profile-v1"
+SCHEMA_VERSION = "mlb-player-day-profile-v4"
 
 STAT_DISPLAY_FALLBACK = {
     "H": "Hits",
@@ -213,23 +213,80 @@ def profile_key_for(detail: Dict[str, Any], file_key: str) -> str:
     return f"{ptype}_{team}_{safe_file_key}"
 
 
+def lineup_band(order: Optional[int]) -> Optional[str]:
+    if order is None:
+        return None
+    if order <= 3:
+        return "top-third lineup"
+    if order <= 6:
+        return "middle-third lineup"
+    return "bottom-third lineup"
+
+
+def handedness_bucket(batter_hand: Optional[str], pitcher_hand: Optional[str]) -> Optional[str]:
+    if not batter_hand or not pitcher_hand:
+        return None
+    b = str(batter_hand).upper()
+    p = str(pitcher_hand).upper()
+    if b == "B":
+        return f"switch hitter vs {p}HP"
+    if b in {"L", "R"} and p in {"L", "R"}:
+        return "opposite-side matchup" if b != p else "same-side matchup"
+    return f"{b} vs {p}"
+
+
+def temperature_bucket(temp_f: Optional[float]) -> Optional[str]:
+    if temp_f is None:
+        return None
+    if temp_f < 55:
+        return "cold environment"
+    if temp_f < 70:
+        return "mild/cool environment"
+    if temp_f < 85:
+        return "warm environment"
+    return "hot environment"
+
+
+def wind_bucket(wind_mph: Optional[float]) -> Optional[str]:
+    if wind_mph is None:
+        return None
+    if wind_mph < 7:
+        return "low wind"
+    if wind_mph < 14:
+        return "moderate wind"
+    return "high wind"
+
+
 def parse_context_text(text: str) -> Dict[str, Any]:
-    """Parse the existing board/driver text into optional matchup fields."""
+    """Parse the existing board/driver text into structured current matchup fields.
+
+    This intentionally parses only the *current* matchup text that already exists in
+    the daily analyzer files. It does not invent historical handedness or pitch-mix
+    data. Those still need to be added upstream before similarity can score them.
+    """
     text = text or ""
     out: Dict[str, Any] = {
         "raw": text,
         "lineupOrder": None,
+        "lineupBand": None,
         "batterHand": None,
         "pitcherHand": None,
         "handednessText": None,
+        "handednessBucket": None,
         "temperatureF": None,
+        "temperatureBucket": None,
         "windMph": None,
+        "windBucket": None,
+        "currentFeatures": [],
+        "summaryPieces": [],
         "parsedFrom": "driverSummary/boardContext",
     }
 
     m = re.search(r"\bOrder\s+(\d+)\b", text, re.I)
     if m:
-        out["lineupOrder"] = int(m.group(1))
+        order = int(m.group(1))
+        out["lineupOrder"] = order
+        out["lineupBand"] = lineup_band(order)
 
     # Handles L vs R, R vs L, B vs R, etc.
     m = re.search(r"\b([LRBS])\s+vs\s+([LRBS])\b", text, re.I)
@@ -237,17 +294,484 @@ def parse_context_text(text: str) -> Dict[str, Any]:
         out["batterHand"] = m.group(1).upper()
         out["pitcherHand"] = m.group(2).upper()
         out["handednessText"] = f"{out['batterHand']} vs {out['pitcherHand']}"
+        out["handednessBucket"] = handedness_bucket(out["batterHand"], out["pitcherHand"])
 
     m = re.search(r"(-?\d+(?:\.\d+)?)\s*°\s*F", text, re.I)
     if m:
-        out["temperatureF"] = safe_float(m.group(1))
+        temp = safe_float(m.group(1))
+        out["temperatureF"] = temp
+        out["temperatureBucket"] = temperature_bucket(temp)
 
     m = re.search(r"\bWind\s+(-?\d+(?:\.\d+)?)", text, re.I)
     if m:
-        out["windMph"] = safe_float(m.group(1))
+        wind = safe_float(m.group(1))
+        out["windMph"] = wind
+        out["windBucket"] = wind_bucket(wind)
 
+    features: List[Dict[str, Any]] = []
+    summary: List[str] = []
+    if out.get("lineupOrder") is not None:
+        features.append({
+            "key": "lineupOrder",
+            "label": "Lineup",
+            "value": f"Order {out['lineupOrder']}",
+            "note": out.get("lineupBand"),
+            "available": True,
+        })
+        summary.append(f"Order {out['lineupOrder']}")
+    if out.get("handednessText"):
+        features.append({
+            "key": "handedness",
+            "label": "Handedness",
+            "value": out["handednessText"],
+            "note": out.get("handednessBucket"),
+            "available": True,
+        })
+        summary.append(out["handednessText"])
+    if out.get("temperatureF") is not None:
+        features.append({
+            "key": "temperature",
+            "label": "Temperature",
+            "value": f"{out['temperatureF']:.0f}°F",
+            "note": out.get("temperatureBucket"),
+            "available": True,
+        })
+        summary.append(f"{out['temperatureF']:.0f}°F")
+    if out.get("windMph") is not None:
+        features.append({
+            "key": "wind",
+            "label": "Wind",
+            "value": f"{out['windMph']:.0f} mph",
+            "note": out.get("windBucket"),
+            "available": True,
+        })
+        summary.append(f"Wind {out['windMph']:.0f}")
+
+    out["currentFeatures"] = features
+    out["summaryPieces"] = summary
+    out["featureCoverage"] = {
+        "lineupOrder": out.get("lineupOrder") is not None,
+        "currentHandedness": bool(out.get("handednessText")),
+        "currentTemperature": out.get("temperatureF") is not None,
+        "currentWind": out.get("windMph") is not None,
+        "historicalHandedness": False,
+        "historicalPitchMix": False,
+        "historicalPark": False,
+        "historicalWeather": False,
+    }
+    out["similarityReadiness"] = {
+        "currentContextReady": bool(summary),
+        "canScoreCurrentHandedness": bool(out.get("handednessText")),
+        "canScoreHistoricalHandedness": False,
+        "canScorePitchMix": False,
+        "nextRequiredInputs": [
+            "historical batter hand and pitcher hand per game-log row",
+            "current and historical opposing starter identity",
+            "pitch mix / pitch-type profile by opposing starter",
+            "park/weather values per historical row",
+        ],
+    }
     return out
 
+
+def native_detail_context(detail: Dict[str, Any]) -> Dict[str, Any]:
+    ctx = detail.get("matchupContext") if isinstance(detail.get("matchupContext"), dict) else None
+    if not ctx:
+        ctx = detail.get("currentMatchupContext") if isinstance(detail.get("currentMatchupContext"), dict) else None
+    return dict(ctx or {})
+
+
+def merge_native_context(parsed: Dict[str, Any], native: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge structured context emitted by the upstream analyzer with parsed text.
+
+    Parsed text is still the fallback, but native fields are preferred because they
+    are less fragile and can include park/starter/pitch-mix fields that are not
+    always shown in the short display summary.
+    """
+    out = dict(parsed or {})
+    native = native or {}
+    field_map = {
+        "lineupOrder": ["lineupOrder", "projectedLineupOrder", "projected_batting_order"],
+        "batterHand": ["batterHand", "batSide", "bat_side"],
+        "pitcherHand": ["pitcherHand", "opposingPitcherHand", "oppPitchHand", "opp_pitch_hand"],
+        "handednessText": ["handednessText"],
+        "temperatureF": ["temperatureF", "tempF", "temperature_f"],
+        "windMph": ["windMph", "wind_mph"],
+        "park": ["park", "venue", "venueName", "ballpark"],
+        "opponentStarterName": ["opponentStarterName", "opposingStarterName", "oppStarterName"],
+        "opponentStarterId": ["opponentStarterId", "opposingStarterId", "oppStarterId"],
+        "pitchMixSummary": ["pitchMixSummary", "pitchMix", "pitch_mix"],
+    }
+    for target, candidates in field_map.items():
+        for key in candidates:
+            value = native.get(key)
+            if value not in [None, ""]:
+                if target == "lineupOrder":
+                    value = safe_int(value)
+                elif target in {"temperatureF", "windMph"}:
+                    value = safe_float(value)
+                elif target in {"batterHand", "pitcherHand"}:
+                    value = str(value).strip().upper()[:1]
+                out[target] = value
+                break
+
+    if not out.get("handednessText") and out.get("batterHand") and out.get("pitcherHand"):
+        out["handednessText"] = f"{out['batterHand']} vs {out['pitcherHand']}"
+    if out.get("lineupOrder") is not None:
+        out["lineupBand"] = lineup_band(int(out["lineupOrder"]))
+    if out.get("batterHand") and out.get("pitcherHand"):
+        out["handednessBucket"] = handedness_bucket(out.get("batterHand"), out.get("pitcherHand"))
+    if out.get("temperatureF") is not None:
+        out["temperatureBucket"] = temperature_bucket(safe_float(out.get("temperatureF")))
+    if out.get("windMph") is not None:
+        out["windBucket"] = wind_bucket(safe_float(out.get("windMph")))
+
+    features: List[Dict[str, Any]] = []
+    summary: List[str] = []
+    if out.get("lineupOrder") is not None:
+        features.append({"key": "lineupOrder", "label": "Lineup", "value": f"Order {out['lineupOrder']}", "note": out.get("lineupBand"), "available": True})
+        summary.append(f"Order {out['lineupOrder']}")
+    if out.get("handednessText"):
+        features.append({"key": "handedness", "label": "Handedness", "value": out["handednessText"], "note": out.get("handednessBucket"), "available": True})
+        summary.append(out["handednessText"])
+    if out.get("temperatureF") is not None:
+        features.append({"key": "temperature", "label": "Temperature", "value": f"{safe_float(out['temperatureF']):.0f}°F", "note": out.get("temperatureBucket"), "available": True})
+        summary.append(f"{safe_float(out['temperatureF']):.0f}°F")
+    if out.get("windMph") is not None:
+        features.append({"key": "wind", "label": "Wind", "value": f"{safe_float(out['windMph']):.0f} mph", "note": out.get("windBucket"), "available": True})
+        summary.append(f"Wind {safe_float(out['windMph']):.0f}")
+    if out.get("park"):
+        features.append({"key": "park", "label": "Park", "value": str(out["park"]), "note": "current venue", "available": True})
+    if out.get("opponentStarterName"):
+        features.append({"key": "opponentStarter", "label": "Opp starter", "value": str(out["opponentStarterName"]), "note": out.get("pitcherHand") and f"{out.get('pitcherHand')}HP", "available": True})
+    if out.get("pitchMixSummary"):
+        features.append({"key": "pitchMix", "label": "Pitch mix", "value": str(out["pitchMixSummary"]), "note": "current starter profile", "available": True})
+
+    out["currentFeatures"] = features
+    out["summaryPieces"] = summary
+    out["featureCoverage"] = {
+        "lineupOrder": out.get("lineupOrder") is not None,
+        "currentHandedness": bool(out.get("handednessText")),
+        "currentTemperature": out.get("temperatureF") is not None,
+        "currentWind": out.get("windMph") is not None,
+        "currentPark": bool(out.get("park")),
+        "currentStarter": bool(out.get("opponentStarterName") or out.get("opponentStarterId")),
+        "currentPitchMix": bool(out.get("pitchMixSummary")),
+        "historicalHandedness": False,
+        "historicalPitchMix": False,
+        "historicalPark": False,
+        "historicalWeather": False,
+    }
+    out["similarityReadiness"] = {
+        "currentContextReady": bool(summary),
+        "canScoreCurrentHandedness": bool(out.get("handednessText")),
+        "canScoreHistoricalHandedness": False,
+        "canScorePitchMix": False,
+        "nextRequiredInputs": [
+            "historical batter hand and pitcher hand per game-log row",
+            "current and historical opposing starter identity",
+            "pitch mix / pitch-type profile by opposing starter",
+            "park/weather values per historical row",
+        ],
+    }
+    return out
+
+
+def parse_date(value: Any) -> Optional[datetime]:
+    if value in [None, ""]:
+        return None
+    text = str(value)[:10]
+    try:
+        return datetime.strptime(text, "%Y-%m-%d")
+    except Exception:
+        return None
+
+
+def clamp(value: float, low: float, high: float) -> float:
+    return max(low, min(high, value))
+
+
+def current_context_order(detail: Dict[str, Any], matchup_context: Dict[str, Any]) -> Optional[float]:
+    order = safe_float((matchup_context or {}).get("lineupOrder"))
+    if order is not None:
+        return order
+    return safe_float(detail.get("contextMetricValue"))
+
+
+def similarity_tier(score: float) -> str:
+    if score >= 80:
+        return "Strong match"
+    if score >= 65:
+        return "Good match"
+    if score >= 50:
+        return "Partial match"
+    return "Loose match"
+
+
+def similarity_bin(score: float) -> str:
+    if score >= 80:
+        return "Strong v2"
+    if score >= 65:
+        return "Good v2"
+    if score >= 50:
+        return "Partial v2"
+    return "Loose v2"
+
+
+def score_similarity_v2_game(
+    game: Dict[str, Any],
+    detail: Dict[str, Any],
+    target_date: str,
+    matchup_context: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Explainable similarity score using only features available on historical rows.
+
+    Important: the current detail files do not carry historical handedness, pitch mix,
+    park, temperature, or wind for each historical game row. Those are intentionally
+    listed as missing, not silently guessed.
+    """
+    score = 0.0
+    components: Dict[str, float] = {}
+    reasons: List[str] = []
+    missing: List[str] = []
+
+    current_opp = str(detail.get("opp") or "").strip().upper()
+    hist_opp = str(game.get("opp") or "").strip().upper()
+    if current_opp and hist_opp:
+        if current_opp == hist_opp:
+            components["sameOpponent"] = 22.0
+            reasons.append(f"same opponent {hist_opp}")
+        else:
+            components["sameOpponent"] = 0.0
+    else:
+        missing.append("opponent")
+
+    current_loc = str(detail.get("location") or "").strip().lower()
+    hist_loc = str(game.get("location") or "").strip().lower()
+    if current_loc and hist_loc:
+        if current_loc == hist_loc:
+            components["sameLocation"] = 18.0
+            reasons.append(f"same location {game.get('location')}")
+        else:
+            components["sameLocation"] = 0.0
+    else:
+        missing.append("home/away")
+
+    current_hand = str((matchup_context or {}).get("handednessText") or "").strip().upper()
+    hist_hand = str(game.get("handednessText") or "").strip().upper()
+    if not hist_hand:
+        hb = str(game.get("batterHand") or "").strip().upper()[:1]
+        hp = str(game.get("opposingPitcherHand") or game.get("pitcherHand") or "").strip().upper()[:1]
+        if hb and hp:
+            hist_hand = f"{hb} VS {hp}"
+    if current_hand and hist_hand:
+        components["sameHandedness"] = 18.0 if current_hand == hist_hand else 6.0
+        reasons.append(f"historical hand match {hist_hand.replace(' VS ', ' vs ')}" if current_hand == hist_hand else f"historical hand differs {hist_hand.replace(' VS ', ' vs ')}")
+    elif current_hand:
+        missing.append("historical handedness")
+
+    current_park = str((matchup_context or {}).get("park") or "").strip().upper()
+    hist_park = str(game.get("park") or "").strip().upper()
+    if current_park and hist_park:
+        if current_park == hist_park:
+            components["samePark"] = 8.0
+            reasons.append("same park")
+        else:
+            components["samePark"] = 0.0
+    elif current_park:
+        missing.append("historical park")
+
+    current_temp = safe_float((matchup_context or {}).get("temperatureF"))
+    hist_temp = safe_float(game.get("temperatureF"))
+    if current_temp is not None and hist_temp is not None:
+        temp_score = clamp(6.0 - (abs(current_temp - hist_temp) / 5.0), 0.0, 6.0)
+        components["temperatureSimilarity"] = round(temp_score, 2)
+        if temp_score >= 4:
+            reasons.append(f"similar temperature ({hist_temp:.0f}°F)")
+    elif current_temp is not None:
+        missing.append("historical temperature")
+
+    current_wind = safe_float((matchup_context or {}).get("windMph"))
+    hist_wind = safe_float(game.get("windMph"))
+    if current_wind is not None and hist_wind is not None:
+        wind_score = clamp(4.0 - (abs(current_wind - hist_wind) / 3.0), 0.0, 4.0)
+        components["windSimilarity"] = round(wind_score, 2)
+        if wind_score >= 2.5:
+            reasons.append(f"similar wind ({hist_wind:.0f} mph)")
+    elif current_wind is not None:
+        missing.append("historical wind")
+
+    current_pitch_mix = str((matchup_context or {}).get("pitchMixSummary") or "").strip()
+    hist_pitch_mix = str(game.get("pitchMixSummary") or "").strip()
+    if current_pitch_mix and hist_pitch_mix:
+        # Seed only: true pitch-type similarity should use pitch usage/quality vectors later.
+        components["pitchMixAvailable"] = 2.0
+        reasons.append("pitch-mix field available")
+    elif current_pitch_mix:
+        missing.append("historical pitch mix")
+
+    projected_order = current_context_order(detail, matchup_context)
+    hist_order = safe_float(game.get("contextValue"))
+    if projected_order is not None and hist_order is not None:
+        diff = abs(projected_order - hist_order)
+        ctx_score = clamp(18.0 - (diff * 4.0), 0.0, 18.0)
+        components["lineupOrContext"] = round(ctx_score, 2)
+        if ctx_score > 0:
+            reasons.append(f"similar lineup/context ({hist_order:g} vs {projected_order:g})")
+    else:
+        missing.append("historical lineup/context")
+
+    # Use AB/IP quality as a light sample-confidence piece, not as a direct matchup edge.
+    minutes = safe_float(game.get("minutes"))
+    player_type = str(detail.get("playerType") or "").lower()
+    if minutes is not None:
+        if player_type == "batter":
+            sample_score = 8.0 if minutes >= 4 else 5.0 if minutes >= 3 else 2.0 if minutes > 0 else 0.0
+            if minutes >= 3:
+                reasons.append(f"usable AB sample ({minutes:g})")
+        elif player_type == "pitcher":
+            sample_score = 8.0 if minutes >= 5 else 5.0 if minutes >= 3 else 2.0 if minutes > 0 else 0.0
+            if minutes >= 3:
+                reasons.append(f"usable IP/outs sample ({minutes:g})")
+        else:
+            sample_score = 5.0 if minutes > 0 else 0.0
+        components["sampleContext"] = sample_score
+    else:
+        missing.append("AB/IP sample")
+
+    gdate = parse_date(game.get("gameDate") or game.get("label"))
+    tdate = parse_date(target_date)
+    if gdate and tdate:
+        days = max(0, (tdate - gdate).days)
+        # Full recency credit for the last week, fades to zero at about 60 days.
+        recency_score = 22.0 if days <= 7 else clamp(22.0 * (1.0 - ((days - 7) / 53.0)), 0.0, 22.0)
+        components["recency"] = round(recency_score, 2)
+        if recency_score >= 14:
+            reasons.append(f"recent sample ({days}d)")
+    else:
+        missing.append("game date")
+
+    # Stability/base score for rows with a valid actual value.
+    if safe_float(game.get("value")) is not None:
+        components["hasResult"] = 12.0
+    else:
+        missing.append("actual result")
+
+    score = round(clamp(sum(components.values()), 0.0, 100.0), 2)
+    out = dict(game)
+    out["simScoreV2"] = score
+    out["simPctV2"] = score
+    out["simBinV2"] = similarity_bin(score)
+    out["simTierV2"] = similarity_tier(score)
+    out["simComponentsV2"] = components
+    out["simReasonsV2"] = reasons[:5]
+    out["simMissingV2"] = missing
+    out["simMethodV2"] = "available-feature-similarity-v2"
+    # Make these rows compatible with the existing table renderer when used directly.
+    out["simScore"] = score
+    out["simPct"] = score
+    out["simBin"] = out["simBinV2"]
+    return out
+
+
+def summarize_similarity_v2(detail: Dict[str, Any], target_date: str, matchup_context: Dict[str, Any]) -> Dict[str, Any]:
+    games = [g for g in (detail.get("games") or []) if isinstance(g, dict)]
+    scored = [score_similarity_v2_game(g, detail, target_date, matchup_context or {}) for g in games]
+    scored_by_score = sorted(
+        scored,
+        key=lambda g: (safe_float(g.get("simScoreV2")) or 0.0, str(g.get("gameDate") or "")),
+        reverse=True,
+    )
+    top = scored_by_score[:12]
+    vals = [safe_float(g.get("value")) for g in top]
+    vals = [v for v in vals if v is not None]
+    all_scores = [safe_float(g.get("simScoreV2")) for g in scored]
+    all_scores = [v for v in all_scores if v is not None]
+    bins = Counter(str(g.get("simBinV2") or "missing") for g in top)
+
+    coverage = {
+        "sameOpponent": True,
+        "homeAway": True,
+        "lineupOrContext": any(safe_float(g.get("contextValue")) is not None for g in games),
+        "abOrIpSample": any(safe_float(g.get("minutes")) is not None for g in games),
+        "recency": True,
+        "currentHandednessParsed": bool((matchup_context or {}).get("handednessText")),
+        "currentPark": bool((matchup_context or {}).get("park")),
+        "currentWeather": (matchup_context or {}).get("temperatureF") is not None or (matchup_context or {}).get("windMph") is not None,
+        "currentPitchMix": bool((matchup_context or {}).get("pitchMixSummary")),
+        "historicalHandedness": any(g.get("handednessText") or (g.get("batterHand") and (g.get("opposingPitcherHand") or g.get("pitcherHand"))) for g in games),
+        "historicalPitchMix": any(g.get("pitchMixSummary") for g in games),
+        "historicalWeather": any(safe_float(g.get("temperatureF")) is not None or safe_float(g.get("windMph")) is not None for g in games),
+        "historicalPark": any(g.get("park") for g in games),
+        "historicalStarter": any(g.get("opposingStarterName") or g.get("opposingStarterId") for g in games),
+    }
+    warnings = []
+    if coverage["currentHandednessParsed"] and not coverage["historicalHandedness"]:
+        warnings.append("Current handedness is structured, but historical game rows still do not include batter/pitcher hand.")
+    if coverage["currentPitchMix"] and not coverage["historicalPitchMix"]:
+        warnings.append("Current pitch mix is structured, but historical pitch-mix rows are not available yet.")
+    if (coverage["currentPark"] and not coverage["historicalPark"]) or (coverage["currentWeather"] and not coverage["historicalWeather"]):
+        warnings.append("Park/weather similarity is only scored when those fields exist on historical rows.")
+
+    def compact_similarity_row(g: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "gameKey": compact_game_key(g),
+            "gameId": g.get("gameId"),
+            "gameDate": g.get("gameDate"),
+            "label": g.get("label"),
+            "shortLabel": g.get("shortLabel"),
+            "seq": g.get("seq"),
+            "opp": g.get("opp"),
+            "location": g.get("location"),
+            "isHome": g.get("isHome"),
+            "value": safe_float(g.get("value")),
+            "minutes": safe_float(g.get("minutes")),
+            "contextValue": safe_float(g.get("contextValue")),
+            "batterHand": g.get("batterHand"),
+            "pitcherHand": g.get("opposingPitcherHand") or g.get("pitcherHand"),
+            "handednessText": g.get("handednessText"),
+            "park": g.get("park"),
+            "temperatureF": safe_float(g.get("temperatureF")),
+            "windMph": safe_float(g.get("windMph")),
+            "pitchMixSummary": g.get("pitchMixSummary"),
+            "simScoreV2": safe_float(g.get("simScoreV2")),
+            "simPctV2": safe_float(g.get("simPctV2")),
+            "simBinV2": g.get("simBinV2"),
+            "simTierV2": g.get("simTierV2"),
+            "simComponentsV2": g.get("simComponentsV2"),
+            "simReasonsV2": g.get("simReasonsV2"),
+            "simMissingV2": g.get("simMissingV2"),
+            "simScore": safe_float(g.get("simScoreV2")),
+            "simPct": safe_float(g.get("simPctV2")),
+            "simBin": g.get("simBinV2"),
+        }
+
+    # Keep the top rows for the similarity-detail cards, but also preserve every
+    # scored historical row so chart points and recent-game logs can be colored
+    # consistently instead of only coloring rows that happened to land in topGames.
+    scored_by_time = sorted(
+        scored,
+        key=lambda g: (
+            str(g.get("gameDate") or g.get("label") or ""),
+            safe_int(g.get("seq")) or 0,
+            compact_game_key(g),
+        ),
+    )
+
+    return {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": len(top),
+        "totalHistoricalRows": len(scored),
+        "avgValue": round(sum(vals) / len(vals), 4) if vals else None,
+        "avgScore": round(sum(all_scores) / len(all_scores), 2) if all_scores else None,
+        "maxScore": max(all_scores) if all_scores else None,
+        "bins": dict(sorted(bins.items())),
+        "featureCoverage": coverage,
+        "warnings": warnings,
+        "topGames": [compact_similarity_row(g) for g in top],
+        "allGames": [compact_similarity_row(g) for g in scored_by_time],
+    }
 
 def load_analyzer_rows(data_dir: Path) -> List[Dict[str, Any]]:
     """Load optional prop board rows from data/mlb_props_analyzer.json if available."""
@@ -394,7 +918,12 @@ def merge_game_logs(details_by_stat: Dict[str, Dict[str, Any]]) -> List[Dict[str
                     "opp": game.get("opp"),
                     "location": game.get("location"),
                     "isHome": game.get("isHome"),
-                    "contextValue": game.get("contextValue"),
+                    # For MLB batter rows, the original detail files store AB in `minutes`
+                    # because the analyzer was adapted from NBA minutes. `contextValue`
+                    # can be lineup/context metadata instead, so prefer minutes here.
+                    "minutes": safe_float(game.get("minutes")),
+                    "contextValue": safe_float(game.get("minutes")) if safe_float(game.get("minutes")) is not None else safe_float(game.get("contextValue")),
+                    "rawContextValue": game.get("contextValue"),
                     "simBin": game.get("simBin"),
                     "simScore": game.get("simScore"),
                     "simPct": game.get("simPct"),
@@ -406,6 +935,7 @@ def merge_game_logs(details_by_stat: Dict[str, Dict[str, Any]]) -> List[Dict[str
                 "value": safe_float(game.get("value")),
                 "rawValue": game.get("value"),
                 "minutes": safe_float(game.get("minutes")),
+                "contextValue": safe_float(game.get("contextValue")),
                 "simBin": game.get("simBin"),
                 "simScore": safe_float(game.get("simScore")),
                 "simPct": safe_float(game.get("simPct")),
@@ -467,13 +997,13 @@ def summarize_similar_games(detail: Dict[str, Any]) -> Dict[str, Any]:
             for g in games[:5]
         ],
     }
-
-
 def build_available_prop(
     stat: str,
     detail: Dict[str, Any],
     detail_filename: str,
     board_rows: List[Dict[str, Any]],
+    target_date: str,
+    matchup_context: Dict[str, Any],
 ) -> Dict[str, Any]:
     games = [g for g in (detail.get("games") or []) if isinstance(g, dict)]
     recent_values = [safe_float(g.get("value")) for g in games[-5:]]
@@ -500,6 +1030,42 @@ def build_available_prop(
         "gameCount": len(games),
         "lineOptions": prop_lines_from_rows(board_rows),
         "similarity": summarize_similar_games(detail),
+        "similarityV2": summarize_similarity_v2(detail, target_date, matchup_context),
+    }
+
+
+
+def aggregate_similarity_coverage(available_props: List[Dict[str, Any]], matchup_context: Dict[str, Any]) -> Dict[str, Any]:
+    cover = dict((matchup_context or {}).get("featureCoverage") or {})
+    sim_coverages = [p.get("similarityV2", {}).get("featureCoverage", {}) for p in available_props if isinstance(p.get("similarityV2"), dict)]
+    for key in [
+        "sameOpponent", "homeAway", "lineupOrContext", "abOrIpSample", "recency",
+        "currentHandednessParsed", "currentPark", "currentWeather", "currentPitchMix",
+        "historicalHandedness", "historicalPitchMix", "historicalWeather", "historicalPark", "historicalStarter",
+    ]:
+        if key not in cover:
+            cover[key] = any(bool(c.get(key)) for c in sim_coverages)
+        elif key.startswith("historical"):
+            cover[key] = any(bool(c.get(key)) for c in sim_coverages)
+    return cover
+
+
+def similarity_readiness_from_coverage(coverage: Dict[str, Any]) -> Dict[str, Any]:
+    next_inputs = []
+    if not coverage.get("historicalHandedness"):
+        next_inputs.append("historical batter hand and pitcher hand per game-log row")
+    if not coverage.get("historicalStarter"):
+        next_inputs.append("current and historical opposing starter identity")
+    if not coverage.get("historicalPitchMix"):
+        next_inputs.append("pitch mix / pitch-type profile by opposing starter")
+    if not coverage.get("historicalPark") or not coverage.get("historicalWeather"):
+        next_inputs.append("park/weather values per historical row")
+    return {
+        "currentContextReady": any(bool(coverage.get(k)) for k in ["lineupOrder", "currentHandedness", "currentTemperature", "currentWind", "currentPark"]),
+        "canScoreCurrentHandedness": bool(coverage.get("currentHandedness") or coverage.get("currentHandednessParsed")),
+        "canScoreHistoricalHandedness": bool(coverage.get("historicalHandedness")),
+        "canScorePitchMix": bool(coverage.get("currentPitchMix") and coverage.get("historicalPitchMix")),
+        "nextRequiredInputs": next_inputs,
     }
 
 
@@ -518,11 +1084,16 @@ def quality_flags(profile: Dict[str, Any]) -> Dict[str, Any]:
                 warnings.append(f"missing {stat} detail")
     ctx = profile.get("matchupContext") or {}
     if not ctx.get("handednessText"):
-        warnings.append("handedness not parsed from driver text")
+        warnings.append("current handedness not parsed")
     if ctx.get("temperatureF") is None:
-        warnings.append("temperature not parsed from driver text")
+        warnings.append("current temperature not parsed")
     if ctx.get("windMph") is None:
-        warnings.append("wind not parsed from driver text")
+        warnings.append("current wind not parsed")
+    coverage = profile.get("matchupFeatureSummary", {}).get("featureCoverage", {}) or {}
+    if not coverage.get("historicalHandedness"):
+        warnings.append("historical handedness not available yet")
+    if not coverage.get("historicalPitchMix"):
+        warnings.append("historical pitch mix not available yet")
 
     return {
         "multiPropReady": len(available_stats) >= 2,
@@ -554,6 +1125,13 @@ def build_profile(
             if context_text:
                 break
 
+    native_context = {}
+    for stat in stats_sorted:
+        native_context = native_detail_context(details_by_stat[stat])
+        if native_context:
+            break
+    matchup_context = merge_native_context(parse_context_text(context_text), native_context)
+
     available_props = []
     for stat in stats_sorted:
         detail = details_by_stat[stat]
@@ -562,10 +1140,21 @@ def build_profile(
             rows.extend(board_index.get((player_id, stat), []))
         if name_key:
             rows.extend(board_index.get((name_key, stat), []))
-        available_props.append(build_available_prop(stat, detail, detail_filenames_by_stat[stat], rows))
+        available_props.append(build_available_prop(stat, detail, detail_filenames_by_stat[stat], rows, target_date, matchup_context))
 
     merged_log = merge_game_logs(details_by_stat)
     chart_series = build_chart_series(details_by_stat, merged_log)
+    aggregate_coverage = aggregate_similarity_coverage(available_props, matchup_context)
+    aggregate_readiness = similarity_readiness_from_coverage(aggregate_coverage)
+    missing_for_true_similarity = []
+    if not aggregate_coverage.get("historicalHandedness"):
+        missing_for_true_similarity.append("historical handedness")
+    if not aggregate_coverage.get("historicalPitchMix"):
+        missing_for_true_similarity.append("pitch mix")
+    if not aggregate_coverage.get("historicalPark"):
+        missing_for_true_similarity.append("historical park")
+    if not aggregate_coverage.get("historicalWeather"):
+        missing_for_true_similarity.append("historical weather")
 
     profile: Dict[str, Any] = {
         "schemaVersion": SCHEMA_VERSION,
@@ -586,7 +1175,14 @@ def build_profile(
         "injuryUpdated": primary.get("injuryUpdated"),
         "boardContext": primary.get("boardContext") or primary.get("driverSummary"),
         "driverSummary": primary.get("driverSummary") or primary.get("boardContext"),
-        "matchupContext": parse_context_text(context_text),
+        "matchupContext": matchup_context,
+        "matchupFeatureSummary": {
+            "currentFeatures": matchup_context.get("currentFeatures") or [],
+            "summaryPieces": matchup_context.get("summaryPieces") or [],
+            "featureCoverage": aggregate_coverage,
+            "similarityReadiness": aggregate_readiness,
+            "missingForTrueSimilarity": missing_for_true_similarity,
+        },
         "availableStats": stats_sorted,
         "availableProps": available_props,
         "combinedGameLog": merged_log,
@@ -662,6 +1258,9 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
     warning_counter = Counter()
     multi_prop_ready = 0
     core_batter_ready = 0
+    current_handedness_ready = 0
+    current_weather_ready = 0
+    current_lineup_ready = 0
 
     for pkey, details_by_stat in sorted(grouped.items()):
         profile = build_profile(
@@ -683,6 +1282,13 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
             multi_prop_ready += 1
         if q.get("coreBatterPropsReady"):
             core_batter_ready += 1
+        ctx_cov = ((profile.get("matchupFeatureSummary") or {}).get("featureCoverage") or {})
+        if ctx_cov.get("currentHandedness"):
+            current_handedness_ready += 1
+        if ctx_cov.get("currentTemperature") or ctx_cov.get("currentWind"):
+            current_weather_ready += 1
+        if ctx_cov.get("lineupOrder"):
+            current_lineup_ready += 1
         for warning in q.get("warnings") or []:
             warning_counter[warning] += 1
 
@@ -722,6 +1328,9 @@ def build_for_date(data_dir: Path, target_date: str, include_tbd: bool) -> Dict[
         "profilesWritten": len(profiles),
         "multiPropReadyProfiles": multi_prop_ready,
         "coreBatterPropsReadyProfiles": core_batter_ready,
+        "currentHandednessReadyProfiles": current_handedness_ready,
+        "currentWeatherReadyProfiles": current_weather_ready,
+        "currentLineupReadyProfiles": current_lineup_ready,
         "statCoverage": dict(sorted(stat_counter.items())),
         "warningCounts": dict(sorted(warning_counter.items())),
         "skipped": dict(sorted(skipped.items())),
@@ -740,6 +1349,9 @@ def write_summary_csv(path: Path, summaries: List[Dict[str, Any]]) -> None:
         "profilesWritten",
         "multiPropReadyProfiles",
         "coreBatterPropsReadyProfiles",
+        "currentHandednessReadyProfiles",
+        "currentWeatherReadyProfiles",
+        "currentLineupReadyProfiles",
         "outputDir",
         "indexFile",
     ]
