@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Game Detail</title>
-  <link rel="stylesheet" href="assets/style.css?v=8" />
+  <link rel="stylesheet" href="assets/style.css?v=22" />
 </head>
 <body>
   <header class="site-header compact-header">
@@ -21,7 +21,18 @@
     </div>
   </header>
 
-  <main class="wrap detail-grid">
+  <nav class="game-jump-nav" aria-label="Game page sections">
+    <div class="wrap game-jump-inner">
+      <a href="#game-overview">Overview</a>
+      <a href="#best-props-section">Best props</a>
+      <a href="#odds-movement-section">Odds</a>
+      <a href="#game-intelligence-section">Research</a>
+      <a href="#mlb-pitchers-section">Pitchers</a>
+      <a href="#mlb-batters-section">All batters</a>
+    </div>
+  </nav>
+
+  <main id="game-overview" class="wrap detail-grid">
     <section class="panel">
       <div class="section-heading">
         <div>
@@ -35,6 +46,7 @@
         <div class="hero-card"><span class="stat-label">Market total</span><strong id="snapshot-total">—</strong></div>
         <div class="hero-card"><span class="stat-label">Confidence</span><strong id="snapshot-confidence">—</strong></div>
       </div>
+      <div id="game-quick-read" class="game-quick-read"></div>
     </section>
 
     <section class="panel">
@@ -58,28 +70,44 @@
           <h2>Movement table</h2>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th id="movement-head-date">Date</th>
-              <th id="movement-head-2">Away pred</th>
-              <th id="movement-head-3">Home pred</th>
-              <th id="movement-head-4">Model spread</th>
-              <th id="movement-head-5">Model total</th>
-            </tr>
-          </thead>
-          <tbody id="movement-body"></tbody>
-        </table>
-      </div>
+      <details class="game-deep-details">
+        <summary>Show movement numbers</summary>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th id="movement-head-date">Date</th>
+                <th id="movement-head-2">Away pred</th>
+                <th id="movement-head-3">Home pred</th>
+                <th id="movement-head-4">Model spread</th>
+                <th id="movement-head-5">Model total</th>
+              </tr>
+            </thead>
+            <tbody id="movement-body"></tbody>
+          </table>
+        </div>
+      </details>
     </section>
   </main>
+
+  <section id="best-props-section" class="card span-12 game-subsection best-props-section">
+      <div class="section-head emphasis-head">
+        <div>
+          <span class="summary-kicker">Prop guide</span>
+          <h2>Best prop angles</h2>
+          <p class="muted">Quickly compare the model edge, volatility, and similar-game support for this matchup.</p>
+        </div>
+      </div>
+      <div id="game-prop-cards" class="game-prop-card-grid"></div>
+      <div id="game-prop-buckets" class="game-prop-buckets"></div>
+      <div id="game-props-empty" class="muted" style="display:none;">No props found for this game.</div>
+    </section>
 
   <section class="card span-12 game-subsection">
       <div class="section-head emphasis-head">
         <div>
-          <h2>Top props for this matchup</h2>
-          <p class="muted">Best available props tied to this game</p>
+          <h2>Prop board for this matchup</h2>
+          <p class="muted">Sortable list of available props tied to this game. Use the cards above for the quick read.</p>
         </div>
       </div>
       <div class="table-wrap">
@@ -92,13 +120,13 @@
               <th data-sort-type="num">Line</th>
               <th data-sort-type="num">Model</th>
               <th data-sort-type="num">Prob.</th>
-              <th data-sort-type="text">Tag</th>
+              <th data-sort-type="num">Score</th>
+              <th data-sort-type="text">Read</th>
             </tr>
           </thead>
           <tbody id="game-props-body"></tbody>
         </table>
       </div>
-      <div id="game-props-empty" class="muted" style="display:none;">No props found for this game.</div>
     </section>
 
 
@@ -113,21 +141,24 @@
       </div>
     </div>
     <div id="odds-movement-cards" class="snapshot-grid"></div>
-    <div class="table-wrap">
-      <table class="sortable-table">
-        <thead>
-          <tr>
-            <th data-sort-type="text">Snapshot</th>
-            <th data-sort-type="text">Spread</th>
-            <th data-sort-type="num">Total</th>
-            <th data-sort-type="num">Away ML</th>
-            <th data-sort-type="num">Home ML</th>
-            <th data-sort-type="text">Source</th>
-          </tr>
-        </thead>
-        <tbody id="odds-movement-body"></tbody>
-      </table>
-    </div>
+    <details class="game-deep-details">
+      <summary>Show archived odds snapshots</summary>
+      <div class="table-wrap">
+        <table class="sortable-table">
+          <thead>
+            <tr>
+              <th data-sort-type="text">Snapshot</th>
+              <th data-sort-type="text">Spread</th>
+              <th data-sort-type="num">Total</th>
+              <th data-sort-type="num">Away ML</th>
+              <th data-sort-type="num">Home ML</th>
+              <th data-sort-type="text">Source</th>
+            </tr>
+          </thead>
+          <tbody id="odds-movement-body"></tbody>
+        </table>
+      </div>
+    </details>
   </section>
 
   <section id="mlb-probability-section" class="card span-12 game-subsection" style="display:none;">
@@ -138,6 +169,7 @@
       </div>
     </div>
     <div id="mlb-probability-grid" class="snapshot-grid"></div>
+    <div id="mlb-probability-read" class="game-context-read"></div>
   </section>
 
 
@@ -160,12 +192,15 @@
         <p class="muted">Starter outlooks with command and contact indicators.</p>
       </div>
     </div>
+    <div id="mlb-pitcher-angle-board" class="pitcher-angle-board"></div>
+    <div id="mlb-pitcher-table-tools" class="pitcher-table-tools"></div>
     <div class="table-wrap enhanced-table-wrap">
       <table class="mlb-detail-table pitcher-detail-table sortable-table">
         <thead>
           <tr class="group-head">
             <th colspan="1">Pitcher</th>
             <th colspan="5">Projection</th>
+            <th colspan="1">Read</th>
           </tr>
           <tr>
             <th data-sort-type="text">Pitcher</th>
@@ -174,6 +209,7 @@
             <th data-sort-type="num">BB</th>
             <th data-sort-type="num">Hits</th>
             <th data-sort-type="num">ER</th>
+            <th data-sort-type="text">Best angle</th>
           </tr>
         </thead>
         <tbody id="mlb-pitchers-body"></tbody>
@@ -189,6 +225,9 @@
         <p class="muted">Lineup order, model projections, and prop probabilities in one view.</p>
       </div>
     </div>
+    <div id="mlb-batter-angle-board" class="batter-angle-board"></div>
+    <div id="mlb-batter-prop-explorer" class="batter-prop-explorer"></div>
+    <div id="mlb-batter-table-tools" class="batter-table-tools"></div>
     <div class="table-wrap enhanced-table-wrap">
       <table class="mlb-detail-table batter-detail-table sortable-table">
         <thead>
@@ -197,9 +236,12 @@
             <th colspan="2">Hits</th>
             <th colspan="2">Total bases</th>
             <th colspan="2">Home runs</th>
+            <th colspan="2">Doubles</th>
             <th colspan="2">Walks</th>
             <th colspan="2">Strikeouts</th>
+            <th colspan="2">Stolen bases</th>
             <th colspan="2">HRR</th>
+            <th colspan="1">Best angle</th>
           </tr>
           <tr>
             <th data-sort-type="text">Player</th>
@@ -214,7 +256,12 @@
             <th data-sort-type="num">Pred.</th>
             <th data-sort-type="num">Prob.</th>
             <th data-sort-type="num">Pred.</th>
+            <th data-sort-type="num">Prob.</th>
+            <th data-sort-type="num">Pred.</th>
+            <th data-sort-type="num">Prob.</th>
+            <th data-sort-type="num">Pred.</th>
             <th data-sort-type="num">2+ Prob.</th>
+            <th data-sort-type="text">Read</th>
           </tr>
         </thead>
         <tbody id="mlb-batters-body"></tbody>
@@ -222,6 +269,6 @@
     </div>
   </section>
 
-  <script src="assets/game.js?v=16"></script>
+  <script src="assets/game.js?v=29"></script>
 </body>
 </html>

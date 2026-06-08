@@ -748,8 +748,10 @@ function mlbFallbackGameProps(detail, gameDate) {
     push('H', 0.5, b.predHits, b.probHit, b.batSide ? `${b.batSide} vs ${b.oppPitchHand || ''}`.trim() : '');
     push('TB', 1.5, b.predTB, b.probTB2Plus, '2+ TB');
     push('HR', 0.5, b.predHR, b.probHR, 'HR');
+    push('2B', 0.5, b.predDoubles, b.probDouble, 'Double');
     push('BB', 0.5, b.predBB, b.probBB, 'BB');
     push('K', 0.5, b.predK, b.probK, 'K');
+    push('SB', 0.5, b.predSB, b.probSB, 'Stolen base');
     push('HRR', 1.5, b.predHRR, b.probHRR2Plus, '2+ HRR');
   });
   return rows.sort((a, b) => Number(b.probability || 0) - Number(a.probability || 0));
@@ -791,7 +793,118 @@ function makeTablesSortable(selector = '.sortable-table') {
   });
 }
 
-function renderGameProps(game, propsData, injuryLookup = new Map(), mlbDetail = null) {
+
+function sortPropsForUseCase(rows) {
+  return (rows || []).slice().sort((a, b) => {
+    const scoreDiff = propDisplayScore(b) - propDisplayScore(a);
+    if (scoreDiff) return scoreDiff;
+    return propProbabilityValue(b) - propProbabilityValue(a);
+  });
+}
+
+function propShortLabel(prop) {
+  const stat = normalizeAnalyzerStat(prop?.stat || prop?.stat_display || '');
+  const line = hasNumericValue(prop?.line) ? ` ${fmt(prop.line, 1)}` : '';
+  return `${gamePropStatLabel(stat)}${line}`;
+}
+
+function propBucketItem(prop, profileMap = new Map()) {
+  const stat = normalizeAnalyzerStat(prop?.stat || prop?.stat_display || '');
+  const profile = profileMap.get(String(prop?.playerId || prop?.PLAYER_ID || '')) || null;
+  const sim = gamePropSimilaritySummary(profile, stat);
+  const href = propAnalyzerHref(prop);
+  const reason = propQuickRead(prop, profile);
+  return `
+    <li>
+      <div>
+        <a class="table-link table-link-strong" href="${href}">${escapeHtml(prop?.player || prop?.PLAYER_NAME || '')}</a>
+        <span>${escapeHtml(propTeamValue(prop) || '')} • ${escapeHtml(propShortLabel(prop))}</span>
+      </div>
+      <strong>${escapeHtml(propProbabilityText(prop))}</strong>
+      <small>${escapeHtml(sim.avg !== null ? `similar avg ${fmt(sim.avg, 2)}` : reason)}</small>
+    </li>
+  `;
+}
+
+function renderGamePropBuckets(rows, game, profileMap = new Map()) {
+  const root = byId('game-prop-buckets');
+  if (!root) return;
+  const props = sortPropsForUseCase(rows || []);
+  if (!props.length) {
+    root.innerHTML = '';
+    return;
+  }
+
+  const saferStats = new Set(['H', 'BB']);
+  const upsideStats = new Set(['TB', 'HRR', '2B', 'SB', 'HR']);
+  const pitcherStats = new Set(['K', 'ER', 'HA', 'IP', 'OUTS']);
+
+  const lowerVariance = props.filter(p => saferStats.has(normalizeAnalyzerStat(p.stat || p.stat_display))).slice(0, 3);
+  const upside = props.filter(p => upsideStats.has(normalizeAnalyzerStat(p.stat || p.stat_display))).slice(0, 3);
+  const pitcher = props.filter(p => pitcherStats.has(normalizeAnalyzerStat(p.stat || p.stat_display))).slice(0, 3);
+
+  const fallbackWatch = props
+    .filter(p => {
+      const stat = normalizeAnalyzerStat(p.stat || p.stat_display);
+      const prob = propProbabilityValue(p);
+      return ['HR', 'SB', '2B', 'HRR', 'TB'].includes(stat) && (!Number.isFinite(prob) || prob < .62);
+    })
+    .slice(0, 3);
+
+  const buckets = [
+    {
+      title: 'Safer building blocks',
+      note: 'Start here for props that rely less on one swing or one run-scoring event.',
+      rows: lowerVariance.length ? lowerVariance : props.slice(0, 3),
+      cls: 'is-safe'
+    },
+    {
+      title: 'Upside / ladder angles',
+      note: 'Better for higher payout ideas, but naturally more volatile.',
+      rows: upside.length ? upside : props.slice(0, 3),
+      cls: 'is-medium'
+    },
+    {
+      title: pitcher.length ? 'Pitcher angles' : 'Use with caution',
+      note: pitcher.length ? 'Starter props and pitcher-side reads for this matchup.' : 'Good to see, but not as clean as the strongest model/profile spots.',
+      rows: pitcher.length ? pitcher : fallbackWatch,
+      cls: 'is-risk'
+    }
+  ].filter(bucket => bucket.rows && bucket.rows.length);
+
+  const modelLean = game?.summary || '';
+  root.innerHTML = `
+    <div class="game-plan-card">
+      <div>
+        <span class="summary-kicker">How to use this game</span>
+        <h3>Prop path</h3>
+        <p>${escapeHtml(modelLean || 'Use the buckets below to separate safer props from upside and higher-variance angles.')}</p>
+      </div>
+      <div class="game-plan-pill-row">
+        <span>1. Start with safer props</span>
+        <span>2. Check similarity</span>
+        <span>3. Add upside only if the profile supports it</span>
+      </div>
+    </div>
+    <div class="game-prop-bucket-grid">
+      ${buckets.map(bucket => `
+        <article class="game-prop-bucket ${bucket.cls}">
+          <div class="game-prop-card-top">
+            <h3>${escapeHtml(bucket.title)}</h3>
+            <span class="prop-risk-pill ${bucket.cls}">${escapeHtml(bucket.cls === 'is-safe' ? 'Cleaner' : bucket.cls === 'is-risk' ? 'Caution' : 'Upside')}</span>
+          </div>
+          <p class="muted">${escapeHtml(bucket.note)}</p>
+          <ul>
+            ${bucket.rows.map(prop => propBucketItem(prop, profileMap)).join('')}
+          </ul>
+        </article>
+      `).join('')}
+    </div>
+  `;
+}
+
+
+async function renderGameProps(game, propsData, injuryLookup = new Map(), mlbDetail = null) {
   const body = byId('game-props-body');
   const empty = byId('game-props-empty');
   if (!body) return;
@@ -817,7 +930,7 @@ function renderGameProps(game, propsData, injuryLookup = new Map(), mlbDetail = 
   }
 
   rows = rows.filter(p => !hasListedInjury(p));
-  rows = selectGameProps(rows, 6);
+  rows = selectGameProps(rows, 10);
 
   if (!rows.length && String(game?.league || '').toUpperCase() === 'MLB' && mlbDetail) {
     rows = mlbFallbackGameProps(mlbDetail, game?.gameDate || '').slice(0, 8);
@@ -825,11 +938,18 @@ function renderGameProps(game, propsData, injuryLookup = new Map(), mlbDetail = 
 
   if (!rows.length) {
     body.innerHTML = '';
+    renderGamePropBuckets([], game, new Map());
     if (empty) empty.style.display = '';
     return;
   }
 
   if (empty) empty.style.display = 'none';
+
+  const profileMap = String(game?.league || '').toUpperCase() === 'MLB'
+    ? await loadProfilesForProps(rows, game?.gameDate || '')
+    : new Map();
+  renderGamePropCards(rows, game, profileMap);
+  renderGamePropBuckets(rows, game, profileMap);
 
   body.innerHTML = rows.map(p => {
     const label = escapeHtml(p.player || p.PLAYER_NAME || '');
@@ -846,7 +966,8 @@ function renderGameProps(game, propsData, injuryLookup = new Map(), mlbDetail = 
         <td data-sort="${escapeHtml(String(p.line ?? ''))}">${escapeHtml(hasNumericValue(p.line) ? fmt(p.line, 1) : '')}</td>
         <td data-sort="${escapeHtml(String(p.modelPrediction ?? p.prediction ?? p.pred_anchor ?? p.mu_cons ?? p.pred_stat ?? ''))}">${escapeHtml(fmt(p.modelPrediction ?? p.prediction ?? p.pred_anchor ?? p.mu_cons ?? p.pred_stat, 1))}</td>
         <td data-sort="${escapeHtml(String(Number(p.probability ?? p.prob_cons ?? 0) || 0))}">${escapeHtml(propProbabilityText(p))}</td>
-        <td>${escapeHtml(p.injuryStatus || p.tag || '')}</td>
+        <td data-sort="${escapeHtml(String(propDisplayScore(p) || 0))}">${escapeHtml(gamePropScoreLabel(p))}</td>
+        <td>${escapeHtml(propQuickRead(p, profileMap.get(String(p.playerId || p.PLAYER_ID || '')) || null))}</td>
       </tr>
     `;
   }).join('');
@@ -910,6 +1031,574 @@ function playerAnalyzerLink(playerObj, fallbackStat = '') {
 }
 
 
+function gamePropStatLabel(stat) {
+  const key = String(stat || '').toUpperCase();
+  return {
+    H: 'Hits',
+    TB: 'Total Bases',
+    HRR: 'Hits + Runs + RBI',
+    HR: 'Home Runs',
+    '2B': 'Doubles',
+    BB: 'Walks',
+    K: 'Strikeouts',
+    SB: 'Stolen Bases',
+    ER: 'Earned Runs',
+    HA: 'Hits Allowed',
+    IP: 'Innings',
+    OUTS: 'Outs'
+  }[key] || String(stat || 'Prop');
+}
+
+function gamePropRiskLabel(stat) {
+  const key = String(stat || '').toUpperCase();
+  if (key === 'H') return { label: 'Lower variance', cls: 'is-safe' };
+  if (['TB', 'HRR', 'SB', '2B'].includes(key)) return { label: 'Medium variance', cls: 'is-medium' };
+  if (['HR', 'K', 'ER', 'BB'].includes(key)) return { label: 'Higher variance', cls: 'is-risk' };
+  return { label: 'Context play', cls: 'is-medium' };
+}
+
+function gamePropModelEdge(prop) {
+  const model = propPredictionValue(prop);
+  const line = propLineValue(prop);
+  return Number.isFinite(model) && Number.isFinite(line) ? model - line : NaN;
+}
+
+function gamePropScoreLabel(prop) {
+  const raw = propDisplayScore(prop);
+  if (!Number.isFinite(raw)) return '—';
+  return `${Math.round(raw * 100)}`;
+}
+
+function gamePropProfileProp(profile, stat) {
+  const key = normalizeAnalyzerStat(stat);
+  const props = Array.isArray(profile?.availableProps) ? profile.availableProps : [];
+  return props.find(p => normalizeAnalyzerStat(p.stat) === key) || null;
+}
+
+function gamePropSimilaritySummary(profile, stat) {
+  const prop = gamePropProfileProp(profile, stat);
+  const sim = prop?.similarityV2 || prop?.similarity || null;
+  const avg = Number(sim?.avgValue);
+  const count = Number(sim?.count || sim?.totalHistoricalRows || 0);
+  const score = Number(sim?.avgScore || sim?.maxScore);
+  const featureCoverage = sim?.featureCoverage || {};
+  const parts = [];
+  if (Number.isFinite(avg)) parts.push(`similar avg ${fmt(avg, 2)}`);
+  if (Number.isFinite(score)) parts.push(`sim score ${fmt(score, 0)}`);
+  if (featureCoverage?.historicalHandedness) parts.push('hand match scored');
+  if (featureCoverage?.historicalPitchMix) parts.push('pitch mix scored');
+  return {
+    text: parts.length ? parts.join(' • ') : 'similarity pending',
+    avg: Number.isFinite(avg) ? avg : null,
+    count: Number.isFinite(count) ? count : 0,
+    score: Number.isFinite(score) ? score : null,
+    prop
+  };
+}
+
+async function loadGamePropProfile(gameDate, playerId) {
+  if (!gameDate || !playerId || String(playerId).toLowerCase() === 'none') return null;
+  const safeId = String(playerId).replace(/[^A-Za-z0-9_.-]/g, '_');
+  return await loadJson(`data/mlb_props_analyzer/${gameDate}/player_profiles/${safeId}.json`, null);
+}
+
+async function loadProfilesForProps(rows, gameDate) {
+  const ids = [...new Set((rows || []).map(p => p.playerId || p.PLAYER_ID).filter(Boolean).map(String))].slice(0, 16);
+  const pairs = await Promise.all(ids.map(async id => [id, await loadGamePropProfile(gameDate, id)]));
+  return new Map(pairs.filter(([, profile]) => profile));
+}
+
+function propQuickRead(prop, profile = null) {
+  const stat = normalizeAnalyzerStat(prop?.stat || prop?.stat_display || '');
+  const model = propPredictionValue(prop);
+  const line = propLineValue(prop);
+  const prob = propProbabilityValue(prop);
+  const edge = gamePropModelEdge(prop);
+  const sim = gamePropSimilaritySummary(profile, stat);
+  const pieces = [];
+  if (Number.isFinite(edge)) {
+    if (edge >= 0.75) pieces.push(`model is well over the line by ${fmt(edge, 2)}`);
+    else if (edge >= 0.25) pieces.push(`model clears the line by ${fmt(edge, 2)}`);
+    else if (edge >= 0) pieces.push(`model is only slightly over the line`);
+    else pieces.push(`model is below the line`);
+  }
+  if (Number.isFinite(prob)) pieces.push(`${propProbabilityText(prop)} projection`);
+  if (sim.avg !== null) pieces.push(`similar games avg ${fmt(sim.avg, 2)}`);
+  const risk = gamePropRiskLabel(stat);
+  if (risk.cls === 'is-risk') pieces.push('high-variance prop');
+  return pieces.join(' • ') || (prop?.tag || 'Model-supported prop');
+}
+
+function renderGamePropCards(rows, game, profileMap = new Map()) {
+  const root = byId('game-prop-cards');
+  if (!root) return;
+  if (!rows.length) {
+    root.innerHTML = '<div class="empty-state">No prop cards available for this matchup.</div>';
+    return;
+  }
+
+  const cards = rows.slice(0, 6).map((p, index) => {
+    const stat = normalizeAnalyzerStat(p.stat || p.stat_display || '');
+    const profile = profileMap.get(String(p.playerId || p.PLAYER_ID || '')) || null;
+    const risk = gamePropRiskLabel(stat);
+    const sim = gamePropSimilaritySummary(profile, stat);
+    const edge = gamePropModelEdge(p);
+    const href = propAnalyzerHref(p);
+    const cardRole = index === 0 ? 'Best overall angle' : risk.cls === 'is-safe' ? 'Safer angle' : risk.cls === 'is-risk' ? 'Upside angle' : 'Matchup angle';
+
+    return `
+      <article class="game-prop-card ${escapeHtml(risk.cls)}">
+        <div class="game-prop-card-top">
+          <span class="summary-kicker">${escapeHtml(cardRole)}</span>
+          <span class="prop-risk-pill ${escapeHtml(risk.cls)}">${escapeHtml(risk.label)}</span>
+        </div>
+        <h3><a class="table-link table-link-strong" href="${href}">${escapeHtml(p.player || p.PLAYER_NAME || '')}</a></h3>
+        <p class="muted">${escapeHtml(propTeamValue(p) || '')} • ${escapeHtml(gamePropStatLabel(stat))} ${hasNumericValue(p.line) ? fmt(p.line, 1) : ''}</p>
+        <div class="game-prop-metrics">
+          <div><span>Model</span><strong>${escapeHtml(fmt(propPredictionValue(p), 2))}</strong></div>
+          <div><span>Prob.</span><strong>${escapeHtml(propProbabilityText(p))}</strong></div>
+          <div><span>Edge</span><strong>${escapeHtml(Number.isFinite(edge) ? fmt(edge, 2) : '—')}</strong></div>
+          <div><span>Score</span><strong>${escapeHtml(gamePropScoreLabel(p))}</strong></div>
+        </div>
+        <p class="game-prop-read">${escapeHtml(propQuickRead(p, profile))}</p>
+        <div class="game-prop-tags">
+          <span>${escapeHtml(sim.text)}</span>
+          ${p.tag || p.injuryStatus ? `<span>${escapeHtml(p.injuryStatus || p.tag || '')}</span>` : ''}
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  root.innerHTML = cards;
+}
+
+
+
+function loadProfilesForPlayers(players, gameDate) {
+  const ids = [...new Set((players || []).map(p => p?.playerId || p?.PLAYER_ID).filter(Boolean).map(String))].slice(0, 30);
+  return Promise.all(ids.map(async id => [id, await loadGamePropProfile(gameDate, id)]))
+    .then(pairs => new Map(pairs.filter(([, profile]) => profile)));
+}
+
+function preferredLineForStat(stat) {
+  const key = normalizeAnalyzerStat(stat);
+  const preferred = {
+    H: 0.5,
+    TB: 1.5,
+    HRR: 1.5,
+    HR: 0.5,
+    '2B': 0.5,
+    BB: 0.5,
+    K: 0.5,
+    SB: 0.5,
+    HA: 4.5,
+    ER: 2.5,
+    IP: 5.5,
+    OUTS: 15.5,
+  };
+  return Object.prototype.hasOwnProperty.call(preferred, key) ? preferred[key] : null;
+}
+
+function profileLineOptionForStat(profileProp) {
+  const stat = normalizeAnalyzerStat(profileProp?.stat);
+  const preferredLine = preferredLineForStat(stat);
+  const options = Array.isArray(profileProp?.lineOptions) ? profileProp.lineOptions : [];
+  const numeric = options
+    .map(opt => ({ ...opt, probabilityNumber: Number(opt.probability), lineNumber: Number(opt.line) }))
+    .filter(opt => Number.isFinite(opt.probabilityNumber) && Number.isFinite(opt.lineNumber));
+
+  if (numeric.length && Number.isFinite(preferredLine)) {
+    const exact = numeric.find(opt => Math.abs(opt.lineNumber - preferredLine) < 0.001);
+    if (exact) return exact;
+    const noEasierThanPreferred = numeric.filter(opt => opt.lineNumber >= preferredLine);
+    if (noEasierThanPreferred.length) {
+      return noEasierThanPreferred.sort((a, b) => {
+        const distance = Math.abs(a.lineNumber - preferredLine) - Math.abs(b.lineNumber - preferredLine);
+        if (distance) return distance;
+        return b.probabilityNumber - a.probabilityNumber;
+      })[0];
+    }
+  }
+
+  if (numeric.length) {
+    return numeric.sort((a, b) => b.probabilityNumber - a.probabilityNumber)[0];
+  }
+  return {};
+}
+
+function profilePropAngle(profileProp) {
+  if (!profileProp) return null;
+  const stat = normalizeAnalyzerStat(profileProp.stat);
+  const option = profileLineOptionForStat(profileProp);
+  const line = Number(option.line);
+  const probability = Number(option.probability);
+  const model = Number(profileProp.modelPred);
+  const sim = profileProp?.similarityV2 || {};
+  const simAvg = Number(sim.avgValue);
+  const simScore = Number(sim.avgScore || sim.maxScore);
+  const edge = Number.isFinite(model) && Number.isFinite(line) ? model - line : NaN;
+  const risk = gamePropRiskLabel(stat);
+  const score =
+    (Number.isFinite(probability) ? probability * 100 : 0) +
+    (Number.isFinite(edge) ? Math.max(-8, Math.min(18, edge * 8)) : 0) +
+    (Number.isFinite(simAvg) && Number.isFinite(line) ? Math.max(-6, Math.min(12, (simAvg - line) * 5)) : 0) +
+    (Number.isFinite(simScore) ? Math.min(10, simScore / 10) : 0) -
+    (risk.cls === 'is-risk' ? 5 : risk.cls === 'is-medium' ? 2 : 0);
+  return {
+    stat,
+    label: gamePropStatLabel(stat),
+    line,
+    probability,
+    model,
+    edge,
+    simAvg,
+    simScore,
+    risk,
+    score,
+    hrefStat: stat
+  };
+}
+
+function bestProfileAngle(profile, preferredStats = []) {
+  const props = Array.isArray(profile?.availableProps) ? profile.availableProps : [];
+  const angles = props.map(profilePropAngle).filter(Boolean);
+  if (!angles.length) return null;
+  const preferred = angles.filter(a => preferredStats.includes(a.stat));
+  return (preferred.length ? preferred : angles).sort((a, b) => b.score - a.score)[0];
+}
+
+function batterFallbackAngles(b) {
+  const predHrr = hasNumericValue(b.predHRR) ? Number(b.predHRR) : ((Number(b.predHR || 0) || 0) + (Number(b.predRuns || 0) || 0) + (Number(b.predRBI || 0) || 0));
+  return [
+    { stat: 'H', label: 'Hits', line: 0.5, model: Number(b.predHits), probability: Number(b.probHit), risk: gamePropRiskLabel('H') },
+    { stat: 'TB', label: 'Total Bases', line: 1.5, model: Number(b.predTB), probability: Number(b.probTB2Plus), risk: gamePropRiskLabel('TB') },
+    { stat: 'HRR', label: 'Hits + Runs + RBI', line: 1.5, model: predHrr, probability: Number(b.probHRR2Plus), risk: gamePropRiskLabel('HRR') },
+    { stat: 'HR', label: 'Home Runs', line: 0.5, model: Number(b.predHR), probability: Number(b.probHR), risk: gamePropRiskLabel('HR') },
+    { stat: '2B', label: 'Doubles', line: 0.5, model: Number(b.predDoubles), probability: Number(b.probDouble), risk: gamePropRiskLabel('2B') },
+    { stat: 'BB', label: 'Walks', line: 0.5, model: Number(b.predBB), probability: Number(b.probBB), risk: gamePropRiskLabel('BB') },
+    { stat: 'K', label: 'Strikeouts', line: 0.5, model: Number(b.predK), probability: Number(b.probK), risk: gamePropRiskLabel('K') },
+    { stat: 'SB', label: 'Stolen Bases', line: 0.5, model: Number(b.predSB), probability: Number(b.probSB), risk: gamePropRiskLabel('SB') }
+  ].filter(a => Number.isFinite(a.model) && Number.isFinite(a.probability))
+   .map(a => ({ ...a, edge: Number.isFinite(a.line) ? a.model - a.line : NaN, score: (a.probability * 100) + Math.max(-8, Math.min(16, (a.model - a.line) * 8)) - (a.risk.cls === 'is-risk' ? 5 : a.risk.cls === 'is-medium' ? 2 : 0) }));
+}
+
+function bestBatterAngle(b, profile = null) {
+  const prof = bestProfileAngle(profile, ['H', 'TB', 'HRR', 'SB', '2B']);
+  if (prof) return prof;
+  const fallback = batterFallbackAngles(b);
+  return fallback.sort((a, b) => b.score - a.score)[0] || null;
+}
+
+function angleSummary(player, angle, profile = null) {
+  if (!angle) return 'No clear prop angle found yet.';
+  const pieces = [];
+  if (Number.isFinite(angle.model) && Number.isFinite(angle.line)) {
+    const edge = angle.model - angle.line;
+    if (edge >= 0.75) pieces.push(`${angle.label} has a strong model edge over ${fmt(angle.line, 1)}`);
+    else if (edge >= 0.2) pieces.push(`${angle.label} clears the ${fmt(angle.line, 1)} line`);
+    else pieces.push(`${angle.label} is close to the line`);
+  }
+  if (Number.isFinite(angle.probability)) pieces.push(`${fmtPct(angle.probability)} projection`);
+  if (Number.isFinite(angle.simAvg)) pieces.push(`similar rows avg ${fmt(angle.simAvg, 2)}`);
+  if (Number.isFinite(angle.simScore)) pieces.push(`similarity ${fmt(angle.simScore, 0)}`);
+  if (angle.risk?.cls === 'is-risk') pieces.push('use as upside, not safest angle');
+  return pieces.join(' • ');
+}
+
+function renderBatterAngleBoard(batters, gameDate, profileMap) {
+  const root = byId('mlb-batter-angle-board');
+  if (!root) return;
+  const angles = (batters || []).map(b => {
+    const profile = profileMap.get(String(b.playerId || '')) || null;
+    const angle = bestBatterAngle(b, profile);
+    return { b, profile, angle };
+  }).filter(row => row.angle).sort((a, b) => Number(b.angle.score || 0) - Number(a.angle.score || 0)).slice(0, 6);
+
+  if (!angles.length) {
+    root.innerHTML = '';
+    return;
+  }
+
+  root.innerHTML = `
+    <div class="batter-angle-head">
+      <div>
+        <span class="summary-kicker">Batter prop focus</span>
+        <h3>Best individual matchup angles</h3>
+      </div>
+      <p>Uses model edge, probability, player-profile similarity, and prop volatility to narrow the full table.</p>
+    </div>
+    <div class="batter-angle-grid">
+      ${angles.map(({ b, profile, angle }) => {
+        const href = b.playerId ? mlbAnalyzerHref(b.playerId, gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '') : '';
+        const name = href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(b.player || '')}</a>` : escapeHtml(b.player || '');
+        return `
+          <article class="batter-angle-card ${escapeHtml(angle.risk?.cls || '')}">
+            <div class="game-prop-card-top">
+              <span class="summary-kicker">${escapeHtml(angle.label)}</span>
+              <span class="prop-risk-pill ${escapeHtml(angle.risk?.cls || '')}">${escapeHtml(angle.risk?.label || 'Angle')}</span>
+            </div>
+            <h4>${name}</h4>
+            <p class="muted">${escapeHtml([b.team, b.order ? `Order ${b.order}` : '', b.batSide && b.oppPitchHand ? `${b.batSide} vs ${b.oppPitchHand}` : ''].filter(Boolean).join(' • '))}</p>
+            <div class="game-prop-metrics">
+              <div><span>Line</span><strong>${escapeHtml(Number.isFinite(angle.line) ? fmt(angle.line, 1) : '—')}</strong></div>
+              <div><span>Model</span><strong>${escapeHtml(fmt(angle.model, 2))}</strong></div>
+              <div><span>Prob.</span><strong>${escapeHtml(fmtPct(angle.probability))}</strong></div>
+              <div><span>Score</span><strong>${escapeHtml(Number.isFinite(angle.score) ? String(Math.round(angle.score)) : '—')}</strong></div>
+            </div>
+            <p class="game-prop-read">${escapeHtml(angleSummary(b.player, angle, profile))}</p>
+          </article>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+
+function allBatterAngles(b, profile = null) {
+  const profileProps = Array.isArray(profile?.availableProps)
+    ? profile.availableProps.map(profilePropAngle).filter(Boolean)
+    : [];
+  const fallbackAngles = batterFallbackAngles(b);
+  const byStat = new Map();
+  [...fallbackAngles, ...profileProps].forEach(angle => {
+    if (!angle?.stat) return;
+    const key = normalizeAnalyzerStat(angle.stat);
+    const current = byStat.get(key);
+    if (!current || Number(angle.score || 0) > Number(current.score || 0)) byStat.set(key, angle);
+  });
+  return Array.from(byStat.values()).filter(angle => Number.isFinite(Number(angle.probability)) || Number.isFinite(Number(angle.model)));
+}
+
+function renderBatterPropExplorer(batters, gameDate, profileMap, activeStat = 'BEST') {
+  const root = byId('mlb-batter-prop-explorer');
+  if (!root) return;
+  const statOrder = ['BEST', 'H', 'TB', 'HRR', 'HR', '2B', 'BB', 'K', 'SB'];
+  const selected = normalizeAnalyzerStat(activeStat || root.dataset.activeStat || 'BEST') || 'BEST';
+  root.dataset.activeStat = selected;
+
+  const rows = [];
+  (batters || []).forEach(b => {
+    const profile = profileMap.get(String(b.playerId || '')) || null;
+    const angles = selected === 'BEST'
+      ? [bestBatterAngle(b, profile)].filter(Boolean)
+      : allBatterAngles(b, profile).filter(angle => normalizeAnalyzerStat(angle.stat) === selected);
+    angles.forEach(angle => rows.push({ b, profile, angle }));
+  });
+
+  rows.sort((a, b) => Number(b.angle?.score || 0) - Number(a.angle?.score || 0));
+  const topRows = rows.slice(0, selected === 'BEST' ? 8 : 10);
+
+  root.innerHTML = `
+    <div class="batter-explorer-head">
+      <div>
+        <span class="summary-kicker">All prop finder</span>
+        <h3>Find the best angle by prop type</h3>
+        <p class="muted">Use this before the full table. It keeps the same model projections, but sorts the board into readable prop cards.</p>
+      </div>
+    </div>
+    <div class="batter-prop-tabs" role="tablist" aria-label="Batter prop filters">
+      ${statOrder.map(stat => `
+        <button type="button" class="${stat === selected ? 'is-active' : ''}" data-batter-prop-stat="${escapeHtml(stat)}">
+          ${escapeHtml(stat === 'BEST' ? 'Best' : gamePropStatLabel(stat))}
+        </button>
+      `).join('')}
+    </div>
+    <div class="batter-prop-explorer-grid">
+      ${topRows.length ? topRows.map(({ b, profile, angle }, index) => {
+        const href = b.playerId ? mlbAnalyzerHref(b.playerId, gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '') : '';
+        const name = href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(b.player || '')}</a>` : escapeHtml(b.player || '');
+        const context = [b.team, b.order ? `Order ${b.order}` : '', b.batSide && b.oppPitchHand ? `${b.batSide} vs ${b.oppPitchHand}` : ''].filter(Boolean).join(' • ');
+        return `
+          <article class="batter-prop-explorer-card ${escapeHtml(angle.risk?.cls || '')}">
+            <div class="game-prop-card-top">
+              <span class="summary-kicker">${escapeHtml(index === 0 ? 'Top result' : angle.label)}</span>
+              <span class="prop-risk-pill ${escapeHtml(angle.risk?.cls || '')}">${escapeHtml(angle.risk?.label || 'Angle')}</span>
+            </div>
+            <h4>${name}</h4>
+            <p class="muted">${escapeHtml(context)}</p>
+            <div class="game-prop-metrics">
+              <div><span>Prop</span><strong>${escapeHtml(angle.label)}</strong></div>
+              <div><span>Line</span><strong>${escapeHtml(Number.isFinite(angle.line) ? fmt(angle.line, 1) : '—')}</strong></div>
+              <div><span>Model</span><strong>${escapeHtml(fmt(angle.model, 2))}</strong></div>
+              <div><span>Prob.</span><strong>${escapeHtml(fmtPct(angle.probability))}</strong></div>
+            </div>
+            <p class="game-prop-read">${escapeHtml(angleSummary(b.player, angle, profile))}</p>
+          </article>
+        `;
+      }).join('') : '<div class="empty-state">No players found for this prop type in this matchup.</div>'}
+    </div>
+  `;
+
+  root.querySelectorAll('[data-batter-prop-stat]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      renderBatterPropExplorer(batters, gameDate, profileMap, btn.dataset.batterPropStat || 'BEST');
+    });
+  });
+}
+
+
+
+function angleStrengthLabel(angle) {
+  const score = Number(angle?.score);
+  if (!Number.isFinite(score)) return { label: 'Unrated', cls: 'is-muted' };
+  if (score >= 86) return { label: 'Strong', cls: 'is-strong' };
+  if (score >= 76) return { label: 'Solid', cls: 'is-solid' };
+  if (score >= 62) return { label: 'Thin', cls: 'is-thin' };
+  return { label: 'Low', cls: 'is-low' };
+}
+
+function angleSimilarityLabel(angle) {
+  const avg = Number(angle?.simAvg);
+  const score = Number(angle?.simScore);
+  if (Number.isFinite(score)) return `Sim ${fmt(score, 0)}`;
+  if (Number.isFinite(avg)) return `Sim avg ${fmt(avg, 2)}`;
+  return 'Profile pending';
+}
+
+function batterRowMeta(b, profile = null) {
+  const angle = bestBatterAngle(b, profile);
+  const strength = angleStrengthLabel(angle);
+  const risk = angle?.risk || gamePropRiskLabel(angle?.stat || '');
+  return {
+    angle,
+    strength,
+    risk,
+    team: String(b?.team || ''),
+    stat: normalizeAnalyzerStat(angle?.stat || ''),
+    score: Number(angle?.score),
+    isStrong: Number(angle?.score) >= 76,
+    isLowerVariance: risk?.cls === 'is-safe',
+    isUpside: ['is-medium', 'is-risk'].includes(risk?.cls || ''),
+  };
+}
+
+function batterRowAttributes(b, profile = null) {
+  const meta = batterRowMeta(b, profile);
+  return [
+    `data-batter-team="${escapeHtml(meta.team)}"`,
+    `data-angle-stat="${escapeHtml(meta.stat || '')}"`,
+    `data-angle-risk="${escapeHtml(meta.risk?.cls || '')}"`,
+    `data-angle-strength="${escapeHtml(meta.strength?.cls || '')}"`,
+    `data-angle-score="${escapeHtml(Number.isFinite(meta.score) ? String(meta.score) : '')}"`
+  ].join(' ');
+}
+
+function renderBatterTableTools(batters, profileMap = new Map()) {
+  const root = byId('mlb-batter-table-tools');
+  if (!root) return;
+  const rows = (batters || []).map(b => {
+    const profile = profileMap.get(String(b.playerId || '')) || null;
+    return { b, profile, meta: batterRowMeta(b, profile) };
+  });
+  if (!rows.length) {
+    root.innerHTML = '';
+    return;
+  }
+
+  const strongCount = rows.filter(r => r.meta.isStrong).length;
+  const lowerCount = rows.filter(r => r.meta.isLowerVariance).length;
+  const upsideCount = rows.filter(r => r.meta.isUpside).length;
+  const teams = [...new Set(rows.map(r => r.meta.team).filter(Boolean))];
+
+  root.innerHTML = `
+    <div class="batter-table-tools-head">
+      <div>
+        <span class="summary-kicker">Full table controls</span>
+        <h3>Filter the full batter board</h3>
+        <p class="muted">Use quick filters to cut the wide table down to the most useful rows.</p>
+      </div>
+      <div class="batter-table-counts">
+        <span>${escapeHtml(`${strongCount} strong/solid`)}</span>
+        <span>${escapeHtml(`${lowerCount} lower-variance`)}</span>
+        <span>${escapeHtml(`${upsideCount} upside`)}</span>
+      </div>
+    </div>
+    <div class="batter-table-filter-row" role="group" aria-label="Batter table filters">
+      <button type="button" class="is-active" data-batter-table-filter="all">All</button>
+      <button type="button" data-batter-table-filter="strong">Strong/Solid</button>
+      <button type="button" data-batter-table-filter="lower">Lower variance</button>
+      <button type="button" data-batter-table-filter="upside">Upside</button>
+      ${teams.map(team => `<button type="button" data-batter-table-filter="team:${escapeHtml(team)}">${escapeHtml(team)}</button>`).join('')}
+    </div>
+  `;
+
+  root.dataset.activeFilter = 'all';
+
+  root.querySelectorAll('[data-batter-table-filter]').forEach(button => {
+    button.addEventListener('click', () => {
+      root.dataset.activeFilter = button.dataset.batterTableFilter || 'all';
+      root.querySelectorAll('[data-batter-table-filter]').forEach(btn => btn.classList.toggle('is-active', btn === button));
+      applyBatterTableFilter(button.dataset.batterTableFilter || 'all');
+    });
+  });
+}
+
+function applyBatterTableFilter(filter = 'all') {
+  const body = byId('mlb-batters-body');
+  if (!body) return;
+  Array.from(body.querySelectorAll('tr')).forEach(row => {
+    const risk = row.dataset.angleRisk || '';
+    const strength = row.dataset.angleStrength || '';
+    const team = row.dataset.batterTeam || '';
+    let show = true;
+    if (filter === 'strong') show = ['is-strong', 'is-solid'].includes(strength);
+    else if (filter === 'lower') show = risk === 'is-safe';
+    else if (filter === 'upside') show = ['is-medium', 'is-risk'].includes(risk);
+    else if (filter.startsWith('team:')) show = team === filter.slice(5);
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+function batterAngleCell(b, profile, gameDate) {
+  const angle = bestBatterAngle(b, profile);
+  if (!angle) return '—';
+  const href = b.playerId ? mlbAnalyzerHref(b.playerId, gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '') : '';
+  const label = `${angle.label}${Number.isFinite(angle.line) ? ` ${fmt(angle.line, 1)}` : ''}`;
+  const summary = angleSummary(b.player, angle, profile);
+  const strength = angleStrengthLabel(angle);
+  const risk = angle.risk || gamePropRiskLabel(angle.stat);
+  return `
+    <div class="best-angle-cell enhanced-angle-cell">
+      <div class="angle-cell-top">
+        ${href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(label)}</a>` : `<strong>${escapeHtml(label)}</strong>`}
+        <span class="angle-strength-pill ${escapeHtml(strength.cls)}">${escapeHtml(strength.label)}</span>
+        <span class="prop-risk-pill ${escapeHtml(risk.cls || '')}">${escapeHtml(risk.label || 'Angle')}</span>
+      </div>
+      <span>${escapeHtml(summary)}</span>
+      <div class="angle-cell-meta">
+        <small>${escapeHtml(angleSimilarityLabel(angle))}</small>
+        <small>${escapeHtml(Number.isFinite(angle.score) ? `Score ${Math.round(angle.score)}` : 'Score pending')}</small>
+      </div>
+    </div>
+  `;
+}
+
+function playerIdFromResearchPlayer(p, profileMap = new Map()) {
+  if (p?.playerId) return String(p.playerId);
+  const wanted = normalizeLookupToken(p?.player || '');
+  for (const [id, profile] of profileMap.entries()) {
+    if (normalizeLookupToken(profile?.player || '') === wanted) return String(id);
+  }
+  return '';
+}
+
+function giProfileInsight(p, profileMap, mode) {
+  const playerId = playerIdFromResearchPlayer(p, profileMap);
+  const profile = playerId ? profileMap.get(playerId) : null;
+  const angle = bestProfileAngle(profile, mode === 'risk' ? ['H', 'TB', 'HRR', 'K'] : ['H', 'TB', 'HRR', 'SB', '2B']);
+  if (!angle) return '';
+  const href = profile?.playerId ? mlbAnalyzerHref(profile.playerId, profile.gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '') : '';
+  const label = `${angle.label}${Number.isFinite(angle.line) ? ` ${fmt(angle.line, 1)}` : ''}`;
+  return `
+    <div class="gi-profile-insight ${mode === 'risk' ? 'is-risk' : 'is-positive'}">
+      <span>${escapeHtml(mode === 'risk' ? 'Profile warning' : 'Best profile angle')}</span>
+      <strong>${href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(label)}</a>` : escapeHtml(label)}</strong>
+      <p>${escapeHtml(angleSummary(profile?.player || p?.player || '', angle, profile))}</p>
+    </div>
+  `;
+}
+
+
 function metricPairCard(label, modelValue, probValue) {
   return `
     <div class="metric-pair-card">
@@ -964,15 +1653,342 @@ function mlbBatterCard(b, gameDate) {
         ${metricPairCard('Hits', fmt(b.predHits, 2), fmtPct(b.probHit))}
         ${metricPairCard('2+ total bases', fmt(b.predTB, 2), fmtPct(b.probTB2Plus))}
         ${metricPairCard('Home run', fmt(b.predHR, 2), fmtPct(b.probHR))}
+        ${metricPairCard('Doubles', fmt(b.predDoubles, 2), fmtPct(b.probDouble))}
         ${metricPairCard('Walks', fmt(b.predBB, 2), fmtPct(b.probBB))}
         ${metricPairCard('Strikeouts', fmt(b.predK, 2), fmtPct(b.probK))}
+        ${metricPairCard('Stolen bases', fmt(b.predSB, 2), fmtPct(b.probSB))}
         ${metricPairCard('2+ HRR', fmt(predHrr, 2), fmtPct(b.probHRR2Plus))}
       </div>
     </article>
   `;
 }
 
-function renderMlbGameDetails(game, detail) {
+
+function signedRunText(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '—';
+  return `${n >= 0 ? '+' : ''}${fmt(n, 2)}`;
+}
+
+function gameFavoriteSide(game, metrics = {}) {
+  const away = String(game?.awayTeam || '').trim();
+  const home = String(game?.homeTeam || '').trim();
+  if (String(metrics.favoriteWinLabel || '').includes(away)) return away;
+  if (String(metrics.favoriteWinLabel || '').includes(home)) return home;
+  const awayScore = Number(game?.modelAwayScore);
+  const homeScore = Number(game?.modelHomeScore);
+  if (Number.isFinite(awayScore) && Number.isFinite(homeScore)) return awayScore >= homeScore ? away : home;
+  return metrics.favoriteWinLabel || 'Model side';
+}
+
+function renderGameQuickRead(game, detail = null) {
+  const root = byId('game-quick-read');
+  if (!root) return;
+  const metrics = detail?.metrics || {};
+  const awayScore = Number(game?.modelAwayScore);
+  const homeScore = Number(game?.modelHomeScore);
+  const modelTotal = Number.isFinite(awayScore) && Number.isFinite(homeScore) ? awayScore + homeScore : Number(metrics.predTotal);
+  const marketTotal = Number(game?.marketTotal);
+  const totalEdge = Number.isFinite(modelTotal) && Number.isFinite(marketTotal) ? modelTotal - marketTotal : NaN;
+  const favorite = gameFavoriteSide(game, metrics);
+  const favoriteProb = Number(metrics.favoriteWinProb);
+  const nrfi = Number(metrics.nrfiProb);
+  const coverLabel = metrics.marketCoverLabel || metrics.favoriteCoverLabel || 'Run line';
+  const coverProb = Number(hasNumericValue(metrics.marketCoverProb) ? metrics.marketCoverProb : metrics.favoriteCoverProb);
+
+  const totalText = Number.isFinite(totalEdge)
+    ? `${totalEdge >= 0 ? 'Model leans higher scoring than market' : 'Model leans lower scoring than market'} by ${signedRunText(totalEdge)} runs`
+    : 'Total read pending';
+
+  const sideText = Number.isFinite(favoriteProb)
+    ? `${favorite} is the model side at ${fmtPct(favoriteProb)}`
+    : `${favorite} is the model side`;
+
+  const inningText = Number.isFinite(nrfi)
+    ? `${nrfi >= .55 ? 'NRFI is the stronger first-inning side' : 'YRFI / early scoring has more support'} at ${fmtPct(nrfi)} NRFI`
+    : 'First-inning read pending';
+
+  const propText = Number.isFinite(totalEdge) && totalEdge > 0.4
+    ? 'Run environment supports RBI, HRR, and total-bases angles more than usual.'
+    : Number.isFinite(totalEdge) && totalEdge < -0.4
+      ? 'Lower run environment makes simple hit/contact props cleaner than RBI-dependent props.'
+      : 'Balanced run environment: use player-level matchup support to separate props.';
+
+  root.innerHTML = `
+    <article>
+      <span class="summary-kicker">Game read</span>
+      <strong>${escapeHtml(sideText)}</strong>
+      <p>${escapeHtml(coverLabel)} ${Number.isFinite(coverProb) ? fmtPct(coverProb) : 'pending'} • Confidence ${escapeHtml(game?.confidence || 'N/A')}</p>
+    </article>
+    <article>
+      <span class="summary-kicker">Run environment</span>
+      <strong>${escapeHtml(Number.isFinite(modelTotal) ? fmt(modelTotal, 2) : 'Pending')}</strong>
+      <p>${escapeHtml(totalText)}</p>
+    </article>
+    <article>
+      <span class="summary-kicker">First inning</span>
+      <strong>${escapeHtml(Number.isFinite(nrfi) ? fmtPct(nrfi) : 'Pending')}</strong>
+      <p>${escapeHtml(inningText)}</p>
+    </article>
+    <article>
+      <span class="summary-kicker">Prop approach</span>
+      <strong>Use the profile cards first</strong>
+      <p>${escapeHtml(propText)}</p>
+    </article>
+  `;
+}
+
+function renderMlbProbabilityRead(game, detail = null) {
+  const root = byId('mlb-probability-read');
+  if (!root) return;
+  const metrics = detail?.metrics || {};
+  const favorite = gameFavoriteSide(game, metrics);
+  const favoriteProb = Number(metrics.favoriteWinProb);
+  const nrfi = Number(metrics.nrfiProb);
+  const yrfi = Number(metrics.yrfiProb);
+  const oneRun = Number(metrics.oneRunGameProb);
+  const tie = Number(metrics.tieAfter9Prob);
+  const coverLabel = metrics.marketCoverLabel || metrics.favoriteCoverLabel || 'Run line';
+  const coverProb = Number(hasNumericValue(metrics.marketCoverProb) ? metrics.marketCoverProb : metrics.favoriteCoverProb);
+  const totalLabel = metrics.marketTotalLabel || metrics.fallbackTotalLabel || 'Total';
+  const totalProb = Number(hasNumericValue(metrics.marketOverProb) ? metrics.marketOverProb : metrics.fallbackOverProb);
+
+  const bullets = [];
+  if (Number.isFinite(favoriteProb)) bullets.push(`${favorite} win probability is ${fmtPct(favoriteProb)}.`);
+  if (Number.isFinite(coverProb)) bullets.push(`${coverLabel} is ${fmtPct(coverProb)}, so the run-line read is ${coverProb >= .58 ? 'actionable' : 'thin'}.`);
+  if (Number.isFinite(totalProb)) bullets.push(`${totalLabel} is ${fmtPct(totalProb)}, which ${totalProb >= .55 ? 'adds support to game-environment props' : 'does not strongly push the total'}.`);
+  if (Number.isFinite(nrfi) && Number.isFinite(yrfi)) bullets.push(`${nrfi >= yrfi ? 'NRFI' : 'YRFI'} has the stronger first-inning read.`);
+  if (Number.isFinite(oneRun) || Number.isFinite(tie)) bullets.push(`Close-game indicators: one-run ${Number.isFinite(oneRun) ? fmtPct(oneRun) : '—'}${Number.isFinite(tie) ? `, tie after 9 ${fmtPct(tie)}` : ''}.`);
+
+  root.innerHTML = bullets.length
+    ? `<strong>Probability read</strong><ul>${bullets.map(b => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`
+    : '';
+}
+
+
+
+function pitcherFallbackAngles(p) {
+  const angles = [
+    { stat: 'K', label: 'Strikeouts', line: null, model: Number(p.predK), probability: null, risk: gamePropRiskLabel('K') },
+    { stat: 'HA', label: 'Hits Allowed', line: null, model: Number(p.predHitsAllowed), probability: null, risk: gamePropRiskLabel('HA') },
+    { stat: 'ER', label: 'Earned Runs', line: null, model: Number(p.predER), probability: null, risk: gamePropRiskLabel('ER') },
+    { stat: 'IP', label: 'Innings', line: null, model: Number(p.predIP), probability: null, risk: gamePropRiskLabel('IP') },
+    { stat: 'BB', label: 'Walks Allowed', line: null, model: Number(p.predBB), probability: null, risk: gamePropRiskLabel('BB') }
+  ].filter(a => Number.isFinite(a.model));
+
+  return angles.map(a => {
+    let score = 0;
+    if (a.stat === 'K') score = a.model * 10;
+    else if (a.stat === 'IP') score = a.model * 8;
+    else if (a.stat === 'ER') score = Math.max(0, 45 - a.model * 9);
+    else if (a.stat === 'HA') score = Math.max(0, 40 - a.model * 4);
+    else if (a.stat === 'BB') score = Math.max(0, 32 - a.model * 8);
+    return { ...a, score, hrefStat: a.stat };
+  });
+}
+
+function bestPitcherAngle(p, profile = null) {
+  const prof = bestProfileAngle(profile, ['K', 'HA', 'ER', 'IP', 'BB']);
+  if (prof) return prof;
+  const fallback = pitcherFallbackAngles(p);
+  return fallback.sort((a, b) => Number(b.score || 0) - Number(a.score || 0))[0] || null;
+}
+
+function pitcherAngleSummary(p, angle, profile = null) {
+  if (!angle) return 'No clear pitcher angle found yet.';
+  const pieces = [];
+  if (angle.stat === 'K') {
+    if (Number.isFinite(angle.model) && angle.model >= 6) pieces.push(`${angle.label} projection is elevated at ${fmt(angle.model, 1)}`);
+    else if (Number.isFinite(angle.model)) pieces.push(`${angle.label} projection is ${fmt(angle.model, 1)}`);
+  } else if (angle.stat === 'ER') {
+    if (Number.isFinite(angle.model) && angle.model <= 2.2) pieces.push(`run-prevention profile is strong at ${fmt(angle.model, 1)} ER`);
+    else if (Number.isFinite(angle.model)) pieces.push(`earned-run risk is ${fmt(angle.model, 1)}`);
+  } else if (angle.stat === 'HA') {
+    if (Number.isFinite(angle.model)) pieces.push(`hits-allowed projection is ${fmt(angle.model, 1)}`);
+  } else if (angle.stat === 'IP') {
+    if (Number.isFinite(angle.model)) pieces.push(`workload projection is ${fmt(angle.model, 1)} IP`);
+  } else if (Number.isFinite(angle.model)) {
+    pieces.push(`${angle.label} model is ${fmt(angle.model, 1)}`);
+  }
+  if (Number.isFinite(angle.probability)) pieces.push(`${fmtPct(angle.probability)} projection`);
+  if (Number.isFinite(angle.simAvg)) pieces.push(`similar rows avg ${fmt(angle.simAvg, 2)}`);
+  if (Number.isFinite(angle.simScore)) pieces.push(`similarity ${fmt(angle.simScore, 0)}`);
+  if (Number.isFinite(p?.predHitsAllowed) && Number(p.predHitsAllowed) >= 6) pieces.push('watch batter hit props against him');
+  if (Number.isFinite(p?.predER) && Number(p.predER) <= 2) pieces.push('supports run-prevention angle');
+  return pieces.join(' • ');
+}
+
+function pitcherQuickRole(p) {
+  const k = Number(p?.predK);
+  const er = Number(p?.predER);
+  const ha = Number(p?.predHitsAllowed);
+  if (Number.isFinite(k) && k >= 6) return { label: 'K upside', cls: 'is-medium' };
+  if (Number.isFinite(er) && er <= 2) return { label: 'Run prevention', cls: 'is-safe' };
+  if (Number.isFinite(ha) && ha >= 6) return { label: 'Contact risk', cls: 'is-risk' };
+  return { label: 'Pitcher read', cls: 'is-medium' };
+}
+
+
+function pitcherRowMeta(p, profile = null) {
+  const angle = bestPitcherAngle(p, profile);
+  const role = pitcherQuickRole(p);
+  const team = String(p?.team || '');
+  const score = Number(angle?.score);
+  return {
+    angle,
+    role,
+    team,
+    isK: role.label === 'K upside' || normalizeAnalyzerStat(angle?.stat) === 'K',
+    isRunPrevention: role.label === 'Run prevention' || normalizeAnalyzerStat(angle?.stat) === 'ER',
+    isContactRisk: role.label === 'Contact risk' || Number(p?.predHitsAllowed) >= 6,
+    score,
+  };
+}
+
+function pitcherRowAttributes(p, profile = null) {
+  const meta = pitcherRowMeta(p, profile);
+  return [
+    `data-pitcher-team="${escapeHtml(meta.team)}"`,
+    `data-pitcher-role="${escapeHtml(meta.role?.label || '')}"`,
+    `data-pitcher-role-class="${escapeHtml(meta.role?.cls || '')}"`,
+    `data-pitcher-k="${meta.isK ? '1' : '0'}"`,
+    `data-pitcher-run-prevention="${meta.isRunPrevention ? '1' : '0'}"`,
+    `data-pitcher-contact-risk="${meta.isContactRisk ? '1' : '0'}"`,
+    `data-pitcher-score="${escapeHtml(Number.isFinite(meta.score) ? String(meta.score) : '')}"`
+  ].join(' ');
+}
+
+function renderPitcherTableTools(pitchers, profileMap = new Map()) {
+  const root = byId('mlb-pitcher-table-tools');
+  if (!root) return;
+  const rows = (pitchers || []).map(p => {
+    const profile = profileMap.get(String(p.playerId || '')) || null;
+    return { p, profile, meta: pitcherRowMeta(p, profile) };
+  });
+  if (!rows.length) {
+    root.innerHTML = '';
+    return;
+  }
+
+  const kCount = rows.filter(r => r.meta.isK).length;
+  const runCount = rows.filter(r => r.meta.isRunPrevention).length;
+  const contactCount = rows.filter(r => r.meta.isContactRisk).length;
+  const teams = [...new Set(rows.map(r => r.meta.team).filter(Boolean))];
+
+  root.innerHTML = `
+    <div class="batter-table-tools-head">
+      <div>
+        <span class="summary-kicker">Pitcher table controls</span>
+        <h3>Filter pitcher projections</h3>
+        <p class="muted">Narrow the starter table by strikeout upside, run prevention, or contact risk.</p>
+      </div>
+      <div class="batter-table-counts">
+        <span>${escapeHtml(`${kCount} K upside`)}</span>
+        <span>${escapeHtml(`${runCount} run prevention`)}</span>
+        <span>${escapeHtml(`${contactCount} contact risk`)}</span>
+      </div>
+    </div>
+    <div class="batter-table-filter-row" role="group" aria-label="Pitcher table filters">
+      <button type="button" class="is-active" data-pitcher-table-filter="all">All</button>
+      <button type="button" data-pitcher-table-filter="k">K upside</button>
+      <button type="button" data-pitcher-table-filter="run">Run prevention</button>
+      <button type="button" data-pitcher-table-filter="contact">Contact risk</button>
+      ${teams.map(team => `<button type="button" data-pitcher-table-filter="team:${escapeHtml(team)}">${escapeHtml(team)}</button>`).join('')}
+    </div>
+  `;
+
+  root.dataset.activeFilter = 'all';
+
+  root.querySelectorAll('[data-pitcher-table-filter]').forEach(button => {
+    button.addEventListener('click', () => {
+      root.dataset.activeFilter = button.dataset.pitcherTableFilter || 'all';
+      root.querySelectorAll('[data-pitcher-table-filter]').forEach(btn => btn.classList.toggle('is-active', btn === button));
+      applyPitcherTableFilter(button.dataset.pitcherTableFilter || 'all');
+    });
+  });
+}
+
+function applyPitcherTableFilter(filter = 'all') {
+  const body = byId('mlb-pitchers-body');
+  if (!body) return;
+  Array.from(body.querySelectorAll('tr')).forEach(row => {
+    const team = row.dataset.pitcherTeam || '';
+    let show = true;
+    if (filter === 'k') show = row.dataset.pitcherK === '1';
+    else if (filter === 'run') show = row.dataset.pitcherRunPrevention === '1';
+    else if (filter === 'contact') show = row.dataset.pitcherContactRisk === '1';
+    else if (filter.startsWith('team:')) show = team === filter.slice(5);
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+
+function pitcherAngleCell(p, profile, gameDate) {
+  const angle = bestPitcherAngle(p, profile);
+  if (!angle) return '—';
+  const href = p.playerId ? mlbAnalyzerHref(p.playerId, gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '') : '';
+  const label = `${angle.label}${Number.isFinite(angle.line) ? ` ${fmt(angle.line, 1)}` : ''}`;
+  const summary = pitcherAngleSummary(p, angle, profile);
+  return `
+    <div class="best-angle-cell">
+      ${href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(label)}</a>` : `<strong>${escapeHtml(label)}</strong>`}
+      <span>${escapeHtml(summary)}</span>
+    </div>
+  `;
+}
+
+function renderPitcherAngleBoard(pitchers, gameDate, profileMap = new Map()) {
+  const root = byId('mlb-pitcher-angle-board');
+  if (!root) return;
+  const rows = (pitchers || []).map(p => {
+    const profile = profileMap.get(String(p.playerId || '')) || null;
+    const angle = bestPitcherAngle(p, profile);
+    const role = pitcherQuickRole(p);
+    return { p, profile, angle, role };
+  }).filter(row => row.angle);
+
+  if (!rows.length) {
+    root.innerHTML = '';
+    return;
+  }
+
+  const sorted = rows.slice().sort((a, b) => Number(b.angle?.score || 0) - Number(a.angle?.score || 0));
+  root.innerHTML = `
+    <div class="pitcher-angle-head">
+      <div>
+        <span class="summary-kicker">Pitcher prop focus</span>
+        <h3>Starter angles</h3>
+        <p class="muted">Quickly separate strikeout upside, run-prevention support, and contact risk.</p>
+      </div>
+    </div>
+    <div class="pitcher-angle-grid">
+      ${sorted.map(({ p, profile, angle, role }) => {
+        const href = p.playerId ? mlbAnalyzerHref(p.playerId, gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '') : '';
+        const name = href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(p.player || '')}</a>` : escapeHtml(p.player || '');
+        return `
+          <article class="pitcher-angle-card ${escapeHtml(role.cls || '')}">
+            <div class="game-prop-card-top">
+              <span class="summary-kicker">${escapeHtml(role.label)}</span>
+              <span class="prop-risk-pill ${escapeHtml(role.cls || '')}">${escapeHtml(angle.label || 'Angle')}</span>
+            </div>
+            <h4>${name}</h4>
+            <p class="muted">${escapeHtml([p.team, p.hand ? `${p.hand}HP` : '', 'Starter'].filter(Boolean).join(' • '))}</p>
+            <div class="game-prop-metrics">
+              <div><span>IP</span><strong>${escapeHtml(fmt(p.predIP, 1))}</strong></div>
+              <div><span>K</span><strong>${escapeHtml(fmt(p.predK, 1))}</strong></div>
+              <div><span>Hits</span><strong>${escapeHtml(fmt(p.predHitsAllowed, 1))}</strong></div>
+              <div><span>ER</span><strong>${escapeHtml(fmt(p.predER, 1))}</strong></div>
+            </div>
+            <p class="game-prop-read">${escapeHtml(pitcherAngleSummary(p, angle, profile))}</p>
+          </article>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+
+async function renderMlbGameDetails(game, detail) {
   const probabilitySection = byId('mlb-probability-section');
   const probabilityGrid = byId('mlb-probability-grid');
   const pitchersSection = byId('mlb-pitchers-section');
@@ -1007,39 +2023,54 @@ function renderMlbGameDetails(game, detail) {
     metricCard('F5 total', fmt(metrics.predF5Total, 2))
   ];
   probabilityGrid.innerHTML = cards.join('');
+  renderMlbProbabilityRead(game, detail);
 
   const pitchers = Array.isArray(detail?.pitchers) ? detail.pitchers : [];
+  const pitcherProfileMap = pitchers.length ? await loadProfilesForPlayers(pitchers, game?.gameDate || '') : new Map();
+  renderPitcherAngleBoard(pitchers, game?.gameDate || '', pitcherProfileMap);
+  renderPitcherTableTools(pitchers, pitcherProfileMap);
   if (pitchers.length) {
     pitchersSection.style.display = '';
     pitchersBody.innerHTML = pitchers.map(p => {
+      const profile = pitcherProfileMap.get(String(p.playerId || '')) || null;
       const pitcherMeta = [p.team || '', 'Starter', p.hand || ''].filter(Boolean).join(' • ');
       return `
-      <tr>
+      <tr class="pitcher-projection-row ${escapeHtml(pitcherRowMeta(p, profile).role.cls || '')}" ${pitcherRowAttributes(p, profile)}>
         <td class="name-cell" data-sort="${escapeHtml(String(p.player || ''))}">${playerAnalyzerLink({ ...p, gameDate: game?.gameDate }, 'K')}<span class="subtle-meta">${escapeHtml(pitcherMeta)}</span></td>
         <td data-sort="${escapeHtml(String(p.predIP ?? ''))}">${mlbMetricHtml(p.predIP, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predK ?? ''))}">${mlbMetricHtml(p.predK, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predBB ?? ''))}">${mlbMetricHtml(p.predBB, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predHitsAllowed ?? ''))}">${mlbMetricHtml(p.predHitsAllowed, { digits: 1, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(p.predER ?? ''))}">${mlbMetricHtml(p.predER, { digits: 1, mode: 'model' })}</td>
+        <td data-sort="${escapeHtml(String(bestPitcherAngle(p, profile)?.score ?? ''))}">${pitcherAngleCell(p, profile, game?.gameDate || '')}</td>
       </tr>
     `;
     }).join('');
   } else {
     pitchersSection.style.display = 'none';
     pitchersBody.innerHTML = '';
+    const pitcherBoard = byId('mlb-pitcher-angle-board');
+    if (pitcherBoard) pitcherBoard.innerHTML = '';
+    const pitcherTools = byId('mlb-pitcher-table-tools');
+    if (pitcherTools) pitcherTools.innerHTML = '';
   }
 
   const batters = Array.isArray(detail?.batters) ? detail.batters : [];
+  const batterProfileMap = batters.length ? await loadProfilesForPlayers(batters, game?.gameDate || '') : new Map();
+  renderBatterAngleBoard(batters, game?.gameDate || '', batterProfileMap);
+  renderBatterPropExplorer(batters, game?.gameDate || '', batterProfileMap);
+  renderBatterTableTools(batters, batterProfileMap);
   if (batters.length) {
     battersSection.style.display = '';
     battersBody.innerHTML = batters.map(b => {
+      const profile = batterProfileMap.get(String(b.playerId || '')) || null;
       const batterMeta = [
         b.team || '',
         (b.order !== undefined && b.order !== null && b.order !== '') ? `#${b.order}` : '',
         [b.batSide || '', b.oppPitchHand ? `vs ${b.oppPitchHand}` : ''].filter(Boolean).join(' ')
       ].filter(Boolean).join(' • ');
       return `
-      <tr>
+      <tr class="batter-projection-row ${escapeHtml(batterRowMeta(b, profile).strength.cls)}" ${batterRowAttributes(b, profile)}>
         <td class="name-cell" data-sort="${escapeHtml(String(b.player || ''))}">${playerAnalyzerLink({ ...b, gameDate: game?.gameDate })}<span class="subtle-meta">${escapeHtml(batterMeta)}</span></td>
         <td data-sort="${escapeHtml(String(b.predHits ?? ''))}">${mlbMetricHtml(b.predHits, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probHit ?? ''))}">${mlbMetricHtml(b.probHit, { pct: true })}</td>
@@ -1047,18 +2078,25 @@ function renderMlbGameDetails(game, detail) {
         <td data-sort="${escapeHtml(String(b.probTB2Plus ?? ''))}">${mlbMetricHtml(b.probTB2Plus, { pct: true })}</td>
         <td data-sort="${escapeHtml(String(b.predHR ?? ''))}">${mlbMetricHtml(b.predHR, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probHR ?? ''))}">${mlbMetricHtml(b.probHR, { pct: true })}</td>
+        <td data-sort="${escapeHtml(String(b.predDoubles ?? ''))}">${mlbMetricHtml(b.predDoubles, { digits: 2, mode: 'model' })}</td>
+        <td data-sort="${escapeHtml(String(b.probDouble ?? ''))}">${mlbMetricHtml(b.probDouble, { pct: true })}</td>
         <td data-sort="${escapeHtml(String(b.predBB ?? ''))}">${mlbMetricHtml(b.predBB, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probBB ?? ''))}">${mlbMetricHtml(b.probBB, { pct: true })}</td>
         <td data-sort="${escapeHtml(String(b.predK ?? ''))}">${mlbMetricHtml(b.predK, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probK ?? ''))}">${mlbMetricHtml(b.probK, { pct: true })}</td>
+        <td data-sort="${escapeHtml(String(b.predSB ?? ''))}">${mlbMetricHtml(b.predSB, { digits: 2, mode: 'model' })}</td>
+        <td data-sort="${escapeHtml(String(b.probSB ?? ''))}">${mlbMetricHtml(b.probSB, { pct: true })}</td>
         <td data-sort="${escapeHtml(String(b.predHRR ?? ''))}">${mlbMetricHtml(b.predHRR, { digits: 2, mode: 'model' })}</td>
         <td data-sort="${escapeHtml(String(b.probHRR2Plus ?? ''))}">${mlbMetricHtml(b.probHRR2Plus, { pct: true })}</td>
+        <td data-sort="${escapeHtml(String(bestBatterAngle(b, profile)?.score ?? ''))}">${batterAngleCell(b, profile, game?.gameDate || '')}</td>
       </tr>
     `;
     }).join('');
   } else {
     battersSection.style.display = 'none';
     battersBody.innerHTML = '';
+    const tools = byId('mlb-batter-table-tools');
+    if (tools) tools.innerHTML = '';
   }
 
   makeTablesSortable('.sortable-table');
@@ -1580,56 +2618,221 @@ function giRenderFirstInning(report) {
   `;
 }
 
-function giRenderBatterList(title, subtitle, players, mode) {
+function giRenderBatterCard(p, mode, profileMap = new Map()) {
+  const m = p.metrics || {};
+  const h10 = m.hitsLast10 || {};
+  const loc = m.locationHits || {};
+  const sim = m.similarHits || {};
+  const tb2 = m.tb2Last10 || {};
+  const hrr2 = m.hrr2Last10 || {};
+  const k10 = m.kLast10 || {};
+  return `
+    <div class="gi-card gi-batter-card ${mode === 'risk' ? 'is-risk' : 'is-positive'}">
+      <div class="gi-card-title">
+        <strong>${escapeHtml(p.player || '')}</strong>
+        <span>${escapeHtml([p.team, p.location, p.pitchHand ? `vs ${p.pitchHand}HP` : '', p.context].filter(Boolean).join(' • '))}</span>
+      </div>
+      <div class="gi-mini-grid">
+        ${giSmallMetric('Hit L10', giRateText(h10), `${giValue(h10.avg,2)} H/g`)}
+        ${giSmallMetric(`${p.location || 'Loc'} hits`, loc.sample ? giRateText(loc) : 'No sample', loc.sample ? `${giValue(loc.avg,2)} H/g` : '')}
+        ${giSmallMetric('Similar hits', sim.sample ? giRateText(sim) : 'No sample', sim.sample ? `${giValue(sim.avg,2)} H/g` : '')}
+        ${giSmallMetric('2+ TB L10', tb2.sample ? giRateText(tb2) : 'No sample')}
+        ${giSmallMetric('2+ HRR L10', hrr2.sample ? giRateText(hrr2) : 'No sample')}
+        ${giSmallMetric('K L10', k10.sample ? giValue(k10.avg,2) : 'No sample', k10.sample ? 'per game' : '')}
+      </div>
+      ${giProfileInsight(p, profileMap, mode)}
+      ${giPlayerNotes(p.notes)}
+    </div>
+  `;
+}
+
+function giRenderBatterList(title, subtitle, players, mode, profileMap = new Map()) {
   const list = Array.isArray(players) ? players : [];
   if (!list.length) return '';
+  const primary = list.slice(0, 4);
+  const more = list.slice(4);
   return `
-    <div class="gi-block">
+    <div class="gi-block gi-batter-block ${mode === 'risk' ? 'is-risk' : 'is-positive'}">
       <div class="gi-block-head">
-        <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(subtitle)}</p>
+        <div>
+          <h3>${escapeHtml(title)}</h3>
+          <p>${escapeHtml(subtitle)}</p>
+        </div>
+        <span class="gi-count-pill">${escapeHtml(`${list.length} signal${list.length === 1 ? '' : 's'}`)}</span>
       </div>
-      <div class="gi-player-grid">
-        ${list.map(p => {
-          const m = p.metrics || {};
-          const h10 = m.hitsLast10 || {};
-          const loc = m.locationHits || {};
-          const sim = m.similarHits || {};
-          const tb2 = m.tb2Last10 || {};
-          const hrr2 = m.hrr2Last10 || {};
-          const k10 = m.kLast10 || {};
-          return `
-            <div class="gi-card gi-batter-card ${mode === 'risk' ? 'is-risk' : 'is-positive'}">
-              <div class="gi-card-title">
-                <strong>${escapeHtml(p.player || '')}</strong>
-                <span>${escapeHtml([p.team, p.location, p.pitchHand ? `vs ${p.pitchHand}HP` : '', p.context].filter(Boolean).join(' • '))}</span>
-              </div>
-              <div class="gi-mini-grid">
-                ${giSmallMetric('Hit L10', giRateText(h10), `${giValue(h10.avg,2)} H/g`)}
-                ${giSmallMetric(`${p.location || 'Loc'} hits`, loc.sample ? giRateText(loc) : 'No sample', loc.sample ? `${giValue(loc.avg,2)} H/g` : '')}
-                ${giSmallMetric('Similar hits', sim.sample ? giRateText(sim) : 'No sample', sim.sample ? `${giValue(sim.avg,2)} H/g` : '')}
-                ${giSmallMetric('2+ TB L10', tb2.sample ? giRateText(tb2) : 'No sample')}
-                ${giSmallMetric('2+ HRR L10', hrr2.sample ? giRateText(hrr2) : 'No sample')}
-                ${giSmallMetric('K L10', k10.sample ? giValue(k10.avg,2) : 'No sample', k10.sample ? 'per game' : '')}
-              </div>
-              ${giPlayerNotes(p.notes)}
+      <div class="gi-player-grid gi-player-grid-priority">
+        ${primary.map(p => giRenderBatterCard(p, mode, profileMap)).join('')}
+      </div>
+      ${more.length ? `
+        <details class="gi-more-details">
+          <summary>Show ${more.length} more ${mode === 'risk' ? 'risk flag' : 'matchup fit'}${more.length === 1 ? '' : 's'}</summary>
+          <div class="gi-player-grid gi-player-grid-secondary">
+            ${more.map(p => giRenderBatterCard(p, mode, profileMap)).join('')}
+          </div>
+        </details>
+      ` : ''}
+    </div>
+  `;
+}
+
+function giRenderBatters(report, profileMap = new Map()) {
+  const br = report?.batterResearch || {};
+  return `
+    ${giRenderBatterList('Best matchup fits / positive research signals', 'Recent form plus profile-aware prop angles, similar-game support, and matchup context.', br.positiveSignals || [], 'positive', profileMap)}
+    ${giRenderBatterList('Risk flags / cold bats', 'Weak recent hit profiles, strikeout trends, or lower-confidence profile angles.', br.riskFlags || [], 'risk', profileMap)}
+  `;
+}
+
+
+function giResearchPlayerAngle(p, profileMap = new Map(), preferredStats = ['H', 'TB', 'HRR', 'SB', '2B']) {
+  const playerId = playerIdFromResearchPlayer(p, profileMap);
+  const profile = playerId ? profileMap.get(playerId) : null;
+  const angle = bestProfileAngle(profile, preferredStats);
+  return { playerId, profile, angle };
+}
+
+function giTakeawayItem(p, profileMap = new Map(), mode = 'contact') {
+  const preferred = mode === 'risk'
+    ? ['K', 'HR', 'HRR', 'TB', 'H']
+    : mode === 'power'
+      ? ['TB', 'HRR', 'HR', '2B']
+      : mode === 'speed'
+        ? ['SB']
+        : ['H', 'BB', 'TB'];
+  const { profile, angle } = giResearchPlayerAngle(p, profileMap, preferred);
+  const fallbackName = p?.player || profile?.player || '';
+  const href = profile?.playerId && angle
+    ? mlbAnalyzerHref(profile.playerId, profile.gameDate, angle.hrefStat || angle.stat, Number.isFinite(angle.line) ? angle.line : '')
+    : '';
+  const metric = p?.metrics || {};
+  const h10 = metric.hitsLast10 || {};
+  const sim = metric.similarHits || {};
+  const title = angle
+    ? `${angle.label}${Number.isFinite(angle.line) ? ` ${fmt(angle.line, 1)}` : ''}`
+    : (mode === 'risk' ? 'Risk flag' : 'Research signal');
+  const sub = angle
+    ? angleSummary(fallbackName, angle, profile)
+    : [
+        h10?.sample ? `Hit L10 ${giRateText(h10)}` : '',
+        sim?.sample ? `similar hits ${giRateText(sim)}` : '',
+        Array.isArray(p?.notes) && p.notes.length ? p.notes[0] : ''
+      ].filter(Boolean).join(' • ');
+
+  return `
+    <li>
+      <div>
+        <strong>${href ? `<a class="table-link table-link-strong" href="${href}">${escapeHtml(fallbackName)}</a>` : escapeHtml(fallbackName)}</strong>
+        <span>${escapeHtml([p?.team, p?.location, p?.pitchHand ? `vs ${p.pitchHand}HP` : ''].filter(Boolean).join(' • '))}</span>
+      </div>
+      <em>${escapeHtml(title)}</em>
+      <small>${escapeHtml(sub || 'Profile support pending')}</small>
+    </li>
+  `;
+}
+
+function giTopResearchPlayers(list, profileMap, mode, limit = 3) {
+  const rows = (Array.isArray(list) ? list : []).map(p => {
+    const preferred = mode === 'risk'
+      ? ['K', 'HR', 'HRR', 'TB', 'H']
+      : mode === 'power'
+        ? ['TB', 'HRR', 'HR', '2B']
+        : mode === 'speed'
+          ? ['SB']
+          : ['H', 'BB', 'TB'];
+    const { angle } = giResearchPlayerAngle(p, profileMap, preferred);
+    const score = Number(angle?.score);
+    const metrics = p?.metrics || {};
+    const h10 = metrics.hitsLast10 || {};
+    const sim = metrics.similarHits || {};
+    const fallbackScore =
+      (Number(h10.rate || 0) * 50) +
+      (Number(sim.rate || 0) * 35) +
+      (Array.isArray(p?.notes) ? Math.min(10, p.notes.length * 2) : 0);
+    return { p, angle, score: Number.isFinite(score) ? score : fallbackScore };
+  });
+  return rows
+    .filter(row => row.p)
+    .sort((a, b) => Number(b.score || 0) - Number(a.score || 0))
+    .slice(0, limit)
+    .map(row => row.p);
+}
+
+function giRenderResearchTakeaways(report, profileMap = new Map()) {
+  const br = report?.batterResearch || {};
+  const positives = Array.isArray(br.positiveSignals) ? br.positiveSignals : [];
+  const risks = Array.isArray(br.riskFlags) ? br.riskFlags : [];
+  if (!positives.length && !risks.length) return '';
+
+  const contact = giTopResearchPlayers(positives, profileMap, 'contact', 3);
+  const power = giTopResearchPlayers(positives, profileMap, 'power', 3);
+  const speed = giTopResearchPlayers(positives, profileMap, 'speed', 2)
+    .filter(p => {
+      const { angle } = giResearchPlayerAngle(p, profileMap, ['SB']);
+      return angle && normalizeAnalyzerStat(angle.stat) === 'SB';
+    });
+  const risk = giTopResearchPlayers(risks, profileMap, 'risk', 3);
+
+  const cards = [
+    {
+      title: 'Contact fits',
+      note: 'Cleaner player props that rely less on one swing.',
+      mode: 'contact',
+      rows: contact,
+      cls: 'is-positive'
+    },
+    {
+      title: 'Power / production fits',
+      note: 'Better for total bases, HRR, doubles, and longshot power ideas.',
+      mode: 'power',
+      rows: power,
+      cls: 'is-upside'
+    },
+    speed.length ? {
+      title: 'Speed angle',
+      note: 'Stolen-base support when the player profile points that way.',
+      mode: 'speed',
+      rows: speed,
+      cls: 'is-speed'
+    } : null,
+    {
+      title: 'Main risk flags',
+      note: 'Players where the research or profile suggests caution.',
+      mode: 'risk',
+      rows: risk,
+      cls: 'is-risk'
+    }
+  ].filter(card => card && card.rows && card.rows.length);
+
+  if (!cards.length) return '';
+
+  return `
+    <div class="gi-block gi-takeaway-block">
+      <div class="gi-block-head">
+        <div>
+          <h3>Research takeaways</h3>
+          <p>Quick summary of where the batter research points before opening the detailed hot/cold cards.</p>
+        </div>
+      </div>
+      <div class="gi-takeaway-grid">
+        ${cards.map(card => `
+          <article class="gi-takeaway-card ${escapeHtml(card.cls)}">
+            <div class="game-prop-card-top">
+              <h4>${escapeHtml(card.title)}</h4>
+              <span class="gi-count-pill">${escapeHtml(`${card.rows.length} shown`)}</span>
             </div>
-          `;
-        }).join('')}
+            <p class="muted">${escapeHtml(card.note)}</p>
+            <ul>
+              ${card.rows.map(p => giTakeawayItem(p, profileMap, card.mode)).join('')}
+            </ul>
+          </article>
+        `).join('')}
       </div>
     </div>
   `;
 }
 
-function giRenderBatters(report) {
-  const br = report?.batterResearch || {};
-  return `
-    ${giRenderBatterList('Hot bats / positive research signals', 'Recent results, matching location/opponent samples, and similar-game production.', br.positiveSignals || [], 'positive')}
-    ${giRenderBatterList('Cold bats / risk flags', 'Actual weak recent hit profiles or strikeout trends — not duplicated model projections.', br.riskFlags || [], 'risk')}
-  `;
-}
 
-async function renderGameIntelligence(game) {
+async function renderGameIntelligence(game, detail = null) {
   const section = byId('game-intelligence-section');
   const body = byId('game-intelligence-body');
   if (!section || !body) return;
@@ -1652,6 +2855,8 @@ async function renderGameIntelligence(game) {
       return;
     }
     section.style.display = '';
+    const battersForProfiles = Array.isArray(detail?.batters) ? detail.batters : [];
+    const giProfileMap = battersForProfiles.length ? await loadProfilesForPlayers(battersForProfiles, game?.gameDate || '') : new Map();
     body.innerHTML = `
       <div class="gi-hero">
         <div>
@@ -1664,16 +2869,77 @@ async function renderGameIntelligence(game) {
           <strong>${escapeHtml(String(report?.dataCoverage?.propsAnalyzerEntries || 0))}</strong>
         </div>
       </div>
+      ${giRenderResearchTakeaways(report, giProfileMap)}
       ${giRenderModelForm(report)}
       ${giRenderMovement(report)}
       ${giRenderPitchers(report)}
       ${giRenderFirstInning(report)}
-      ${giRenderBatters(report)}
+      ${giRenderBatters(report, giProfileMap)}
     `;
   } catch (err) {
     section.style.display = 'none';
   }
 }
+
+
+function setupGameJumpNavActive() {
+  const links = Array.from(document.querySelectorAll('.game-jump-inner a[href^="#"]'));
+  if (!links.length || !('IntersectionObserver' in window)) return;
+  const sections = links
+    .map(link => {
+      const id = String(link.getAttribute('href') || '').replace('#', '');
+      const section = id ? document.getElementById(id) : null;
+      return section ? { link, section } : null;
+    })
+    .filter(Boolean);
+
+  const setActive = id => {
+    sections.forEach(({ link, section }) => {
+      const active = section.id === id;
+      link.classList.toggle('is-active', active);
+      if (active && typeof link.scrollIntoView === 'function') {
+        link.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    });
+  };
+
+  const observer = new IntersectionObserver(entries => {
+    const visible = entries
+      .filter(entry => entry.isIntersecting)
+      .sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top))[0];
+    if (visible?.target?.id) setActive(visible.target.id);
+  }, { rootMargin: '-22% 0px -65% 0px', threshold: [0, .2, .45] });
+
+  sections.forEach(({ section }) => observer.observe(section));
+}
+
+function setupTableScrollHints() {
+  const update = () => {
+    document.querySelectorAll('.table-wrap').forEach(wrap => {
+      const hasOverflow = wrap.scrollWidth > wrap.clientWidth + 12;
+      wrap.classList.toggle('is-scrollable', hasOverflow);
+    });
+  };
+  update();
+  window.addEventListener('resize', update, { passive: true });
+  setTimeout(update, 250);
+  setTimeout(update, 900);
+}
+
+function setupDetailsLazyScrollHints() {
+  document.querySelectorAll('.game-deep-details, .gi-more-details').forEach(detail => {
+    detail.addEventListener('toggle', () => {
+      if (detail.open) setTimeout(setupTableScrollHints, 60);
+    }, { passive: true });
+  });
+}
+
+function setupGamePagePolish() {
+  setupGameJumpNavActive();
+  setupTableScrollHints();
+  setupDetailsLazyScrollHints();
+}
+
 
 (async function init() {
   try {
@@ -1706,13 +2972,15 @@ async function renderGameIntelligence(game) {
       : 'Pending';
     byId('snapshot-total').textContent = hasNumericValue(game.marketTotal) ? fmt(game.marketTotal, 2) : 'Pending';
     byId('snapshot-confidence').textContent = game.confidence || 'N/A';
+    renderGameQuickRead(game, mlbDetail);
 
     setupMovementToggle(game, game.movement || []);
-    renderGameProps(game, propsData, injuryLookup, mlbDetail);
-    renderMlbGameDetails(game, mlbDetail);
+    await renderGameProps(game, propsData, injuryLookup, mlbDetail);
+    await renderMlbGameDetails(game, mlbDetail);
     renderMlbOddsMovement(game, archiveRows);
-    await renderGameIntelligence(game);
+    await renderGameIntelligence(game, mlbDetail);
     makeTablesSortable('.sortable-table');
+    setupGamePagePolish();
   } catch (err) {
     byId('game-title').textContent = 'Unable to load game';
     byId('game-summary').textContent = err.message || String(err);
