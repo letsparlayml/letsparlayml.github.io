@@ -330,8 +330,7 @@ function updateHero(entry, series, profile = null) {
   const compLine = entryComparisonLine(entry, profile);
   const compProb = entryComparisonProbability(entry, profile);
   const compProp = selectedPropForEntry(profile, entry);
-  const compOptionForHero = lineOptionForProp(compProp, entry);
-  const compLabel = compOptionForHero?.isClosestAverageLine ? 'near avg' : compOptionForHero?.isComparisonLine ? 'avg' : 'line';
+  const compLabel = lineOptionForProp(compProp, entry)?.isComparisonLine ? 'avg' : 'line';
   const model = entry?.pred_anchor ?? entry?.mu_cons ?? series?.modelPred ?? compProp?.modelPred ?? null;
   byId('analyzer-hero-date').textContent = entry?.gameDate || series?.gameDate || '—';
   byId('analyzer-hero-player').textContent = entry?.player || series?.player || '—';
@@ -425,7 +424,7 @@ function renderKpis(entry, series, view, profile = null) {
     <article class="hero-card kpi-card">
       <span class="stat-label">Board context</span>
       <strong>${hasNumericValue(compProb) ? fmtPct(compProb) : (compProp?.comparisonLine ? 'vs avg' : fmtPct(entry.prob_cons))}</strong>
-      <p class="muted">${escapeHtml(compOption?.isComparisonLine ? `${compOption?.isClosestAverageLine ? 'Using closest listed line to pitcher average' : 'Compared to ' + compSource}, not the lowest static prop line.` : (entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text'))}</p>
+      <p class="muted">${escapeHtml(compOption?.isComparisonLine ? `Compared to ${compSource}, not the lowest static prop line.` : (entry.boardDriver || entry.driver_summary || entry.reason_flags || 'No driver text'))}</p>
     </article>
   `;
 }
@@ -624,61 +623,21 @@ function patchPitcherLineControl(entry, profile) {
   const prop = selectedPropForEntry(profile, entry);
   const avg = pitcherAverageLineForProp(prop);
   if (!prop || !avg || !hasNumericValue(avg.line)) return;
-  const option = lineOptionForProp(prop, entry);
-  const label = option?.isClosestAverageLine
-    ? `${statDisplayLabel(entry, null)} ${fmt(option.line, 1)} • closest to ${avg.source} ${fmt(avg.line, 1)}`
-    : `${statDisplayLabel(entry, null)} avg ${fmt(avg.line, 1)} • ${avg.source}`;
+  const label = `${statDisplayLabel(entry, null)} avg ${fmt(avg.line, 1)} • ${avg.source}`;
   lineSelect.innerHTML = `<option value="${escapeHtml(String(entry.line ?? ''))}">${escapeHtml(label)}</option>`;
 }
 
 
-function closestListedLineToAverage(prop, averageLine) {
-  const options = (Array.isArray(prop?.lineOptions) ? prop.lineOptions : [])
-    .map(opt => ({
-      ...opt,
-      lineNumber: Number(opt.line),
-      probabilityNumber: Number(opt.probability),
-    }))
-    .filter(opt => hasNumericValue(opt.lineNumber));
-
-  if (!options.length || !hasNumericValue(averageLine)) return null;
-
-  return options.sort((a, b) => {
-    const distance = Math.abs(a.lineNumber - averageLine) - Math.abs(b.lineNumber - averageLine);
-    if (distance) return distance;
-    const aProb = hasNumericValue(a.probabilityNumber) ? a.probabilityNumber : -1;
-    const bProb = hasNumericValue(b.probabilityNumber) ? b.probabilityNumber : -1;
-    return bProb - aProb;
-  })[0];
-}
-
 function lineOptionForProp(prop, selectedEntry = null) {
-  // Pitcher pages use the listed line closest to the pitcher's own average.
-  // This avoids comparing everything to the lowest alt line while preserving
-  // a real model probability from the existing lineOptions.
+  // Pitcher pages use the pitcher's own average as the comparison line.
+  // This avoids every pitcher prop looking artificially strong against the lowest static line.
   const pitcherAverage = pitcherAverageLineForProp(prop);
   if (pitcherAverage && hasNumericValue(pitcherAverage.line)) {
-    const closest = closestListedLineToAverage(prop, pitcherAverage.line);
-    if (closest) {
-      return {
-        ...closest,
-        line: Number(closest.lineNumber),
-        probability: hasNumericValue(closest.probabilityNumber) ? Number(closest.probabilityNumber) : null,
-        side: 'closest listed line to pitcher average',
-        source: `closest listed line to ${pitcherAverage.source || 'pitcher average'}`,
-        averageReference: Number(pitcherAverage.line),
-        averageSource: pitcherAverage.source || 'pitcher average',
-        isComparisonLine: true,
-        isClosestAverageLine: true,
-      };
-    }
     return {
       line: pitcherAverage.line,
       probability: pitcherAverage.probability,
       side: 'vs pitcher average',
       source: pitcherAverage.source || 'pitcher average',
-      averageReference: Number(pitcherAverage.line),
-      averageSource: pitcherAverage.source || 'pitcher average',
       isComparisonLine: true,
     };
   }
@@ -1516,7 +1475,7 @@ function renderMultiPropProfile(entry, profile, view, selectedStats, league) {
       <article class="multi-prop-chart-card">
         <h3>${escapeHtml(prop.statDisplay || stat)}</h3>
         <div class="prop-meta">
-          <span class="prop-chip">${lineOptionForProp(prop, entry)?.isClosestAverageLine ? 'Near avg' : lineOptionForProp(prop, entry)?.isComparisonLine ? 'Avg' : 'Line'} ${hasNumericValue(line) ? fmt(line, 1) : '—'}</span>${lineOptionForProp(prop, entry)?.isClosestAverageLine && hasNumericValue(Number(lineOptionForProp(prop, entry)?.averageReference)) ? `<span class="prop-chip">Avg ref ${fmt(Number(lineOptionForProp(prop, entry).averageReference), 1)}</span>` : ''}
+          <span class="prop-chip">${lineOptionForProp(prop, entry)?.isComparisonLine ? 'Avg' : 'Line'} ${hasNumericValue(line) ? fmt(line, 1) : '—'}</span>
           <span class="prop-chip">Model ${fmt(prop.modelPred, 2)}</span>
           <span class="prop-chip">${lineOptionForProp(prop, entry)?.isComparisonLine ? 'Vs avg' : 'Prob'} ${hasNumericValue(prob) ? fmtPct(prob) : '—'}</span>
         </div>
