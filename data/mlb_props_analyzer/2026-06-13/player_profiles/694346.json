@@ -1,0 +1,3827 @@
+{
+  "schemaVersion": "mlb-player-day-profile-v4",
+  "generatedAt": "2026-06-12T12:34:27+00:00",
+  "gameDate": "2026-06-13",
+  "profileKey": "694346",
+  "sourceFileKey": "pitcher_694346",
+  "playerId": "694346",
+  "player": "Trey Gibson",
+  "league": "MLB",
+  "playerType": "pitcher",
+  "team": "BAL",
+  "opp": "SDP",
+  "matchup": "SDP @ BAL",
+  "location": "Home",
+  "injuryStatus": "",
+  "injuryNote": "",
+  "injuryUpdated": "",
+  "boardContext": "BAL vs SDP • R",
+  "driverSummary": "Projected 1.9 pitcher walks allowed • projected 4.2 IP",
+  "matchupContext": {
+    "raw": "Projected 1.9 pitcher walks allowed • projected 4.2 IP",
+    "lineupOrder": null,
+    "lineupBand": null,
+    "batterHand": null,
+    "pitcherHand": "R",
+    "handednessText": null,
+    "handednessBucket": null,
+    "temperatureF": 90.0,
+    "temperatureBucket": "hot environment",
+    "windMph": 12.3,
+    "windBucket": "moderate wind",
+    "currentFeatures": [
+      {
+        "key": "temperature",
+        "label": "Temperature",
+        "value": "90°F",
+        "note": "hot environment",
+        "available": true
+      },
+      {
+        "key": "wind",
+        "label": "Wind",
+        "value": "12 mph",
+        "note": "moderate wind",
+        "available": true
+      },
+      {
+        "key": "park",
+        "label": "Park",
+        "value": "Oriole Park at Camden Yards",
+        "note": "current venue",
+        "available": true
+      }
+    ],
+    "summaryPieces": [
+      "90°F",
+      "Wind 12"
+    ],
+    "parsedFrom": "driverSummary/boardContext",
+    "featureCoverage": {
+      "lineupOrder": false,
+      "currentHandedness": false,
+      "currentTemperature": true,
+      "currentWind": true,
+      "currentPark": true,
+      "currentStarter": false,
+      "currentPitchMix": false,
+      "historicalHandedness": false,
+      "historicalPitchMix": false,
+      "historicalPark": false,
+      "historicalWeather": false
+    },
+    "similarityReadiness": {
+      "currentContextReady": true,
+      "canScoreCurrentHandedness": false,
+      "canScoreHistoricalHandedness": false,
+      "canScorePitchMix": false,
+      "nextRequiredInputs": [
+        "historical batter hand and pitcher hand per game-log row",
+        "current and historical opposing starter identity",
+        "pitch mix / pitch-type profile by opposing starter",
+        "park/weather values per historical row"
+      ]
+    },
+    "park": "Oriole Park at Camden Yards"
+  },
+  "pitcherLineupContext": {
+    "available": true,
+    "gameId": "mlb-824828",
+    "matchup": "SDP @ BAL",
+    "pitcherId": "694346",
+    "pitcher": "Trey Gibson",
+    "pitcherTeam": "BAL",
+    "pitcherHand": "R",
+    "opponentTeam": "SDP",
+    "lineupSize": 9,
+    "lineupHandCounts": {
+      "R": 5,
+      "L": 3,
+      "S": 1,
+      "Unknown": 0
+    },
+    "topThirdHandCounts": {
+      "R": 2,
+      "L": 1,
+      "S": 0,
+      "Unknown": 0
+    },
+    "middleThirdHandCounts": {
+      "R": 1,
+      "L": 2,
+      "S": 0,
+      "Unknown": 0
+    },
+    "bottomThirdHandCounts": {
+      "R": 2,
+      "L": 0,
+      "S": 1,
+      "Unknown": 0
+    },
+    "sideAdvantageCounts": {
+      "opposite": 3,
+      "same": 5,
+      "switch": 1,
+      "unknown": 0
+    },
+    "topThirdSideAdvantageCounts": {
+      "opposite": 1,
+      "same": 2,
+      "switch": 0,
+      "unknown": 0
+    },
+    "lineupPressure": {
+      "contact": "low",
+      "power": "medium",
+      "strikeoutOpportunity": "low",
+      "walkRisk": "medium",
+      "contactValue": 0.4913,
+      "powerValue": 0.4645,
+      "strikeoutValue": 0.6522,
+      "walkValue": 0.3242
+    },
+    "contactThreats": [
+      {
+        "playerId": "665487",
+        "player": "Fernando Tatis Jr.",
+        "team": "SDP",
+        "order": 1,
+        "hand": "R",
+        "metric": 0.6902770421279036,
+        "metricLabel": "contact"
+      },
+      {
+        "playerId": "701538",
+        "player": "Jackson Merrill",
+        "team": "SDP",
+        "order": 4,
+        "hand": "L",
+        "metric": 0.5586594035461393,
+        "metricLabel": "contact"
+      },
+      {
+        "playerId": "657757",
+        "player": "Gavin Sheets",
+        "team": "SDP",
+        "order": 3,
+        "hand": "L",
+        "metric": 0.5316530187905846,
+        "metricLabel": "contact"
+      },
+      {
+        "playerId": "609280",
+        "player": "Miguel Andujar",
+        "team": "SDP",
+        "order": 6,
+        "hand": "R",
+        "metric": 0.529873157888174,
+        "metricLabel": "contact"
+      }
+    ],
+    "powerThreats": [
+      {
+        "playerId": "665487",
+        "player": "Fernando Tatis Jr.",
+        "team": "SDP",
+        "order": 1,
+        "hand": "R",
+        "metric": 0.6617135256243692,
+        "metricLabel": "power"
+      },
+      {
+        "playerId": "701538",
+        "player": "Jackson Merrill",
+        "team": "SDP",
+        "order": 4,
+        "hand": "L",
+        "metric": 0.403845059919552,
+        "metricLabel": "power"
+      },
+      {
+        "playerId": "609280",
+        "player": "Miguel Andujar",
+        "team": "SDP",
+        "order": 6,
+        "hand": "R",
+        "metric": 0.3455760956143602,
+        "metricLabel": "power"
+      },
+      {
+        "playerId": "657757",
+        "player": "Gavin Sheets",
+        "team": "SDP",
+        "order": 3,
+        "hand": "L",
+        "metric": 0.3265479151698824,
+        "metricLabel": "power"
+      }
+    ],
+    "strikeoutTargets": [
+      {
+        "playerId": "657757",
+        "player": "Gavin Sheets",
+        "team": "SDP",
+        "order": 3,
+        "hand": "L",
+        "metric": 0.9079409981925952,
+        "metricLabel": "K risk"
+      },
+      {
+        "playerId": "701538",
+        "player": "Jackson Merrill",
+        "team": "SDP",
+        "order": 4,
+        "hand": "L",
+        "metric": 0.830202854367482,
+        "metricLabel": "K risk"
+      },
+      {
+        "playerId": "592518",
+        "player": "Manny Machado",
+        "team": "SDP",
+        "order": 2,
+        "hand": "R",
+        "metric": 0.8296794547126625,
+        "metricLabel": "K risk"
+      },
+      {
+        "playerId": "664034",
+        "player": "Ty France",
+        "team": "SDP",
+        "order": 7,
+        "hand": "R",
+        "metric": 0.7924954931667284,
+        "metricLabel": "K risk"
+      }
+    ],
+    "walkRiskBats": [
+      {
+        "playerId": "657757",
+        "player": "Gavin Sheets",
+        "team": "SDP",
+        "order": 3,
+        "hand": "L",
+        "metric": 0.5103005489145057,
+        "metricLabel": "walk risk"
+      },
+      {
+        "playerId": "665487",
+        "player": "Fernando Tatis Jr.",
+        "team": "SDP",
+        "order": 1,
+        "hand": "R",
+        "metric": 0.4258096949967496,
+        "metricLabel": "walk risk"
+      },
+      {
+        "playerId": "695238",
+        "player": "Will Wagner",
+        "team": "SDP",
+        "order": 5,
+        "hand": "L",
+        "metric": 0.4028945537091954,
+        "metricLabel": "walk risk"
+      },
+      {
+        "playerId": "664034",
+        "player": "Ty France",
+        "team": "SDP",
+        "order": 7,
+        "hand": "R",
+        "metric": 0.3534495388528819,
+        "metricLabel": "walk risk"
+      }
+    ],
+    "summaryPieces": [
+      "SDP projected lineup",
+      "5 RHB",
+      "3 LHB",
+      "1 switch",
+      "3 opposite-side bats"
+    ]
+  },
+  "matchupFeatureSummary": {
+    "currentFeatures": [
+      {
+        "key": "temperature",
+        "label": "Temperature",
+        "value": "90°F",
+        "note": "hot environment",
+        "available": true
+      },
+      {
+        "key": "wind",
+        "label": "Wind",
+        "value": "12 mph",
+        "note": "moderate wind",
+        "available": true
+      },
+      {
+        "key": "park",
+        "label": "Park",
+        "value": "Oriole Park at Camden Yards",
+        "note": "current venue",
+        "available": true
+      }
+    ],
+    "summaryPieces": [
+      "90°F",
+      "Wind 12"
+    ],
+    "featureCoverage": {
+      "lineupOrder": false,
+      "currentHandedness": false,
+      "currentTemperature": true,
+      "currentWind": true,
+      "currentPark": true,
+      "currentStarter": false,
+      "currentPitchMix": false,
+      "historicalHandedness": false,
+      "historicalPitchMix": false,
+      "historicalPark": true,
+      "historicalWeather": true,
+      "sameOpponent": true,
+      "homeAway": true,
+      "lineupOrContext": false,
+      "abOrIpSample": true,
+      "recency": true,
+      "currentHandednessParsed": false,
+      "currentWeather": true,
+      "historicalStarter": false
+    },
+    "similarityReadiness": {
+      "currentContextReady": true,
+      "canScoreCurrentHandedness": false,
+      "canScoreHistoricalHandedness": false,
+      "canScorePitchMix": false,
+      "nextRequiredInputs": [
+        "historical batter hand and pitcher hand per game-log row",
+        "current and historical opposing starter identity",
+        "pitch mix / pitch-type profile by opposing starter"
+      ]
+    },
+    "missingForTrueSimilarity": [
+      "historical handedness",
+      "pitch mix"
+    ]
+  },
+  "availableStats": [
+    "BB",
+    "K",
+    "ER",
+    "HA",
+    "IP",
+    "OUTS"
+  ],
+  "availableProps": [
+    {
+      "stat": "BB",
+      "statDisplay": "Pitcher Walks Allowed",
+      "detailFile": "pitcher_694346_bb.json",
+      "sampleType": "historical_games",
+      "recentWindow": 4,
+      "playerType": "pitcher",
+      "modelPred": 1.905471992751922,
+      "modelPredDisplay": "1.91",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.2,
+      "samples": {
+        "prior": null,
+        "r10": 3.0,
+        "r5": 3.0,
+        "r3": 3.0
+      },
+      "recent5Avg": 2.0,
+      "allGamesAvg": 2.0,
+      "comparisonLine": 2.0,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 4,
+      "lineOptions": [
+        {
+          "line": 0.5,
+          "probability": 0.8512475840119642,
+          "probabilityDisplay": "85.1%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 1.5,
+          "probability": 0.5678040214925789,
+          "probabilityDisplay": "56.8%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 2.5,
+          "probability": 0.29775713653932034,
+          "probabilityDisplay": "29.8%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 3.5,
+          "probability": 0.12623487786987542,
+          "probabilityDisplay": "12.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 4,
+        "avgValue": 2.0,
+        "maxSimScore": 28.0,
+        "bins": {
+          "Close 25%": 1,
+          "Closest 25%": 1,
+          "Far 25%": 1,
+          "Mid 25%": 1
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-06-08",
+            "opp": "SEA",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 28.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-05-27",
+            "opp": "TB",
+            "location": "Home",
+            "value": 4.0,
+            "simScore": 20.0,
+            "simPct": 75.0
+          },
+          {
+            "gameDate": "2026-05-08",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 50.0
+          },
+          {
+            "gameDate": "2026-05-03",
+            "opp": "NYY",
+            "location": "Away",
+            "value": 2.0,
+            "simScore": 0.0,
+            "simPct": 25.0
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 4,
+        "totalHistoricalRows": 4,
+        "avgValue": 2.0,
+        "avgScore": 54.27,
+        "maxScore": 69.7,
+        "bins": {
+          "Good v2": 2,
+          "Loose v2": 1,
+          "Partial v2": 1
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 2.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 2.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "K",
+      "statDisplay": "Pitcher Strikeouts",
+      "detailFile": "pitcher_694346_k.json",
+      "sampleType": "historical_games",
+      "recentWindow": 4,
+      "playerType": "pitcher",
+      "modelPred": 3.47001385173483,
+      "modelPredDisplay": "3.47",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.2,
+      "samples": {
+        "prior": null,
+        "r10": 1.5,
+        "r5": 1.5,
+        "r3": 1.5
+      },
+      "recent5Avg": 1.25,
+      "allGamesAvg": 1.25,
+      "comparisonLine": 1.25,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 4,
+      "lineOptions": [
+        {
+          "line": 2.5,
+          "probability": 0.6735709406576632,
+          "probabilityDisplay": "67.4%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 3.5,
+          "probability": 0.45688311736191156,
+          "probabilityDisplay": "45.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 4.5,
+          "probability": 0.2689056802772798,
+          "probabilityDisplay": "26.9%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 4,
+        "avgValue": 1.25,
+        "maxSimScore": 28.0,
+        "bins": {
+          "Close 25%": 1,
+          "Closest 25%": 1,
+          "Far 25%": 1,
+          "Mid 25%": 1
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-06-08",
+            "opp": "SEA",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 28.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-05-27",
+            "opp": "TB",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 75.0
+          },
+          {
+            "gameDate": "2026-05-08",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 2.0,
+            "simScore": 20.0,
+            "simPct": 50.0
+          },
+          {
+            "gameDate": "2026-05-03",
+            "opp": "NYY",
+            "location": "Away",
+            "value": 2.0,
+            "simScore": 0.0,
+            "simPct": 25.0
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 4,
+        "totalHistoricalRows": 4,
+        "avgValue": 1.25,
+        "avgScore": 54.27,
+        "maxScore": 69.7,
+        "bins": {
+          "Good v2": 2,
+          "Loose v2": 1,
+          "Partial v2": 1
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 2.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 2.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "ER",
+      "statDisplay": "Pitcher Earned Runs",
+      "detailFile": "pitcher_694346_er.json",
+      "sampleType": "historical_games",
+      "recentWindow": 4,
+      "playerType": "pitcher",
+      "modelPred": 2.2771950586221954,
+      "modelPredDisplay": "2.28",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.2,
+      "samples": {
+        "prior": null,
+        "r10": 2.0,
+        "r5": 2.0,
+        "r3": 2.0
+      },
+      "recent5Avg": 2.0,
+      "allGamesAvg": 2.0,
+      "comparisonLine": 2.0,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 4,
+      "lineOptions": [
+        {
+          "line": 0.5,
+          "probability": 0.8974284893337489,
+          "probabilityDisplay": "89.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 1.5,
+          "probability": 0.663853152089148,
+          "probabilityDisplay": "66.4%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 2.5,
+          "probability": 0.3979048501944389,
+          "probabilityDisplay": "39.8%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 3.5,
+          "probability": 0.19603279721990718,
+          "probabilityDisplay": "19.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 4,
+        "avgValue": 2.0,
+        "maxSimScore": 28.0,
+        "bins": {
+          "Close 25%": 1,
+          "Closest 25%": 1,
+          "Far 25%": 1,
+          "Mid 25%": 1
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-06-08",
+            "opp": "SEA",
+            "location": "Home",
+            "value": 3.0,
+            "simScore": 28.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-05-27",
+            "opp": "TB",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 75.0
+          },
+          {
+            "gameDate": "2026-05-08",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 50.0
+          },
+          {
+            "gameDate": "2026-05-03",
+            "opp": "NYY",
+            "location": "Away",
+            "value": 3.0,
+            "simScore": 0.0,
+            "simPct": 25.0
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 4,
+        "totalHistoricalRows": 4,
+        "avgValue": 2.0,
+        "avgScore": 54.27,
+        "maxScore": 69.7,
+        "bins": {
+          "Good v2": 2,
+          "Loose v2": 1,
+          "Partial v2": 1
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 3.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 3.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "HA",
+      "statDisplay": "Pitcher Hits Allowed",
+      "detailFile": "pitcher_694346_ha.json",
+      "sampleType": "historical_games",
+      "recentWindow": 4,
+      "playerType": "pitcher",
+      "modelPred": 4.699037235777084,
+      "modelPredDisplay": "4.70",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.2,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 4.5,
+      "allGamesAvg": 4.5,
+      "comparisonLine": 4.5,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 4,
+      "lineOptions": [
+        {
+          "line": 3.5,
+          "probability": 0.6901648765864354,
+          "probabilityDisplay": "69.0%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 4.5,
+          "probability": 0.5052131617770498,
+          "probabilityDisplay": "50.5%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 5.5,
+          "probability": 0.3313941628350243,
+          "probabilityDisplay": "33.1%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 4,
+        "avgValue": 4.5,
+        "maxSimScore": 28.0,
+        "bins": {
+          "Close 25%": 1,
+          "Closest 25%": 1,
+          "Far 25%": 1,
+          "Mid 25%": 1
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-06-08",
+            "opp": "SEA",
+            "location": "Home",
+            "value": 5.0,
+            "simScore": 28.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-05-27",
+            "opp": "TB",
+            "location": "Home",
+            "value": 6.0,
+            "simScore": 20.0,
+            "simPct": 75.0
+          },
+          {
+            "gameDate": "2026-05-08",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 3.0,
+            "simScore": 20.0,
+            "simPct": 50.0
+          },
+          {
+            "gameDate": "2026-05-03",
+            "opp": "NYY",
+            "location": "Away",
+            "value": 4.0,
+            "simScore": 0.0,
+            "simPct": 25.0
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 4,
+        "totalHistoricalRows": 4,
+        "avgValue": 4.5,
+        "avgScore": 54.27,
+        "maxScore": 69.7,
+        "bins": {
+          "Good v2": 2,
+          "Loose v2": 1,
+          "Partial v2": 1
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "IP",
+      "statDisplay": "Pitcher Innings Pitched",
+      "detailFile": "pitcher_694346_ip.json",
+      "sampleType": "historical_games",
+      "recentWindow": 4,
+      "playerType": "pitcher",
+      "modelPred": 4.2,
+      "modelPredDisplay": "4.20",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.2,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 3.9,
+      "allGamesAvg": 3.9,
+      "comparisonLine": 3.9,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 4,
+      "lineOptions": [
+        {
+          "line": 4.0,
+          "probability": null,
+          "probabilityDisplay": null,
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 5.0,
+          "probability": null,
+          "probabilityDisplay": null,
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 4,
+        "avgValue": 3.9,
+        "maxSimScore": 28.0,
+        "bins": {
+          "Close 25%": 1,
+          "Closest 25%": 1,
+          "Far 25%": 1,
+          "Mid 25%": 1
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-06-08",
+            "opp": "SEA",
+            "location": "Home",
+            "value": 4.2,
+            "simScore": 28.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-05-27",
+            "opp": "TB",
+            "location": "Home",
+            "value": 5.2,
+            "simScore": 20.0,
+            "simPct": 75.0
+          },
+          {
+            "gameDate": "2026-05-08",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 2.0,
+            "simScore": 20.0,
+            "simPct": 50.0
+          },
+          {
+            "gameDate": "2026-05-03",
+            "opp": "NYY",
+            "location": "Away",
+            "value": 4.2,
+            "simScore": 0.0,
+            "simPct": 25.0
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 4,
+        "totalHistoricalRows": 4,
+        "avgValue": 3.9,
+        "avgScore": 54.27,
+        "maxScore": 69.7,
+        "bins": {
+          "Good v2": 2,
+          "Loose v2": 1,
+          "Partial v2": 1
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.2,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.2,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.2,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.2,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 24.89,
+            "simPctV2": 24.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 5.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (4.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 24.89,
+            "simPct": 24.89,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 2.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 53.19,
+            "simPctV2": 53.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 2.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 53.19,
+            "simPct": 53.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.2,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5.2)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.2,
+            "minutes": 4.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.7,
+            "simPctV2": 69.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 5.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4.2)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.7,
+            "simPct": 69.7,
+            "simBin": "Good v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "OUTS",
+      "statDisplay": "Pitcher Outs",
+      "detailFile": "pitcher_694346_outs.json",
+      "sampleType": "historical_games",
+      "recentWindow": 4,
+      "playerType": "pitcher",
+      "modelPred": 14.20638188855467,
+      "modelPredDisplay": "14.21",
+      "modelSigma": null,
+      "contextMetricLabel": "Outs",
+      "contextMetricValue": 14.20638188855467,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 12.75,
+      "allGamesAvg": 12.75,
+      "comparisonLine": 12.75,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 4,
+      "lineOptions": [
+        {
+          "line": 11.5,
+          "probability": 0.7569841629587639,
+          "probabilityDisplay": "75.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 14.5,
+          "probability": 0.45142652203722,
+          "probabilityDisplay": "45.1%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 4,
+        "avgValue": 12.75,
+        "maxSimScore": 28.0,
+        "bins": {
+          "Close 25%": 1,
+          "Closest 25%": 1,
+          "Far 25%": 1,
+          "Mid 25%": 1
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-06-08",
+            "opp": "SEA",
+            "location": "Home",
+            "value": 14.0,
+            "simScore": 28.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-05-27",
+            "opp": "TB",
+            "location": "Home",
+            "value": 17.0,
+            "simScore": 20.0,
+            "simPct": 75.0
+          },
+          {
+            "gameDate": "2026-05-08",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 6.0,
+            "simScore": 20.0,
+            "simPct": 50.0
+          },
+          {
+            "gameDate": "2026-05-03",
+            "opp": "NYY",
+            "location": "Away",
+            "value": 14.0,
+            "simScore": 0.0,
+            "simPct": 25.0
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 4,
+        "totalHistoricalRows": 4,
+        "avgValue": 12.75,
+        "avgScore": 57.27,
+        "maxScore": 72.7,
+        "bins": {
+          "Good v2": 2,
+          "Loose v2": 1,
+          "Partial v2": 1
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 14.0,
+            "minutes": 14.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 72.7,
+            "simPctV2": 72.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (14)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 72.7,
+            "simPct": 72.7,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 17.0,
+            "minutes": 17.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (17)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 59.19,
+            "simPctV2": 59.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 8.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 59.19,
+            "simPct": 59.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 14.0,
+            "minutes": 14.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.89,
+            "simPctV2": 27.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (14)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.89,
+            "simPct": 27.89,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823555",
+            "gameId": 823555,
+            "gameDate": "2026-05-03",
+            "label": "2026-05-03",
+            "shortLabel": "05-03",
+            "seq": 1,
+            "opp": "NYY",
+            "location": "Away",
+            "isHome": 0,
+            "value": 14.0,
+            "minutes": 14.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Yankee Stadium",
+            "temperatureF": 57.2,
+            "windMph": 27.7,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.89,
+            "simPctV2": 27.89,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 7.89,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (14)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.89,
+            "simPct": 27.89,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824846",
+            "gameId": 824846,
+            "gameDate": "2026-05-08",
+            "label": "2026-05-08",
+            "shortLabel": "05-08",
+            "seq": 2,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 70.0,
+            "windMph": 4.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 59.19,
+            "simPctV2": 59.19,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.0,
+              "windSimilarity": 1.23,
+              "sampleContext": 8.0,
+              "recency": 9.96,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 59.19,
+            "simPct": 59.19,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824836",
+            "gameId": 824836,
+            "gameDate": "2026-05-27",
+            "label": "2026-05-27",
+            "shortLabel": "05-27",
+            "seq": 3,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 17.0,
+            "minutes": 17.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 77.7,
+            "windMph": 6.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 69.32,
+            "simPctV2": 69.32,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 1.93,
+              "sampleContext": 8.0,
+              "recency": 17.85,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (17)",
+              "recent sample (17d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 69.32,
+            "simPct": 69.32,
+            "simBin": "Good v2"
+          },
+          {
+            "gameKey": "id:824829",
+            "gameId": 824829,
+            "gameDate": "2026-06-08",
+            "label": "2026-06-08",
+            "shortLabel": "06-08",
+            "seq": 4,
+            "opp": "SEA",
+            "location": "Home",
+            "isHome": 1,
+            "value": 14.0,
+            "minutes": 14.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Oriole Park at Camden Yards",
+            "temperatureF": 74.0,
+            "windMph": 6.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 72.7,
+            "simPctV2": 72.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 2.8,
+              "windSimilarity": 1.9,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (14)",
+              "recent sample (5d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 72.7,
+            "simPct": 72.7,
+            "simBin": "Good v2"
+          }
+        ]
+      }
+    }
+  ],
+  "combinedGameLog": [
+    {
+      "gameKey": "id:823555",
+      "gameId": 823555,
+      "gameDate": "2026-05-03",
+      "label": "2026-05-03",
+      "shortLabel": "05-03",
+      "seq": 1,
+      "opp": "NYY",
+      "location": "Away",
+      "isHome": 0,
+      "minutes": 4.2,
+      "contextValue": 4.2,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 4.0,
+          "rawValue": 4.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 4.2,
+          "rawValue": 4.2,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 14.0,
+          "rawValue": 14.0,
+          "minutes": 14.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:824846",
+      "gameId": 824846,
+      "gameDate": "2026-05-08",
+      "label": "2026-05-08",
+      "shortLabel": "05-08",
+      "seq": 2,
+      "opp": "OAK",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 2.0,
+      "contextValue": 2.0,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 2.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 2.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 2.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 2.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 2.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 6.0,
+          "rawValue": 6.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:824836",
+      "gameId": 824836,
+      "gameDate": "2026-05-27",
+      "label": "2026-05-27",
+      "shortLabel": "05-27",
+      "seq": 3,
+      "opp": "TB",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 5.2,
+      "contextValue": 5.2,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 4.0,
+          "rawValue": 4.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 6.0,
+          "rawValue": 6.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 5.2,
+          "rawValue": 5.2,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 17.0,
+          "rawValue": 17.0,
+          "minutes": 17.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:824829",
+      "gameId": 824829,
+      "gameDate": "2026-06-08",
+      "label": "2026-06-08",
+      "shortLabel": "06-08",
+      "seq": 4,
+      "opp": "SEA",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 4.2,
+      "contextValue": 4.2,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 5.0,
+          "rawValue": 5.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 4.2,
+          "rawValue": 4.2,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 4.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 14.0,
+          "rawValue": 14.0,
+          "minutes": 14.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    }
+  ],
+  "chartSeries": [
+    {
+      "stat": "BB",
+      "label": "Pitcher Walks Allowed",
+      "modelPred": 1.905471992751922,
+      "sampleType": "historical_games",
+      "x": [
+        "05-03",
+        "05-08",
+        "05-27",
+        "06-08"
+      ],
+      "gameKeys": [
+        "id:823555",
+        "id:824846",
+        "id:824836",
+        "id:824829"
+      ],
+      "y": [
+        2.0,
+        1.0,
+        4.0,
+        1.0
+      ]
+    },
+    {
+      "stat": "K",
+      "label": "Pitcher Strikeouts",
+      "modelPred": 3.47001385173483,
+      "sampleType": "historical_games",
+      "x": [
+        "05-03",
+        "05-08",
+        "05-27",
+        "06-08"
+      ],
+      "gameKeys": [
+        "id:823555",
+        "id:824846",
+        "id:824836",
+        "id:824829"
+      ],
+      "y": [
+        2.0,
+        2.0,
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "stat": "ER",
+      "label": "Pitcher Earned Runs",
+      "modelPred": 2.2771950586221954,
+      "sampleType": "historical_games",
+      "x": [
+        "05-03",
+        "05-08",
+        "05-27",
+        "06-08"
+      ],
+      "gameKeys": [
+        "id:823555",
+        "id:824846",
+        "id:824836",
+        "id:824829"
+      ],
+      "y": [
+        3.0,
+        1.0,
+        1.0,
+        3.0
+      ]
+    },
+    {
+      "stat": "HA",
+      "label": "Pitcher Hits Allowed",
+      "modelPred": 4.699037235777084,
+      "sampleType": "historical_games",
+      "x": [
+        "05-03",
+        "05-08",
+        "05-27",
+        "06-08"
+      ],
+      "gameKeys": [
+        "id:823555",
+        "id:824846",
+        "id:824836",
+        "id:824829"
+      ],
+      "y": [
+        4.0,
+        3.0,
+        6.0,
+        5.0
+      ]
+    },
+    {
+      "stat": "IP",
+      "label": "Pitcher Innings Pitched",
+      "modelPred": 4.2,
+      "sampleType": "historical_games",
+      "x": [
+        "05-03",
+        "05-08",
+        "05-27",
+        "06-08"
+      ],
+      "gameKeys": [
+        "id:823555",
+        "id:824846",
+        "id:824836",
+        "id:824829"
+      ],
+      "y": [
+        4.2,
+        2.0,
+        5.2,
+        4.2
+      ]
+    },
+    {
+      "stat": "OUTS",
+      "label": "Pitcher Outs",
+      "modelPred": 14.20638188855467,
+      "sampleType": "historical_games",
+      "x": [
+        "05-03",
+        "05-08",
+        "05-27",
+        "06-08"
+      ],
+      "gameKeys": [
+        "id:823555",
+        "id:824846",
+        "id:824836",
+        "id:824829"
+      ],
+      "y": [
+        14.0,
+        6.0,
+        17.0,
+        14.0
+      ]
+    }
+  ],
+  "uiHints": {
+    "defaultSelectedStats": [
+      "BB",
+      "K",
+      "ER"
+    ],
+    "recommendedChartMode": "smallMultiples",
+    "canUseNormalizedMultiLine": true,
+    "primaryStat": "BB"
+  },
+  "dataQuality": {
+    "multiPropReady": true,
+    "coreBatterPropsReady": false,
+    "availableStatCount": 6,
+    "warnings": [
+      "historical opposing-lineup handedness not available in pitcher start rows yet",
+      "historical pitcher pitch mix not available in start rows yet"
+    ]
+  }
+}
