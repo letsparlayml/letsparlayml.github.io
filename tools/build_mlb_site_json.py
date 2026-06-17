@@ -681,11 +681,22 @@ def local_date(value: Any, tz_name: str = DISPLAY_TIMEZONE) -> str:
 
 
 def game_display_date(row: pd.Series, tz_name: str = DISPLAY_TIMEZONE) -> str:
+    # gameDate_mlb_local is the model's authoritative MLB-local calendar date.
+    # Keep gameDate only as the UTC start timestamp; using its UTC calendar date
+    # for slate grouping moves late evening games into the following day.
+    for field in ('gameDate_mlb_local', 'target_game_date'):
+        value = row.get(field)
+        ts = pd.to_datetime(value, errors="coerce")
+        if not pd.isna(ts):
+            return ts.date().isoformat()
+
+    # Backward-compatible fallback for older workbooks that predate the explicit
+    # MLB-local date columns. Timezone-aware timestamps are converted to Denver;
+    # naive values preserve their written calendar date.
     game_dt = local_date(row.get('gameDate'), tz_name)
     if game_dt:
         return game_dt
-    return local_date(row.get('target_game_date') or row.get('gameDate'), tz_name) or iso_date(row.get('target_game_date') or row.get('gameDate'))
-
+    return iso_date(row.get('gameDate'))
 
 def iso_datetime_utc(value: Any) -> str:
     ts = pd.to_datetime(value, errors="coerce", utc=True)
@@ -1004,7 +1015,7 @@ def build_props_from_workbook(workbook_path: Path | None, game_lookup: dict[tupl
 
     rows = []
     for _, row in df.head(limit).iterrows():
-        game_date = local_date(row.get('gameDate')) or iso_date(row.get('gameDate'))
+        game_date = game_display_date(row)
         team = clean_str(row.get('team'))
         opp = clean_str(row.get('opponent'))
         lookup = game_lookup.get((game_date, team, opp), {})

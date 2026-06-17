@@ -259,6 +259,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--keep-old-details', action='store_true')
     return parser.parse_args()
 
+def slate_date(value: Any) -> str:
+    """Return the model slate date without applying UTC conversion."""
+    try:
+        ts = pd.to_datetime(value, errors='coerce')
+    except Exception:
+        return ''
+    if pd.isna(ts):
+        return ''
+    return ts.date().isoformat()
+
 def display_date_from_game_ts(value: Any) -> str:
     try:
         ts = pd.to_datetime(value, utc=True)
@@ -302,7 +312,7 @@ def build_game_lookup(game_df: pd.DataFrame) -> dict[int, dict[str, Any]]:
         away = clean_str(row.get('away_team'))
         home = clean_str(row.get('home_team'))
         game_ts = display_ts(row.get('gameDate'))
-        display_date = display_date_from_game_ts(row.get('gameDate')) or clean_str(row.get('target_game_date'))
+        display_date = slate_date(row.get('target_game_date')) or display_date_from_game_ts(row.get('gameDate'))
         lookup[game_pk] = {
             'gameDate': display_date,
             'gameTs': game_ts.isoformat() if game_ts is not None else '',
