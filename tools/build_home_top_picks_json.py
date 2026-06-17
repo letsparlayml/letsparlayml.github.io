@@ -599,6 +599,63 @@ def game_url(game: dict[str, Any]) -> str:
     return "game.html?id=" + str(game.get("id") or "")
 
 
+
+def calibrated_moneyline_pick(game: dict[str, Any]) -> tuple[str, float | None, float | None, bool]:
+    """Return public calibrated ML team, probability, odds, and flip status."""
+    away_team = str(game.get("awayTeam") or "")
+    home_team = str(game.get("homeTeam") or "")
+
+    team = str(game.get("calibratedMoneylineTeam") or "")
+    probability = pct(game.get("calibratedMoneylineWinProb"))
+    flipped = bool(game.get("calibratedMoneylineFlipped"))
+
+    if team not in {away_team, home_team} or probability is None:
+        raw_team = str(game.get("modelPickTeam") or "")
+        raw_probability = pct(
+            game.get("calibratedModelPickWinProb")
+            if game.get("calibratedModelPickWinProb") is not None
+            else game.get("modelMoneylineProb")
+        )
+        if raw_team in {away_team, home_team} and raw_probability is not None:
+            if raw_probability < 0.5:
+                team = home_team if raw_team == away_team else away_team
+                probability = 1.0 - raw_probability
+                flipped = True
+            else:
+                team = raw_team
+                probability = raw_probability
+                flipped = False
+
+    if team not in {away_team, home_team} or probability is None:
+        away_probability = pct(game.get("awayWinProb"))
+        home_probability = pct(game.get("homeWinProb"))
+        if away_probability is not None or home_probability is not None:
+            if (away_probability if away_probability is not None else -1) >= (home_probability if home_probability is not None else -1):
+                team, probability = away_team, away_probability
+            else:
+                team, probability = home_team, home_probability
+
+    odds = num(game.get("homeML")) if team == home_team else num(game.get("awayML")) if team == away_team else None
+    return team, probability, odds, flipped
+
+
+def calibrated_moneyline_reason(game: dict[str, Any], team: str, probability: float | None) -> str:
+    away_score = num(game.get("modelAwayScore"))
+    home_score = num(game.get("modelHomeScore"))
+    away_team = str(game.get("awayTeam") or "")
+    home_team = str(game.get("homeTeam") or "")
+    if away_score is None or home_score is None or not team:
+        return f"Calibrated win probability {(probability or 0) * 100:.0f}%"
+
+    score_team = away_team if away_score > home_score else home_team if home_score > away_score else ""
+    if score_team and score_team != team:
+        return (
+            f"Calibrated ML probability favors {team}, while the average score projection leans "
+            f"{score_team} {fmt_num(home_score, 1)}-{fmt_num(away_score, 1)}. "
+            f"The ML pick follows the calibrated chance of winning."
+        )
+    return f"Calibrated win probability {(probability or 0) * 100:.0f}%"
+
 def compact_game(game: dict[str, Any], tracker: dict[str, Any], *, kind: str, title: str, pick: str,
                  probability: float | None, reason: str) -> dict[str, Any]:
     return {
@@ -633,10 +690,7 @@ def game_leg_metadata(game: dict[str, Any], kind: str) -> dict[str, Any]:
     line_pair_valid = True
 
     if market == "ML":
-        side = str(game.get("modelPickSide") or "").upper()
-        selected_odds = num(game.get("homeML")) if side == "HOME" else num(game.get("awayML")) if side == "AWAY" else None
-        if selected_odds is None and game.get("moneylineActionable") is None:
-            selected_odds = num(game.get("homeML")) if str(game.get("modelPickTeam") or "") == str(game.get("homeTeam") or "") else num(game.get("awayML"))
+        _, _, selected_odds, _ = calibrated_moneyline_pick(game)
         reprice_required = bool(game.get("moneylineRepriceRequired"))
         actionable = game.get("moneylineActionable") is True
         if game.get("moneylineActionable") is None:
@@ -725,32 +779,17 @@ def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: l
         matchup = f"{g.get('awayTeam')} @ {g.get('homeTeam')}"
         candidates: list[dict[str, Any]] = []
 
-        # Moneyline: always pair the team with its own calibrated probability and
-        # current scraped price.
-        away_prob = pct(g.get("awayWinProb"))
-        home_prob = pct(g.get("homeWinProb"))
-        if away_prob is not None or home_prob is not None:
-            if (away_prob if away_prob is not None else -1) >= (home_prob if home_prob is not None else -1):
-                team, probability, odds = g.get("awayTeam"), away_prob, num(g.get("awayML"))
-            else:
-                team, probability, odds = g.get("homeTeam"), home_prob, num(g.get("homeML"))
-            if probability is not None and odds is not None:
-                candidates.append({
-                    "id": g.get("id"), "league": league, "matchup": matchup,
-                    "pick": f"ML · {team} ({fmt_american(odds)})",
-                    "probability": probability,
-                    "modelScore": (
-                        f"Calibrated ML probability favors {team}, while the average score projection leans "
-                        f"{(g.get('awayTeam') if (num(g.get('modelAwayScore')) or 0) > (num(g.get('modelHomeScore')) or 0) else g.get('homeTeam'))} "
-                        f"{fmt_num(num(g.get('modelHomeScore')), 1)}-{fmt_num(num(g.get('modelAwayScore')), 1)}. "
-                        f"The ML pick follows the calibrated chance of winning."
-                        if num(g.get("modelAwayScore")) is not None
-                        and num(g.get("modelHomeScore")) is not None
-                        and team != (g.get("awayTeam") if num(g.get("modelAwayScore")) > num(g.get("modelHomeScore")) else g.get("homeTeam"))
-                        else f"Calibrated win probability {probability * 100:.0f}%"
-                    ),
-                    "href": game_url(g), "market": "ML", "priced": True,
-                })
+        # Moneyline: calibrated_model_pick_win_prob belongs to modelPickTeam.
+        # When it is below 50%, the public side flips to the opponent.
+        team, probability, odds, _ = calibrated_moneyline_pick(g)
+        if probability is not None and odds is not None and team:
+            candidates.append({
+                "id": g.get("id"), "league": league, "matchup": matchup,
+                "pick": f"ML · {team} ({fmt_american(odds)})",
+                "probability": probability,
+                "modelScore": calibrated_moneyline_reason(g, team, probability),
+                "href": game_url(g), "market": "ML", "priced": True,
+            })
 
         # Spread: compare both sides when the exact +/-1.5 probabilities exist.
         away_line = num(g.get("awaySpread") if g.get("awaySpread") is not None else g.get("marketSpread"))
@@ -843,12 +882,19 @@ def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: l
 
     # Preserve the featured-card selection below; this is separate from the
     # condensed one-best-market-per-game board.
-    top_ml = next((g for g in sorted(today, key=lambda x: pct(x.get('favoriteWinProb')) or 0, reverse=True) if g.get('moneylineActionable') is not False and not g.get('calibratedProbabilityRejectsScorePick') and (pct(g.get('favoriteWinProb')) or 0) >= 0.58), None)
-    if top_ml:
+    calibrated_ml_candidates = []
+    for game in today:
+        team, probability, odds, _ = calibrated_moneyline_pick(game)
+        if team and probability is not None and odds is not None:
+            calibrated_ml_candidates.append((probability, game, team))
+    calibrated_ml_candidates.sort(key=lambda item: item[0], reverse=True)
+    top_ml_entry = next((item for item in calibrated_ml_candidates if item[0] >= 0.58), None)
+    if top_ml_entry:
+        probability, top_ml, team = top_ml_entry
         cards.append(compact_game(
             top_ml, game_tracker(results_history, "mlResult", str(top_ml.get("league") or ""), 40),
-            kind="ML", title="Strongest Game Lean", pick=top_ml.get("favoriteWinLabel") or "Favorite win",
-            probability=pct(top_ml.get("favoriteWinProb")), reason=top_ml.get("summary") or "Top win-probability signal on today’s board."
+            kind="ML", title="Strongest Game Lean", pick=f"{team} ML",
+            probability=probability, reason=calibrated_moneyline_reason(top_ml, team, probability)
         ))
 
     total_candidates = []
@@ -1027,13 +1073,22 @@ def build_game_parlay_candidates(games: list[dict[str, Any]], date: str, results
         matchup = f"{g.get('awayTeam', '')} @ {g.get('homeTeam', '')}"
         summary = str(g.get("summary") or "")
 
-        # Existing model probabilities when available.
-        fav_prob = pct(g.get("favoriteWinProb"))
-        if g.get('moneylineActionable') is not False and not g.get('calibratedProbabilityRejectsScorePick') and fav_prob is not None and fav_prob >= 0.55:
+        # Formal parlay eligibility still respects recommendation gates, while
+        # the selected team/probability pair follows the calibrated ML side.
+        ml_team, ml_probability, ml_odds, ml_flipped = calibrated_moneyline_pick(g)
+        if (
+            g.get('moneylineActionable') is not False
+            and not g.get('calibratedProbabilityRejectsScorePick')
+            and not ml_flipped
+            and ml_team
+            and ml_probability is not None
+            and ml_probability >= 0.55
+            and ml_odds is not None
+        ):
             candidates.append(compact_game(
                 g, game_tracker(results_history, "mlResult", league, 40),
-                kind="ML", title="Game Winner", pick=g.get("favoriteWinLabel") or "Game winner",
-                probability=fav_prob, reason=g.get("summary") or "Model win-probability signal."
+                kind="ML", title="Game Winner", pick=f"{ml_team} ML",
+                probability=ml_probability, reason=calibrated_moneyline_reason(g, ml_team, ml_probability)
             ))
 
         spread_pick = derived_spread_pick(g)

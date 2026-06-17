@@ -120,6 +120,71 @@ def choose_win_team_and_prob(row: pd.Series) -> tuple[str, float | None]:
     return favorite_team, None
 
 
+
+def normalized_probability(value: Any) -> float | None:
+    probability = safe_float(value)
+    if probability is None:
+        return None
+    if 1.0 < probability <= 100.0:
+        probability /= 100.0
+    if probability < 0.0 or probability > 1.0:
+        return None
+    return probability
+
+
+def choose_public_calibrated_moneyline(row: pd.Series) -> dict[str, Any]:
+    """Resolve the public ML side from the calibrated probability layer.
+
+    `calibrated_model_pick_win_prob` is the calibrated probability assigned to
+    `model_pick_team`. When that probability is below 50%, calibration favors
+    the opponent. The public ML team therefore flips to the opponent and the
+    displayed probability becomes 1 - p.
+
+    Raw model-pick fields remain available for audits and recommendation gates.
+    """
+    home_team = clean_str(row.get("home_team"))
+    away_team = clean_str(row.get("away_team"))
+    raw_team = first_text(row, ["model_pick_team"])
+    raw_side = first_text(row, ["model_pick_side"]).upper()
+    raw_probability = normalized_probability(first_number(row, ["calibrated_model_pick_win_prob"]))
+
+    if raw_team not in {home_team, away_team}:
+        if raw_side in {"HOME", "HOME_ML", "HOME_MONEYLINE"}:
+            raw_team = home_team
+        elif raw_side in {"AWAY", "AWAY_ML", "AWAY_MONEYLINE"}:
+            raw_team = away_team
+
+    if raw_team in {home_team, away_team} and raw_probability is not None:
+        flipped = raw_probability < 0.5
+        if flipped:
+            public_team = away_team if raw_team == home_team else home_team
+            public_probability = 1.0 - raw_probability
+        else:
+            public_team = raw_team
+            public_probability = raw_probability
+        return {
+            "team": public_team,
+            "probability": public_probability,
+            "side": "HOME" if public_team == home_team else "AWAY",
+            "flipped": flipped,
+            "rawTeam": raw_team,
+            "rawProbability": raw_probability,
+            "source": "CALIBRATED_MODEL_PICK",
+        }
+
+    # Backward-compatible fallback for older workbooks without the v86n
+    # calibrated model-pick fields.
+    fallback_team, fallback_probability = choose_win_team_and_prob(row)
+    return {
+        "team": fallback_team,
+        "probability": normalized_probability(fallback_probability),
+        "side": "HOME" if fallback_team == home_team else "AWAY" if fallback_team == away_team else "",
+        "flipped": False,
+        "rawTeam": raw_team,
+        "rawProbability": raw_probability,
+        "source": "HOME_AWAY_WIN_PROB_FALLBACK",
+    }
+
 def choose_market_runline_pick(row: pd.Series, market_spread: float | None) -> tuple[str, float | None, str]:
     """Return the model's preferred side of the actual market run line.
 
@@ -293,25 +358,38 @@ def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = 
             market_price_status = 'PARTIAL'
 
     # Moneyline recommendation/calibration fields.
-    model_pick_team = first_text(row, ['model_pick_team'])
-    model_pick_side = first_text(row, ['model_pick_side'])
-    model_pick_prob = first_number(row, ['calibrated_model_pick_win_prob'])
+    raw_model_pick_team = first_text(row, ['model_pick_team'])
+    raw_model_pick_side = first_text(row, ['model_pick_side'])
+    raw_model_pick_prob = normalized_probability(first_number(row, ['calibrated_model_pick_win_prob']))
+    public_ml = choose_public_calibrated_moneyline(row)
+    public_ml_team = clean_str(public_ml.get('team'))
+    public_ml_prob = normalized_probability(public_ml.get('probability'))
+    public_ml_side = clean_str(public_ml.get('side'))
+    public_ml_flipped = bool(public_ml.get('flipped'))
+
     bet_recommendation = first_text(row, ['bet_recommendation'])
     bet_reason = first_text(row, ['bet_reason'])
     model_pick_status = first_text(row, ['model_pick_status'])
     calibration_rejects = first_boolish(row, ['calibrated_probability_rejects_score_pick']) is True or model_pick_status.upper() == 'SCORE_PICK_REJECTED_BY_CALIBRATION'
-    if not model_pick_team:
-        model_pick_team, legacy_prob = choose_win_team_and_prob(row)
-        if model_pick_prob is None:
-            model_pick_prob = legacy_prob
+
     model_away_ml = first_number(row, ['away_ml'])
     model_home_ml = first_number(row, ['home_ml'])
-    model_pick_current_odds = home_ml if model_pick_team == home_team else away_ml if model_pick_team == away_team else None
-    model_pick_original_odds = model_home_ml if model_pick_team == home_team else model_away_ml if model_pick_team == away_team else None
-    moneyline_reprice_required = bool(use_archive_snapshot and model_pick_original_odds is not None and (
-        model_pick_current_odds is None or abs(model_pick_original_odds - model_pick_current_odds) > 0.001
+    public_ml_current_odds = home_ml if public_ml_team == home_team else away_ml if public_ml_team == away_team else None
+    public_ml_original_odds = model_home_ml if public_ml_team == home_team else model_away_ml if public_ml_team == away_team else None
+    moneyline_reprice_required = bool(use_archive_snapshot and public_ml_original_odds is not None and (
+        public_ml_current_odds is None or abs(public_ml_original_odds - public_ml_current_odds) > 0.001
     ))
-    moneyline_actionable = bool(model_pick_team and model_pick_current_odds is not None and not calibration_rejects and recommendation_is_actionable(bet_recommendation) and not moneyline_reprice_required)
+
+    # A flipped public signal is useful to show, but it is not automatically a
+    # formal BET. The original recommendation/calibration gates remain intact.
+    moneyline_actionable = bool(
+        public_ml_team
+        and public_ml_current_odds is not None
+        and not calibration_rejects
+        and not public_ml_flipped
+        and recommendation_is_actionable(bet_recommendation)
+        and not moneyline_reprice_required
+    )
 
     # Spread final recommendation. Side determines team; never infer it from sign.
     spread_side = first_text(row, ['spread_pick_side'])
@@ -380,7 +458,10 @@ def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = 
     total_market_label, market_over_prob, market_under_prob = choose_total_prob_fields(market_total, row, allow_fallback=False)
     fallback_total_label, fallback_over_prob, fallback_under_prob = choose_total_prob_fields(None, row, allow_fallback=True)
 
-    favorite_team, favorite_win_prob = choose_win_team_and_prob(row)
+    # Public favorite fields follow the calibrated ML side. Raw score/model-pick
+    # fields are preserved separately for audits and disagreement explanations.
+    favorite_team = public_ml_team
+    favorite_win_prob = public_ml_prob
     best_market = first_text(row, ['best_market']).upper()
     routed_market_actionable = {
         'MONEYLINE': moneyline_actionable,
@@ -394,12 +475,17 @@ def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = 
         'favoriteTeam': favorite_team,
         'favoriteWinLabel': f'{favorite_team} win' if favorite_team else 'Favorite win',
         'favoriteWinProb': favorite_win_prob,
-        'modelMoneylineLabel': f'{model_pick_team} ML' if model_pick_team and not calibration_rejects else '',
-        'modelMoneylineProb': model_pick_prob,
+        'modelMoneylineLabel': f'{public_ml_team} ML' if public_ml_team else '',
+        'modelMoneylineProb': public_ml_prob,
+        'calibratedMoneylineTeam': public_ml_team,
+        'calibratedMoneylineSide': public_ml_side,
+        'calibratedMoneylineWinProb': public_ml_prob,
+        'calibratedMoneylineFlipped': public_ml_flipped,
+        'calibratedMoneylineSource': public_ml.get('source'),
         'moneylineActionable': moneyline_actionable,
         'moneylineRepriceRequired': moneyline_reprice_required,
-        'modelPickTeam': model_pick_team, 'modelPickSide': model_pick_side,
-        'calibratedModelPickWinProb': model_pick_prob,
+        'modelPickTeam': raw_model_pick_team, 'modelPickSide': raw_model_pick_side,
+        'calibratedModelPickWinProb': raw_model_pick_prob,
         'probEdgeVsNovig': first_number(row, ['prob_edge_vs_novig']),
         'expectedRoi': first_number(row, ['expected_roi']),
         'betRecommendation': bet_recommendation, 'betReason': bet_reason,
@@ -1133,6 +1219,11 @@ def build_game_objects(
             'moneylineActionable': context.get('moneylineActionable'), 'moneylineRepriceRequired': context.get('moneylineRepriceRequired'),
             'modelPickTeam': context.get('modelPickTeam'), 'modelPickSide': context.get('modelPickSide'),
             'calibratedModelPickWinProb': context.get('calibratedModelPickWinProb'),
+            'calibratedMoneylineTeam': context.get('calibratedMoneylineTeam'),
+            'calibratedMoneylineSide': context.get('calibratedMoneylineSide'),
+            'calibratedMoneylineWinProb': context.get('calibratedMoneylineWinProb'),
+            'calibratedMoneylineFlipped': context.get('calibratedMoneylineFlipped'),
+            'calibratedMoneylineSource': context.get('calibratedMoneylineSource'),
             'probEdgeVsNovig': context.get('probEdgeVsNovig'), 'expectedRoi': context.get('expectedRoi'),
             'betRecommendation': context.get('betRecommendation'), 'betReason': context.get('betReason'),
             'modelPickStatus': context.get('modelPickStatus'),
@@ -1232,6 +1323,10 @@ def build_game_details(game_df: pd.DataFrame, pitcher_df: pd.DataFrame, batter_d
                 'awayWinProb': game.get('awayWinProb'),
                 'favoriteWinLabel': game.get('favoriteWinLabel'),
                 'favoriteWinProb': game.get('favoriteWinProb'),
+                'calibratedMoneylineTeam': game.get('calibratedMoneylineTeam'),
+                'calibratedMoneylineSide': game.get('calibratedMoneylineSide'),
+                'calibratedMoneylineWinProb': game.get('calibratedMoneylineWinProb'),
+                'calibratedMoneylineFlipped': game.get('calibratedMoneylineFlipped'),
                 'nrfiProb': game.get('nrfiProb'),
                 'yrfiProb': game.get('yrfiProb'),
                 'homeMinus1p5Prob': game.get('homeMinus1p5Prob'),

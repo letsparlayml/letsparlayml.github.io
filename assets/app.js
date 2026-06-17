@@ -246,34 +246,47 @@ function moneylineLayerExplanation(game, mlPick = null) {
 function actualMoneylinePick(game) {
   const awayTeam = String(game?.awayTeam || 'Away').toUpperCase();
   const homeTeam = String(game?.homeTeam || 'Home').toUpperCase();
-  const awayProb = coerceProbability(game?.awayWinProb);
-  const homeProb = coerceProbability(game?.homeWinProb);
 
-  // The public pick must be the side with the larger calibrated win
-  // probability. Do not pair modelPickTeam with a sub-50% probability.
-  let team = '';
-  let prob = NaN;
-  if (Number.isFinite(awayProb) || Number.isFinite(homeProb)) {
-    if ((Number.isFinite(awayProb) ? awayProb : -1) >= (Number.isFinite(homeProb) ? homeProb : -1)) {
-      team = awayTeam;
-      prob = awayProb;
-    } else {
-      team = homeTeam;
-      prob = homeProb;
+  // Preferred unambiguous fields written by the corrected site-data builder.
+  let team = String(game?.calibratedMoneylineTeam || '').toUpperCase();
+  let prob = coerceProbability(game?.calibratedMoneylineWinProb);
+
+  // Backward-compatible v86n derivation:
+  // calibratedModelPickWinProb belongs to modelPickTeam. A probability below
+  // 50% means calibration favors the opponent, so flip both team and probability.
+  if (![awayTeam, homeTeam].includes(team) || !Number.isFinite(prob)) {
+    const rawTeam = String(game?.modelPickTeam || '').toUpperCase();
+    const rawProb = coerceProbability(game?.calibratedModelPickWinProb ?? game?.modelMoneylineProb);
+    if ([awayTeam, homeTeam].includes(rawTeam) && Number.isFinite(rawProb)) {
+      if (rawProb < 0.5) {
+        team = rawTeam === awayTeam ? homeTeam : awayTeam;
+        prob = 1 - rawProb;
+      } else {
+        team = rawTeam;
+        prob = rawProb;
+      }
     }
   }
 
-  if (!team) {
-    team = String(game?.modelPickTeam || '').toUpperCase();
-    prob = coerceProbability(game?.calibratedModelPickWinProb ?? game?.modelMoneylineProb);
+  // Older-workbook fallback only when calibrated model-pick fields are absent.
+  if (![awayTeam, homeTeam].includes(team) || !Number.isFinite(prob)) {
+    const awayProb = coerceProbability(game?.awayWinProb);
+    const homeProb = coerceProbability(game?.homeWinProb);
+    if (Number.isFinite(awayProb) || Number.isFinite(homeProb)) {
+      if ((Number.isFinite(awayProb) ? awayProb : -1) >= (Number.isFinite(homeProb) ? homeProb : -1)) {
+        team = awayTeam;
+        prob = awayProb;
+      } else {
+        team = homeTeam;
+        prob = homeProb;
+      }
+    }
   }
+
+  // Final display fallback for very old records.
   if (![awayTeam, homeTeam].includes(team)) {
-    const awayScore = Number(game?.modelAwayScore);
-    const homeScore = Number(game?.modelHomeScore);
-    team = awayScore >= homeScore ? awayTeam : homeTeam;
-  }
-  if (!Number.isFinite(prob)) {
-    prob = team === awayTeam ? awayProb : homeProb;
+    const scoreWinner = projectedScoreWinner(game);
+    team = scoreWinner?.team || awayTeam;
   }
 
   const odds = team === awayTeam
