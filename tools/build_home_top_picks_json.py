@@ -739,7 +739,16 @@ def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: l
                     "id": g.get("id"), "league": league, "matchup": matchup,
                     "pick": f"ML · {team} ({fmt_american(odds)})",
                     "probability": probability,
-                    "modelScore": f"Model win probability {probability * 100:.0f}%",
+                    "modelScore": (
+                        f"Calibrated ML probability favors {team}, while the average score projection leans "
+                        f"{(g.get('awayTeam') if (num(g.get('modelAwayScore')) or 0) > (num(g.get('modelHomeScore')) or 0) else g.get('homeTeam'))} "
+                        f"{fmt_num(num(g.get('modelHomeScore')), 1)}-{fmt_num(num(g.get('modelAwayScore')), 1)}. "
+                        f"The ML pick follows the calibrated chance of winning."
+                        if num(g.get("modelAwayScore")) is not None
+                        and num(g.get("modelHomeScore")) is not None
+                        and team != (g.get("awayTeam") if num(g.get("modelAwayScore")) > num(g.get("modelHomeScore")) else g.get("homeTeam"))
+                        else f"Calibrated win probability {probability * 100:.0f}%"
+                    ),
                     "href": game_url(g), "market": "ML", "priced": True,
                 })
 

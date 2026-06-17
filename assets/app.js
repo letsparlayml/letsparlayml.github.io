@@ -217,6 +217,32 @@ function lineOddsText(value) {
   return odds ? ` (${odds})` : '';
 }
 
+
+function projectedScoreWinner(game) {
+  const awayTeam = String(game?.awayTeam || 'Away').toUpperCase();
+  const homeTeam = String(game?.homeTeam || 'Home').toUpperCase();
+  const awayScore = Number(game?.modelAwayScore);
+  const homeScore = Number(game?.modelHomeScore);
+  if (!Number.isFinite(awayScore) || !Number.isFinite(homeScore) || Math.abs(awayScore - homeScore) < 0.0001) {
+    return null;
+  }
+  return {
+    team: awayScore > homeScore ? awayTeam : homeTeam,
+    awayTeam,
+    homeTeam,
+    awayScore,
+    homeScore,
+  };
+}
+
+function moneylineLayerExplanation(game, mlPick = null) {
+  const pick = mlPick || actualMoneylinePick(game);
+  const scoreWinner = projectedScoreWinner(game);
+  if (!pick?.team || !scoreWinner || pick.team === scoreWinner.team) return '';
+
+  return `Calibrated ML probability favors ${pick.team}, while the average score projection leans ${scoreWinner.team} ${fmt(scoreWinner.homeScore, 1)}-${fmt(scoreWinner.awayScore, 1)}. The ML pick follows the calibrated chance of winning.`;
+}
+
 function actualMoneylinePick(game) {
   const awayTeam = String(game?.awayTeam || 'Away').toUpperCase();
   const homeTeam = String(game?.homeTeam || 'Home').toUpperCase();
@@ -371,12 +397,15 @@ function moneylineSignalText(game) {
 }
 
 function gameMarketSignalsHtml(game) {
+  const mlPick = actualMoneylinePick(game);
+  const mlExplanation = moneylineLayerExplanation(game, mlPick);
   return `
     <div class="game-signal-row" aria-label="Model picks at current scraped market lines">
-      <span class="game-signal-chip"><b>ML model pick</b> ${escapeHtml(moneylineSignalText(game))}</span>
+      <span class="game-signal-chip"><b>Calibrated ML pick</b> ${escapeHtml(moneylineSignalText(game))}</span>
       <span class="game-signal-chip"><b>Spread model pick</b> ${escapeHtml(spreadSignalText(game))}</span>
       <span class="game-signal-chip"><b>Total model pick</b> ${escapeHtml(totalSignalText(game))}</span>
     </div>
+    ${mlExplanation ? `<p class="game-layer-note">${escapeHtml(mlExplanation)}</p>` : ''}
   `;
 }
 
@@ -2194,7 +2223,7 @@ function strongestGameBoardSignal(game) {
       matchup,
       pick: `ML · ${ml.team}${lineOddsText(ml.odds)}`,
       probability: ml.prob,
-      modelScore: `Model win probability ${fmtPct(ml.prob, 0)}`,
+      modelScore: moneylineLayerExplanation(game, ml) || `Calibrated win probability ${fmtPct(ml.prob, 0)}`,
       href,
       market: 'ML',
       priced: true,

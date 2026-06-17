@@ -94,19 +94,30 @@ def choose_total_prob_fields(total_line: Any, row: pd.Series, *, allow_fallback:
 
 
 def choose_win_team_and_prob(row: pd.Series) -> tuple[str, float | None]:
+    """Return the team favored by the calibrated home/away win probabilities.
+
+    The score projection and calibrated win-probability layer may disagree in
+    very close games. Public ML fields must follow the calibrated probability
+    because that layer estimates the chance of winning. favorite_team is only a
+    backward-compatible fallback when both calibrated side probabilities are
+    missing.
+    """
     home_team = clean_str(row.get('home_team'))
     away_team = clean_str(row.get('away_team'))
     home_win = safe_float(row.get('home_win_prob'))
     away_win = safe_float(row.get('away_win_prob'))
+
+    if home_win is not None or away_win is not None:
+        if (home_win if home_win is not None else -1.0) >= (away_win if away_win is not None else -1.0):
+            return home_team, home_win
+        return away_team, away_win
+
     favorite_team = clean_str(row.get('favorite_team'))
-    if favorite_team:
-        if favorite_team == home_team:
-            return favorite_team, home_win
-        if favorite_team == away_team:
-            return favorite_team, away_win
-    if (home_win or 0) >= (away_win or 0):
-        return home_team, home_win
-    return away_team, away_win
+    if favorite_team == home_team:
+        return favorite_team, home_win
+    if favorite_team == away_team:
+        return favorite_team, away_win
+    return favorite_team, None
 
 
 def choose_market_runline_pick(row: pd.Series, market_spread: float | None) -> tuple[str, float | None, str]:
