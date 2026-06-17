@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import pandas as pd
+
 STAT_LABELS = {
     "H": "Hits",
     "TB": "Total Bases",
@@ -389,7 +391,215 @@ def first_inning_scope_flags(summary: Dict[str, Any]) -> Dict[str, bool]:
         "showLocationFirstInning": location_samples > 0,
     }
 
-def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List[Dict[str, Any]], pitcher: Dict[str, Any], first_inning_map: Dict[str, Any]) -> Dict[str, Any]:
+
+def first_existing_col(df: pd.DataFrame, names: List[str]) -> Optional[str]:
+    lower = {str(c).strip().lower(): c for c in df.columns}
+    for name in names:
+        if name.lower() in lower:
+            return lower[name.lower()]
+    return None
+
+
+def read_pitcher_log_files(mlb_data_dir: Optional[Path]) -> pd.DataFrame:
+    """Load the actual pitcher-game log table without depending on analyzer splits.
+
+    The scraper has used both `*_latest` files and dated/partitioned exports over
+    time. Prefer the canonical latest file, then fall back to concatenating all
+    readable files under pitcher_game_logs. This makes the game page independent
+    of whether the large analyzer split files were copied to the site correctly.
+    """
+    if not mlb_data_dir:
+        return pd.DataFrame()
+    root = mlb_data_dir / 'pitcher_game_logs'
+    if not root.exists():
+        return pd.DataFrame()
+
+    preferred = [
+        root / 'pitcher_game_logs_latest.parquet',
+        root / 'pitcher_game_logs_latest.csv',
+    ]
+    for path in preferred:
+        if not path.exists():
+            continue
+        try:
+            return pd.read_parquet(path) if path.suffix.lower() == '.parquet' else pd.read_csv(path)
+        except Exception:
+            pass
+
+    files = sorted(
+        [p for p in root.rglob('*') if p.is_file() and p.suffix.lower() in {'.parquet', '.csv'}],
+        key=lambda p: p.stat().st_mtime,
+    )
+    frames: List[pd.DataFrame] = []
+    for path in files:
+        try:
+            frame = pd.read_parquet(path) if path.suffix.lower() == '.parquet' else pd.read_csv(path)
+        except Exception:
+            continue
+        if frame is not None and not frame.empty:
+            frames.append(frame)
+    return pd.concat(frames, ignore_index=True, sort=False) if frames else pd.DataFrame()
+
+
+def boolish(value: Any) -> Optional[bool]:
+    if value is None:
+        return None
+    text = str(value).strip().lower()
+    if text in {'1', 'true', 'yes', 'y', 'starter', 'start', 'sp'}:
+        return True
+    if text in {'0', 'false', 'no', 'n', 'reliever', 'relief', 'rp'}:
+        return False
+    n = num(value)
+    if n is not None:
+        return n > 0
+    return None
+
+
+def baseball_ip_from_outs(outs: Any) -> Optional[float]:
+    n = num(outs)
+    if n is None:
+        return None
+    whole = int(round(n)) // 3
+    rem = int(round(n)) % 3
+    return float(f'{whole}.{rem}')
+
+
+def normalize_direct_pitcher_logs(mlb_data_dir: Optional[Path]) -> Dict[str, List[Dict[str, Any]]]:
+    raw = read_pitcher_log_files(mlb_data_dir)
+    if raw.empty:
+        return {}
+
+    pid_col = first_existing_col(raw, ['player_id', 'pitcher_id', 'playerId', 'pitcherId', 'mlbam_id'])
+    name_col = first_existing_col(raw, ['player_name', 'pitcher_name', 'fullName', 'player', 'pitcher', 'name'])
+    date_local_col = first_existing_col(raw, ['gameDate_mlb_local', 'gameDateLocal', 'game_date_local', 'date_local'])
+    date_col = first_existing_col(raw, ['gameDate', 'game_date', 'date', 'game_datetime'])
+    if not pid_col and not name_col:
+        return {}
+    if not date_local_col and not date_col:
+        return {}
+
+    game_col = first_existing_col(raw, ['gamePk', 'game_pk', 'gameId', 'game_id'])
+    opp_col = first_existing_col(raw, ['opponent', 'opp', 'opponent_team', 'opp_team'])
+    team_col = first_existing_col(raw, ['team', 'team_abbr', 'pitching_team'])
+    loc_col = first_existing_col(raw, ['location', 'home_away', 'homeAway'])
+    home_col = first_existing_col(raw, ['isHome', 'is_home'])
+    side_col = first_existing_col(raw, ['team_side', 'side'])
+    starter_col = first_existing_col(raw, ['isStarter', 'is_starter', 'starter', 'gamesStarted', 'GS', 'role', 'appearance_type'])
+    outs_col = first_existing_col(raw, ['outsRecorded', 'outs_recorded', 'outs'])
+    ip_col = first_existing_col(raw, ['inningsPitched', 'innings_pitched', 'IP', 'ip'])
+    k_col = first_existing_col(raw, ['strikeOuts', 'strikeouts', 'SO', 'so', 'Ks', 'K', 'k'])
+    h_col = first_existing_col(raw, ['hitsAllowed', 'hits_allowed', 'hitsAgainst', 'hits_against', 'HA', 'ha', 'hits', 'H'])
+    er_col = first_existing_col(raw, ['earnedRuns', 'earned_runs', 'ER', 'er'])
+    bb_col = first_existing_col(raw, ['baseOnBalls', 'walksAllowed', 'walks_allowed', 'BB', 'bb', 'walks'])
+
+    rows: List[Dict[str, Any]] = []
+    for _, r in raw.iterrows():
+        pid = clean_id(r.get(pid_col)) if pid_col else ''
+        name = str(r.get(name_col) or '').strip() if name_col else ''
+        if not pid and not norm_name(name):
+            continue
+
+        if date_local_col:
+            d = safe_date(r.get(date_local_col))
+        else:
+            parsed = pd.to_datetime(r.get(date_col), errors='coerce', utc=True)
+            d = '' if pd.isna(parsed) else parsed.tz_convert('America/Denver').date().isoformat()
+        if not is_real_game_date(d):
+            continue
+
+        outs = num(r.get(outs_col)) if outs_col else None
+        ip = num(r.get(ip_col)) if ip_col else None
+        if ip is None and outs is not None:
+            ip = baseball_ip_from_outs(outs)
+        if outs is None and ip is not None:
+            whole = int(ip)
+            rem = int(round((ip - whole) * 10))
+            outs = whole * 3 + max(0, min(2, rem))
+        if (outs is None or outs <= 0) and (ip is None or ip <= 0):
+            continue
+
+        starter = boolish(r.get(starter_col)) if starter_col else None
+        location = str(r.get(loc_col) or '').strip().title() if loc_col else ''
+        if not location and home_col:
+            hv = boolish(r.get(home_col))
+            location = 'Home' if hv is True else 'Away' if hv is False else ''
+        if not location and side_col:
+            side = str(r.get(side_col) or '').strip().upper()
+            location = 'Home' if side == 'HOME' else 'Away' if side == 'AWAY' else ''
+
+        rows.append({
+            'playerId': pid,
+            'player': name,
+            'date': d,
+            'gameId': clean_id(r.get(game_col)) if game_col else '',
+            'team': str(r.get(team_col) or '').strip().upper() if team_col else '',
+            'opponent': str(r.get(opp_col) or '').strip().upper() if opp_col else '',
+            'location': location,
+            'ip': round_or_none(ip, 1),
+            'outs': round_or_none(outs, 0),
+            'k': round_or_none(r.get(k_col), 0) if k_col else None,
+            'hitsAllowed': round_or_none(r.get(h_col), 0) if h_col else None,
+            'er': round_or_none(r.get(er_col), 0) if er_col else None,
+            'bb': round_or_none(r.get(bb_col), 0) if bb_col else None,
+            'isStarter': starter,
+            'source': 'direct_pitcher_game_logs',
+        })
+
+    dedup: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+    for row in rows:
+        who = row.get('playerId') or norm_name(row.get('player'))
+        key = (str(who), str(row.get('gameId') or ''), str(row.get('date') or ''))
+        dedup[key] = row
+
+    lookup: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for row in dedup.values():
+        if row.get('playerId'):
+            lookup[f'id:{row["playerId"]}'].append(row)
+        nm = norm_name(row.get('player'))
+        if nm:
+            lookup[f'name:{nm}'].append(row)
+    for key in list(lookup):
+        lookup[key].sort(key=lambda x: (x.get('date') or '', x.get('gameId') or ''))
+    return dict(lookup)
+
+
+def direct_pitcher_rows(pitcher: Dict[str, Any], lookup: Dict[str, List[Dict[str, Any]]], target_date: str = '') -> List[Dict[str, Any]]:
+    pid = clean_id(pitcher.get('playerId'))
+    nm = norm_name(pitcher.get('player'))
+    rows = list(lookup.get(f'id:{pid}', [])) if pid else []
+    if not rows and nm:
+        rows = list(lookup.get(f'name:{nm}', []))
+    if target_date:
+        rows = [r for r in rows if str(r.get('date') or '') < target_date]
+    starters = [r for r in rows if r.get('isStarter') is True]
+    if len(starters) >= 3:
+        rows = starters
+    return rows[-25:]
+
+
+def enrich_direct_first_inning(row: Dict[str, Any], pitcher: Dict[str, Any], first_inning_map: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(row)
+    pid = clean_id(pitcher.get('playerId'))
+    pnorm = norm_name(pitcher.get('player'))
+    game_id = clean_id(row.get('gameId'))
+    d = safe_date(row.get('date'))
+    keys = [
+        f'id:{pid}|game:{game_id}' if pid and game_id else '',
+        f'name:{pnorm}|game:{game_id}' if pnorm and game_id else '',
+        f'id:{pid}|date:{d}' if pid and d else '',
+        f'name:{pnorm}|date:{d}' if pnorm and d else '',
+    ]
+    first = next((first_inning_map[k] for k in keys if k and k in first_inning_map), None)
+    confirmed = is_confirmed_first_inning_start_record(first)
+    out['firstInningRunsAllowed'] = first.get('runs') if isinstance(first, dict) and confirmed else None
+    out['firstInningStatus'] = first.get('status') if isinstance(first, dict) else ''
+    out['firstInningDisplay'] = first.get('display') if isinstance(first, dict) else ''
+    out['firstInningNote'] = first.get('note') if isinstance(first, dict) else ''
+    out['firstInningSource'] = first.get('source') if isinstance(first, dict) else ''
+    return out
+
+
+def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List[Dict[str, Any]], pitcher: Dict[str, Any], first_inning_map: Dict[str, Any], direct_log_lookup: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Any]:
     pid = clean_id(pitcher.get("playerId"))
     stat_series: Dict[str, Optional[Dict[str, Any]]] = {}
     stat_games: Dict[str, List[Dict[str, Any]]] = {}
@@ -472,6 +682,18 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
     dropped_non_start_rows = len(last5) - len(filtered_last5)
     last5 = filtered_last5[-5:]
 
+    # Reliable fallback: read the actual local pitcher_game_logs table directly.
+    # This avoids an empty card when analyzer split files are missing, stale, or
+    # keyed differently from the current pitcher entry.
+    target_date = ''
+    pitcher_entry = primary_entry(entries, pid, 'pitcher')
+    if pitcher_entry:
+        target_date = safe_date(pitcher_entry.get('gameDate'))
+    direct_rows_all = direct_pitcher_rows(pitcher, direct_log_lookup, target_date)
+    if not last5 and direct_rows_all:
+        last5 = [enrich_direct_first_inning(r, pitcher, first_inning_map) for r in direct_rows_all[-5:]]
+        dropped_non_start_rows = 0
+
     summary = {
         "avgIP": round_or_none(avg([r.get("ip") for r in last5]), 1),
         "avgK": round_or_none(avg([r.get("k") for r in last5]), 1),
@@ -544,6 +766,8 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
                 "k": sv("K"), "hitsAllowed": sv("HA"), "er": sv("ER"), "bb": sv("BB"),
             })
     same_opp = same_opp[-5:]
+    if not same_opp and direct_rows_all:
+        same_opp = [r for r in direct_rows_all if team_norm(r.get('opponent')) == opp][-5:]
 
     flags = []
     if last5:
@@ -562,7 +786,9 @@ def combine_pitcher_last_starts(repo: Path, props: Dict[str, Any], entries: List
         if k5 >= 3:
             flags.append(f"Reached 5+ strikeouts in {k5}/{len(last5)} recent starts.")
     if not last5 and aggregate_windows:
-        flags.append("Detailed start-by-start pitcher logs were not found for this starter in the site files; showing analyzer L3/L5/L10 windows instead.")
+        flags.append("Detailed start-by-start pitcher logs were not found; showing analyzer L3/L5/L10 windows instead.")
+    elif last5 and any(str(r.get('source') or '') == 'direct_pitcher_game_logs' for r in last5):
+        flags.append("Recent outings loaded directly from the local pitcher game-log table.")
     if same_opp:
         flags.append(f"Has {len(same_opp)} recent start(s) in the logs against {pitcher.get('opp')}.")
     if summary.get("firstInningSamples"):
@@ -1324,11 +1550,11 @@ def quick_writeup(game: Dict[str, Any], pitcher_reports: List[Dict[str, Any]], p
     return " ".join([p for p in pieces if p])
 
 
-def build_report_for_game(repo: Path, props: Dict[str, Any], entries: List[Dict[str, Any]], game: Dict[str, Any], target_date: str, results_history: List[Dict[str, Any]], first_inning_map: Dict[str, Any], raw_splits: Dict[str, Any]) -> Dict[str, Any]:
+def build_report_for_game(repo: Path, props: Dict[str, Any], entries: List[Dict[str, Any]], game: Dict[str, Any], target_date: str, results_history: List[Dict[str, Any]], first_inning_map: Dict[str, Any], raw_splits: Dict[str, Any], direct_pitcher_logs: Dict[str, List[Dict[str, Any]]]) -> Dict[str, Any]:
     snapshot_game(repo, game, target_date)
     movement = read_snapshots(repo, game, target_date)
     pitcher_players = collect_players(entries, "pitcher")
-    pitcher_reports = [combine_pitcher_last_starts(repo, props, entries, p, first_inning_map) for p in pitcher_players]
+    pitcher_reports = [combine_pitcher_last_starts(repo, props, entries, p, first_inning_map, direct_pitcher_logs) for p in pitcher_players]
     positives, risks, all_batter_research = collect_batter_research(repo, props, entries, raw_splits)
     forms = {
         str(game.get("awayTeam")): team_model_form(game.get("awayTeam"), results_history),
@@ -1381,6 +1607,7 @@ def build_report_for_game(repo: Path, props: Dict[str, Any], entries: List[Dict[
             "propsAnalyzerEntries": len(entries),
             "firstInningHistoryFound": bool(first_inning_map),
             "rawBatterSplitsFound": bool(raw_splits),
+            "directPitcherLogsFound": bool(direct_pitcher_logs),
         },
     }
 
@@ -1422,6 +1649,7 @@ def main() -> int:
     mlb_data = Path(args.mlb_data_dir).resolve() if args.mlb_data_dir else None
     first_inning_map = build_first_inning_map(mlb_data, repo)
     raw_splits = build_raw_batter_splits(mlb_data)
+    direct_pitcher_logs = normalize_direct_pitcher_logs(mlb_data)
 
     by_gid = entries_by_game(props, target_date)
     out_dir = data_dir / "game_intelligence"
@@ -1445,7 +1673,7 @@ def main() -> int:
         if not entries:
             # Don't build empty fluff reports.
             continue
-        report = build_report_for_game(repo, props, entries, game, target_date, results_history, first_inning_map, raw_splits)
+        report = build_report_for_game(repo, props, entries, game, target_date, results_history, first_inning_map, raw_splits, direct_pitcher_logs)
         filename = f"mlb_{target_date}_{slug_part(game.get('awayTeam'))}_{slug_part(game.get('homeTeam'))}_{game.get('gamePk') or game.get('id')}.json"
         rel = f"data/game_intelligence/{filename}"
         report["reportPath"] = rel
@@ -1465,6 +1693,7 @@ def main() -> int:
     print(f"Built {built} MLB Game Intelligence report(s) for {target_date}.")
     print(f"First-inning raw history found: {bool(first_inning_map)}")
     print(f"Raw batter split enrichment found: {bool(raw_splits)}")
+    print(f"Direct pitcher game logs found: {bool(direct_pitcher_logs)}")
     return 0
 
 

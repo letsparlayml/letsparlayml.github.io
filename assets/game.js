@@ -922,6 +922,78 @@ function renderGamePropBuckets(rows, game, profileMap = new Map()) {
 }
 
 
+function gamePropValueRows(game, propValuePayload) {
+  if (String(game?.league || '').toUpperCase() !== 'MLB') return [];
+  const values = Array.isArray(propValuePayload?.values) ? propValuePayload.values : [];
+  const numericId = gameNumericId(game);
+  const matchup = normalizeGameId(game?.awayTeam, game?.homeTeam);
+  const date = String(game?.gameDate || '').slice(0, 10);
+  return values.filter(row => {
+    if (date && String(row?.date || '').slice(0, 10) !== date) return false;
+    const rowGameId = normalizeGameNumericId(row?.gameId || '');
+    if (numericId && rowGameId && numericId === rowGameId) return true;
+    const rowMatchup = normalizeGameId(row?.awayTeam, row?.homeTeam);
+    return rowMatchup && rowMatchup === matchup;
+  }).filter(row => ['VALUE', 'LEAN', 'WATCH'].includes(String(row?.recommendation || '').toUpperCase()))
+    .sort((a, b) => {
+      const rank = { VALUE: 3, LEAN: 2, WATCH: 1 };
+      const statusDelta = (rank[String(b?.recommendation || '').toUpperCase()] || 0) - (rank[String(a?.recommendation || '').toUpperCase()] || 0);
+      if (statusDelta) return statusDelta;
+      return Number(b?.expectedRoi ?? -999) - Number(a?.expectedRoi ?? -999);
+    });
+}
+
+function renderGameMarketValues(game, propValuePayload) {
+  const section = byId('market-value-section');
+  const summary = byId('game-market-value-summary');
+  const grid = byId('game-market-value-grid');
+  if (!section || !summary || !grid) return;
+  const rows = gamePropValueRows(game, propValuePayload);
+  if (!rows.length) {
+    section.style.display = 'none';
+    summary.innerHTML = '';
+    grid.innerHTML = '';
+    return;
+  }
+  section.style.display = '';
+  const values = rows.filter(row => String(row?.recommendation || '').toUpperCase() === 'VALUE');
+  const watches = rows.filter(row => String(row?.recommendation || '').toUpperCase() === 'WATCH');
+  const books = [...new Set(rows.map(row => row?.bookmakerTitle || row?.bookmakerKey).filter(Boolean))];
+  const generated = propValuePayload?.generatedAt ? new Date(propValuePayload.generatedAt).toLocaleString() : '—';
+  summary.innerHTML = `
+    <div class="hero-card"><span class="stat-label">Qualified values</span><strong>${values.length}</strong></div>
+    <div class="hero-card"><span class="stat-label">Confirmation watches</span><strong>${watches.length}</strong></div>
+    <div class="hero-card"><span class="stat-label">Books represented</span><strong>${escapeHtml(String(books.length))}</strong></div>
+    <div class="hero-card"><span class="stat-label">Calculated</span><strong>${escapeHtml(generated)}</strong></div>
+  `;
+  grid.innerHTML = rows.slice(0, 8).map(row => {
+    const status = String(row?.recommendation || 'WATCH').toUpperCase();
+    const edge = hasNumericValue(row?.probabilityEdge) ? Number(row.probabilityEdge) * 100 : null;
+    const roi = hasNumericValue(row?.expectedRoi) ? Number(row.expectedRoi) * 100 : null;
+    const age = hasNumericValue(row?.marketAgeHours) ? `${fmt(row.marketAgeHours, 1)}h old` : 'Age unavailable';
+    return `
+      <article class="game-market-value-card is-${escapeHtml(status.toLowerCase())}">
+        <div class="game-prop-card-top">
+          <span class="summary-kicker">${escapeHtml(status)}</span>
+          <span class="prop-risk-pill ${status === 'VALUE' ? 'is-safe' : status === 'LEAN' ? 'is-medium' : 'is-risk'}">${escapeHtml(row?.bookmakerTitle || row?.bookmakerKey || 'Sportsbook')}</span>
+        </div>
+        <h3>${escapeHtml(row?.pick || '')}</h3>
+        <p class="muted">${escapeHtml([row?.team, row?.playerType, age].filter(Boolean).join(' • '))}</p>
+        <div class="game-prop-metrics">
+          <div><span>Price</span><strong>${escapeHtml(fmtMoneyline(row?.price))}</strong></div>
+          <div><span>Model</span><strong>${escapeHtml(fmtPct(row?.modelProbability, 1))}</strong></div>
+          <div><span>No-vig</span><strong>${escapeHtml(fmtPct(row?.marketNoVigProbability, 1))}</strong></div>
+          <div><span>Edge</span><strong>${escapeHtml(hasNumericValue(edge) ? fmtSigned(edge, 1) + ' pts' : 'N/A')}</strong></div>
+          <div><span>ROI</span><strong>${escapeHtml(hasNumericValue(roi) ? fmtSigned(roi, 1) + '%' : 'N/A')}</strong></div>
+          <div><span>Projection</span><strong>${escapeHtml(fmt(row?.modelProjection, 2))}</strong></div>
+        </div>
+        <p class="game-prop-read">${escapeHtml(row?.recommendationReason || '')}</p>
+        <a class="button-link button-link-subtle" href="${escapeHtml(row?.href || 'props_analyzer.html?league=MLB')}">Open analyzer</a>
+      </article>
+    `;
+  }).join('');
+}
+
 async function renderGameProps(game, propsData, injuryLookup = new Map(), mlbDetail = null) {
   const body = byId('game-props-body');
   const empty = byId('game-props-empty');
@@ -2144,6 +2216,22 @@ function archiveLocalDate(row) {
   }
 }
 
+function archiveTimestampLabel(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '—';
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return raw.replace('T', ' ').slice(0, 16);
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Denver', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false
+    }).formatToParts(parsed).reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {});
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+  } catch (err) {
+    return raw.replace('T', ' ').slice(0, 16);
+  }
+}
+
 function archiveMoneyline(row, side) {
   const keys = side === 'away'
     ? ['marketAwayML', 'awayML', 'awayMoneyline']
@@ -2178,6 +2266,36 @@ function archiveTotalOdds(row, side) {
 }
 
 
+function marketArchiveRowKey(row) {
+  const matchup = archiveMatchup(row);
+  const capture = String(row?.capturedAt || row?.fetchedAtUtc || row?.archivedAt || row?.updatedAt || '').trim();
+  const values = [
+    row?.awaySpread ?? row?.marketSpread,
+    row?.homeSpread,
+    archiveSpreadOdds(row, 'away'),
+    archiveSpreadOdds(row, 'home'),
+    row?.marketTotal,
+    archiveTotalOdds(row, 'over'),
+    archiveTotalOdds(row, 'under'),
+    archiveMoneyline(row, 'away'),
+    archiveMoneyline(row, 'home')
+  ].map(v => hasNumericValue(v) ? Number(v) : '').join('|');
+  return [
+    String(row?.league || '').toUpperCase(), archiveLocalDate(row),
+    String(matchup.away || '').toUpperCase(), String(matchup.home || '').toUpperCase(),
+    String(row?.eventId || row?.event_id || ''), String(row?.bookmakerKey || '').toLowerCase(),
+    capture, values
+  ].join('|');
+}
+
+function combineMarketArchiveRows(...collections) {
+  const seen = new Map();
+  collections.flat().filter(row => row && typeof row === 'object').forEach(row => {
+    seen.set(marketArchiveRowKey(row), row);
+  });
+  return Array.from(seen.values());
+}
+
 function archiveMatchKeyFromGame(game) {
   return `${String(game?.gameDate || '').trim()}|${String(game?.awayTeam || '').trim()}|${String(game?.homeTeam || '').trim()}`;
 }
@@ -2191,7 +2309,7 @@ function latestArchiveForGame(game, archiveRows) {
     const localDate = archiveLocalDate(row) || String(row?.date || '').trim();
     const key = `${localDate}|${String(matchup.away || '').trim()}|${String(matchup.home || '').trim()}`;
     if (key !== target) return;
-    const ts = Date.parse(row?.updatedAt || row?.archivedAt || row?.fetchedAtUtc || '') || 0;
+    const ts = Date.parse(row?.capturedAt || row?.fetchedAtUtc || row?.archivedAt || row?.updatedAt || '') || 0;
     if (!best || ts >= bestTs) {
       best = row;
       bestTs = ts;
@@ -2246,7 +2364,7 @@ function renderMlbOddsMovement(game, archiveRows) {
       awayTeamNorm: matchup.away,
       homeTeamNorm: matchup.home,
       localDate: archiveLocalDate(row),
-      asOf: row?.updatedAt || row?.archivedAt || row?.marketLineUpdated || '',
+      asOf: row?.capturedAt || row?.fetchedAtUtc || row?.archivedAt || row?.updatedAt || row?.marketLineUpdated || '',
       awaySpread: archiveAwaySpread(row),
       awaySpreadOdds: archiveSpreadOdds(row, 'away'),
       homeSpreadOdds: archiveSpreadOdds(row, 'home'),
@@ -2293,7 +2411,7 @@ function renderMlbOddsMovement(game, archiveRows) {
 
   body.innerHTML = snapshots.map(s => `
     <tr>
-      <td>${escapeHtml(String(s.asOf || '').replace('T', ' ').slice(0, 16) || '—')}</td>
+      <td>${escapeHtml(archiveTimestampLabel(s.asOf))}</td>
       <td>${escapeHtml(hasNumericValue(s.awaySpread ?? s.marketSpread) ? spreadWithPrice(game, Number(s.awaySpread ?? s.marketSpread), s.awaySpreadOdds, s.homeSpreadOdds) : '—')}</td>
       <td>${escapeHtml(hasNumericValue(s.marketTotal) ? totalWithPrices(s.marketTotal, s.overOdds, s.underOdds) : '—')}</td>
       <td>${escapeHtml(fmtMoneyline(archiveMoneyline(s, 'away')))}</td>
@@ -3005,13 +3123,16 @@ function setupGamePagePolish() {
 (async function init() {
   try {
     const id = qs('id');
-    const [gamesRaw, rawProps, rawPropsLab, injuries, archiveRows] = await Promise.all([
+    const [gamesRaw, rawProps, rawPropsLab, injuries, legacyArchiveRows, capturedArchiveRows, propValuePayload] = await Promise.all([
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/nba_props_lab.json', null),
       loadJson('data/nba_injuries.json', {}),
-      loadJson('data/market_lines_archive.json', [])
+      loadJson('data/market_lines_archive.json', []),
+      loadJson('data/market_line_snapshots.json', []),
+      loadJson('data/mlb_prop_values.json', { values: [] })
     ]);
+    const archiveRows = combineMarketArchiveRows(legacyArchiveRows || [], capturedArchiveRows || []);
     const injuryLookup = buildInjuryLookup(injuries);
 
     const games = (gamesRaw || []).map(g => hydrateGameWithArchive(g, archiveRows));
@@ -3039,6 +3160,7 @@ function setupGamePagePolish() {
       : 'Pending';
     byId('snapshot-confidence').textContent = game.confidence || 'N/A';
     renderGameQuickRead(game, mlbDetail);
+    renderGameMarketValues(game, propValuePayload);
 
     setupMovementToggle(game, game.movement || []);
     await renderGameProps(game, propsData, injuryLookup, mlbDetail);

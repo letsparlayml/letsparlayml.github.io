@@ -180,7 +180,9 @@ def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = 
     away_team = clean_str(row.get('away_team'))
 
     model_market_updated_at = first_text(row, ['market_updated_at'])
-    archive_market_updated_at = first_text(market_entry, ['updatedAt', '__file_updated'])
+    archive_market_captured_at = first_text(market_entry, ['capturedAt', 'fetchedAtUtc', 'archivedAt'])
+    archive_book_updated_at = first_text(market_entry, ['updatedAt'])
+    archive_market_updated_at = archive_market_captured_at or archive_book_updated_at or first_text(market_entry, ['__file_updated'])
     model_market_ts = pd.to_datetime(model_market_updated_at, errors='coerce', utc=True)
     archive_market_ts = pd.to_datetime(archive_market_updated_at, errors='coerce', utc=True)
     use_archive_snapshot = bool(market_entry) and (
@@ -422,7 +424,7 @@ def derive_market_context(row: pd.Series, market_entry: dict[str, Any] | None = 
         'awayMoneyline': away_ml, 'homeMoneyline': home_ml,
         'marketAwayML': away_ml, 'marketHomeML': home_ml,
         'marketLineSource': market_source, 'marketSource': market_source, 'marketLineUpdated': market_updated_at,
-        'marketUpdatedAt': market_updated_at, 'modelMarketUpdatedAt': model_market_updated_at,
+        'marketUpdatedAt': market_updated_at, 'marketCapturedAt': archive_market_captured_at, 'modelMarketUpdatedAt': model_market_updated_at,
         'marketSnapshotSource': 'post_run_archive' if use_archive_snapshot else 'model_workbook',
         'marketSnapshotMismatch': bool(moneyline_reprice_required or spread_reprice_required or total_reprice_required),
         'marketLineAgeHours': market_line_age_hours,
@@ -464,6 +466,9 @@ def load_market_entries_from_path(path: Path) -> list[dict[str, Any]]:
 
 def load_mlb_market_lines(repo: Path, mlb_output_dir: Path) -> tuple[dict[int, dict[str, Any]], dict[str, dict[str, Any]], int]:
     candidates = [
+        # Dedicated append-only captures are preferred. Legacy rollup scripts may
+        # rebuild market_lines_archive.json, but they do not own this file.
+        repo / 'data' / 'market_line_snapshots.json',
         repo / 'data' / 'market_lines_archive.json',
         repo / 'data' / 'mlb_market_lines.json',
         repo / 'data' / 'mlb_market_lines.csv',
@@ -525,7 +530,8 @@ def load_mlb_market_lines(repo: Path, mlb_output_dir: Path) -> tuple[dict[int, d
                 'bookmakerKey': clean_str(entry.get('bookmakerKey')), 'bookmakerTitle': clean_str(entry.get('bookmakerTitle')),
                 'source': clean_str(entry.get('source')) or path.name,
                 'updatedAt': clean_str(entry.get('updatedAt')) or file_updated,
-                '__rank': (clean_str(entry.get('updatedAt')) or file_updated, str(path)),
+                'capturedAt': clean_str(entry.get('capturedAt') or entry.get('fetchedAtUtc') or entry.get('archivedAt')),
+                '__rank': (clean_str(entry.get('capturedAt') or entry.get('fetchedAtUtc') or entry.get('archivedAt') or entry.get('updatedAt')) or file_updated, str(path)),
                 '__file_updated': file_updated,
             }
             if game_pk is not None:
@@ -1177,7 +1183,7 @@ def build_game_objects(
             'marketTotalText': 'Pending' if context.get('marketTotal') is None else context.get('marketTotalLabel') or f"{context.get('marketTotal')}",
             'marketLineSource': context.get('marketLineSource'),
             'marketLineUpdated': context.get('marketLineUpdated'),
-            'marketUpdatedAt': context.get('marketUpdatedAt'),
+            'marketUpdatedAt': context.get('marketUpdatedAt'), 'marketCapturedAt': context.get('marketCapturedAt'),
             'marketLineAgeHours': context.get('marketLineAgeHours'),
             'marketLineStatus': context.get('marketLineStatus'), 'modelMarketUpdatedAt': context.get('modelMarketUpdatedAt'),
             'marketSnapshotSource': context.get('marketSnapshotSource'), 'marketSnapshotMismatch': context.get('marketSnapshotMismatch'),
@@ -1245,7 +1251,7 @@ def build_game_details(game_df: pd.DataFrame, pitcher_df: pd.DataFrame, batter_d
                 'marketLineSource': game.get('marketLineSource'),
                 'marketAwayML': game.get('marketAwayML'),
                 'marketHomeML': game.get('marketHomeML'),
-                'marketLineUpdated': game.get('marketLineUpdated'), 'marketLineAgeHours': game.get('marketLineAgeHours'),
+                'marketLineUpdated': game.get('marketLineUpdated'), 'marketCapturedAt': game.get('marketCapturedAt'), 'marketLineAgeHours': game.get('marketLineAgeHours'),
                 'marketLineStatus': game.get('marketLineStatus'), 'marketPriceStatus': game.get('marketPriceStatus'),
                 'predHomeF5': safe_float(row.get('pred_home_f5')),
                 'predAwayF5': safe_float(row.get('pred_away_f5')),

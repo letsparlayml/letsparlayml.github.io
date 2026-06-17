@@ -245,6 +245,10 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
                 'bookmakerKey': clean(book.get('key')).lower(),
                 'bookmakerTitle': clean(book.get('title')),
                 'updatedAt': iso_z(clean(book.get('last_update'))),
+                # Capture time is ours; updatedAt is the sportsbook's market timestamp.
+                # Keeping both lets the site append every refresh without pretending
+                # an unchanged bookmaker timestamp is a new book update.
+                'capturedAt': '',
             }
             away_point = home_point = over_point = under_point = None
             for market in book.get('markets') or []:
@@ -333,7 +337,7 @@ def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, An
         'marketSpread', 'marketSpreadPerspective', 'awaySpread', 'homeSpread',
         'awaySpreadOdds', 'homeSpreadOdds', 'spreadLinePairValid', 'spreadPricePairValid',
         'marketTotal', 'overOdds', 'underOdds', 'totalLinePairValid', 'totalPricePairValid', 'marketPriceStatus',
-        'bookmakerKey', 'bookmakerTitle', 'eventId',
+        'bookmakerKey', 'bookmakerTitle', 'eventId', 'capturedAt',
     ]
     for g in games:
         league = clean(g.get('league')).upper()
@@ -348,6 +352,7 @@ def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, An
         g['marketLineSource'] = row.get('source')
         g['marketLineUpdated'] = row.get('updatedAt') or datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
         g['marketUpdatedAt'] = g['marketLineUpdated']
+        g['marketCapturedAt'] = row.get('capturedAt') or g['marketLineUpdated']
         g['marketLineAgeHours'] = 0.0
         g['marketLineStatus'] = 'CURRENT'
         if row.get('gameDate'):
@@ -355,30 +360,58 @@ def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, An
         applied += 1
     return applied
 
+def archive_identity(row: dict[str, Any]) -> tuple[str, ...]:
+    """Identity for one captured market snapshot.
+
+    capturedAt is intentionally part of the key. The same sportsbook can retain
+    the same updatedAt timestamp across multiple site refreshes; those are still
+    separate captures and must not overwrite the prior snapshot.
+    """
+    return (
+        clean(row.get('league')).upper(),
+        clean(row.get('date')),
+        clean(row.get('awayTeam')).upper(),
+        clean(row.get('homeTeam')).upper(),
+        clean(row.get('eventId')),
+        clean(row.get('bookmakerKey')).lower(),
+        clean(row.get('capturedAt') or row.get('fetchedAtUtc') or row.get('archivedAt') or row.get('updatedAt')),
+    )
+
+
 def merge_archive(archive: list[dict[str, Any]], selected_rows: list[dict[str, Any]]):
-    # Preserve every existing historical snapshot. Only replace an exact snapshot
-    # identity when the newly fetched row carries richer fields.
-    merged = list(archive)
-    index: dict[tuple[str, ...], int] = {}
-    for i, row in enumerate(merged):
-        identity = (
-            clean(row.get('league')).upper(), clean(row.get('date')),
-            clean(row.get('awayTeam')).upper(), clean(row.get('homeTeam')).upper(),
-            clean(row.get('eventId')), clean(row.get('bookmakerKey')).lower(), clean(row.get('updatedAt')),
-        )
-        index[identity] = i
+    # Preserve every prior capture. Exact duplicates from an interrupted/repeated
+    # write are merged, but a later capture never replaces an earlier capture.
+    merged = [dict(r) for r in archive if isinstance(r, dict)]
+    index = {archive_identity(r): i for i, r in enumerate(merged)}
     for row in selected_rows:
-        identity = (
-            clean(row.get('league')).upper(), clean(row.get('date')),
-            clean(row.get('awayTeam')).upper(), clean(row.get('homeTeam')).upper(),
-            clean(row.get('eventId')), clean(row.get('bookmakerKey')).lower(), clean(row.get('updatedAt')),
-        )
+        identity = archive_identity(row)
         if identity in index:
             merged[index[identity]] = {**merged[index[identity]], **row}
         else:
             index[identity] = len(merged)
-            merged.append(row)
+            merged.append(dict(row))
+    merged.sort(key=lambda r: (
+        clean(r.get('league')).upper(), clean(r.get('date')),
+        clean(r.get('awayTeam')).upper(), clean(r.get('homeTeam')).upper(),
+        clean(r.get('capturedAt') or r.get('updatedAt') or r.get('archivedAt')),
+    ))
     return merged
+
+
+def append_snapshot_archive(path: Path, selected_rows: list[dict[str, Any]]) -> int:
+    """Write a dedicated append-only current-market timeline.
+
+    This file is separate from market_lines_archive.json because legacy rollup
+    utilities may rebuild the shared archive. The game-detail page combines both
+    files, so these captures remain visible even if a rollup rewrites the legacy
+    archive.
+    """
+    existing = load_json(path, [])
+    if not isinstance(existing, list):
+        existing = []
+    merged = merge_archive(existing, selected_rows)
+    save_json(path, merged)
+    return len(merged)
 
 def main() -> int:
     ap = argparse.ArgumentParser(description='Fetch NBA/NHL/MLB market lines from The Odds API and update site data.')
@@ -395,10 +428,12 @@ def main() -> int:
     data_dir = repo / 'data'
     games_path = data_dir / 'games.json'
     archive_path = data_dir / 'market_lines_archive.json'
+    snapshot_archive_path = data_dir / 'market_line_snapshots.json'
     games = load_json(games_path, [])
     archive = load_json(archive_path, [])
     session = requests.Session()
     session.headers.update({'User-Agent': 'LetsParlayML unified odds fetcher/1.0'})
+    captured_at = datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
 
     all_selected: list[dict[str, Any]] = []
     for sport_key in [s.strip() for s in args.sports.split(',') if s.strip()]:
@@ -408,6 +443,8 @@ def main() -> int:
             continue
         events = api_get(session, sport_key, args.api_key, args.timeout, args.bookmakers)
         selected = build_selected_rows(events, league)
+        for row in selected:
+            row['capturedAt'] = captured_at
         all_selected.extend(selected)
         print(f'[ODDS] {league}: fetched {len(events)} events, selected {len(selected)} rows')
         raw_path = data_dir / f'{league.lower()}_market_lines_api.json'
@@ -415,10 +452,12 @@ def main() -> int:
 
     applied = apply_to_games(games, all_selected)
     merged_archive = merge_archive(archive, all_selected)
+    snapshot_count = append_snapshot_archive(snapshot_archive_path, all_selected)
     save_json(games_path, games)
     save_json(archive_path, merged_archive)
     print(f'[ODDS] Updated {applied} games in {games_path}')
-    print(f'[ODDS] Archive now has {len(merged_archive)} rows in {archive_path}')
+    print(f'[ODDS] Legacy archive now has {len(merged_archive)} rows in {archive_path}')
+    print(f'[ODDS] Append-only snapshot archive has {snapshot_count} rows in {snapshot_archive_path}')
     return 0
 
 

@@ -206,109 +206,132 @@ function mlbMarketRunLineSignal(game) {
   return best ? `${best.label} ${fmtPct(best.prob, 0)}` : '';
 }
 
-function recommendationStatusText(value) {
-  return String(value || '').trim().toUpperCase().replace(/\s+/g, '_');
+function formatAmericanOdds(value) {
+  if (!hasNumericValue(value)) return '';
+  const rounded = Math.round(Number(value));
+  return rounded > 0 ? `+${rounded}` : String(rounded);
 }
 
-function recommendationBlockedText(value, fallback) {
-  const status = recommendationStatusText(value);
-  if (status.includes('PRICE_REQUIRED')) return 'Price required';
-  if (status.includes('NO_BET') || status === 'PASS' || status === 'AVOID') return fallback;
-  return '';
+function lineOddsText(value) {
+  const odds = formatAmericanOdds(value);
+  return odds ? ` (${odds})` : '';
+}
+
+function actualMoneylinePick(game) {
+  const awayTeam = String(game?.awayTeam || 'Away').toUpperCase();
+  const homeTeam = String(game?.homeTeam || 'Home').toUpperCase();
+  let team = String(game?.modelPickTeam || '').toUpperCase();
+  let prob = coerceProbability(game?.calibratedModelPickWinProb ?? game?.modelMoneylineProb);
+
+  if (![awayTeam, homeTeam].includes(team)) {
+    const awayProb = coerceProbability(game?.awayWinProb);
+    const homeProb = coerceProbability(game?.homeWinProb);
+    if (Number.isFinite(awayProb) || Number.isFinite(homeProb)) {
+      team = (Number.isFinite(awayProb) ? awayProb : 0) >= (Number.isFinite(homeProb) ? homeProb : 0)
+        ? awayTeam : homeTeam;
+      prob = team === awayTeam ? awayProb : homeProb;
+    } else {
+      const awayScore = Number(game?.modelAwayScore);
+      const homeScore = Number(game?.modelHomeScore);
+      team = awayScore >= homeScore ? awayTeam : homeTeam;
+    }
+  }
+
+  if (!Number.isFinite(prob)) {
+    prob = team === awayTeam ? coerceProbability(game?.awayWinProb) : coerceProbability(game?.homeWinProb);
+  }
+  const odds = team === awayTeam
+    ? (game?.marketAwayML ?? game?.awayML ?? game?.awayMoneyline)
+    : (game?.marketHomeML ?? game?.homeML ?? game?.homeMoneyline);
+  return { team, prob, odds };
+}
+
+function exactRunLineProbability(game, side, line) {
+  if (!Number.isFinite(line)) return NaN;
+  const rounded = Math.round(line * 10) / 10;
+  const isAway = side === 'away';
+  if (Math.abs(rounded - 1.5) < 0.01) {
+    return coerceProbability(isAway ? game?.awayPlus1p5Prob : game?.homePlus1p5Prob);
+  }
+  if (Math.abs(rounded + 1.5) < 0.01) {
+    return coerceProbability(isAway ? game?.awayMinus1p5Prob : game?.homeMinus1p5Prob);
+  }
+  return NaN;
+}
+
+function actualSpreadPick(game) {
+  const awaySpread = marketSpreadForDisplay(game);
+  if (!Number.isFinite(awaySpread) || game?.spreadLinePairValid === false) return null;
+  const homeSpread = hasNumericValue(game?.homeSpread) ? Number(game.homeSpread) : -awaySpread;
+  const storedSide = String(game?.spreadPickSide || '').toUpperCase();
+  const edge = spreadEdgeForDisplay(game);
+  let side = storedSide === 'HOME_SPREAD' ? 'home'
+    : storedSide === 'AWAY_SPREAD' ? 'away'
+    : (Number.isFinite(edge) && edge > 0 ? 'home' : 'away');
+  const team = side === 'home' ? (game?.homeTeam || 'Home') : (game?.awayTeam || 'Away');
+  const line = side === 'home' ? homeSpread : awaySpread;
+  const odds = side === 'home' ? game?.homeSpreadOdds : game?.awaySpreadOdds;
+
+  let prob = exactRunLineProbability(game, side, line);
+  const selectedLine = Number(game?.selectedSpreadLine);
+  const storedProb = coerceProbability(game?.spreadCoverProbEst ?? game?.modelSpreadPickProb);
+  const storedMatchesSide = (side === 'home' && storedSide === 'HOME_SPREAD') || (side === 'away' && storedSide === 'AWAY_SPREAD');
+  const storedMatchesLine = !Number.isFinite(selectedLine) || Math.abs(selectedLine - line) < 0.01;
+  if (!Number.isFinite(prob) && storedMatchesSide && storedMatchesLine && Number.isFinite(storedProb)) prob = storedProb;
+  if (!Number.isFinite(prob) && Number.isFinite(edge)) prob = derivedSpreadProbabilityForDisplay(game, edge);
+  return { team, side, line, odds, prob };
+}
+
+function actualTotalPick(game) {
+  const line = Number(game?.marketTotal);
+  if (!Number.isFinite(line)) return null;
+  let side = String(game?.totalPickSide || '').toUpperCase();
+  const overProb = coerceProbability(game?.marketOverProb);
+  const underProb = coerceProbability(game?.marketUnderProb);
+  if (!['OVER', 'UNDER'].includes(side)) {
+    if (Number.isFinite(overProb) || Number.isFinite(underProb)) {
+      side = (Number.isFinite(overProb) ? overProb : 0) >= (Number.isFinite(underProb) ? underProb : 0) ? 'OVER' : 'UNDER';
+    } else {
+      side = Number(game?.modelTotal) >= line ? 'OVER' : 'UNDER';
+    }
+  }
+
+  let prob = side === 'OVER' ? overProb : underProb;
+  const storedProb = coerceProbability(game?.totalPickProbEst ?? game?.modelTotalPickProb);
+  if (!Number.isFinite(prob) && game?.totalRepriceRequired !== true && Number.isFinite(storedProb)) prob = storedProb;
+  if (!Number.isFinite(prob) && Number.isFinite(Number(game?.modelTotal))) {
+    prob = derivedTotalProbabilityForDisplay(game, Number(game.modelTotal) - line);
+  }
+  const odds = side === 'OVER' ? game?.overOdds : game?.underOdds;
+  return { side, line, odds, prob };
 }
 
 function spreadSignalText(game) {
-  if (game?.spreadRepriceRequired === true) return 'Reprice required';
-  if (game?.spreadLinePairValid === false) return 'Spread unavailable';
-  const blocked = recommendationBlockedText(game?.spreadFinalRecommendation, 'No spread bet');
-  if (blocked) return blocked;
-  const league = String(game?.league || '').toUpperCase();
-  const marketSpread = marketSpreadForDisplay(game);
-  const storedModelPickProb = coerceProbability(game?.modelSpreadPickProb);
-  if (game?.modelSpreadPickLabel && Number.isFinite(storedModelPickProb)) {
-    return `${game.modelSpreadPickLabel} ${fmtPct(storedModelPickProb, 0)}`;
-  }
-
-  if (league === 'MLB') {
-    const mlbSignal = mlbMarketRunLineSignal(game);
-    if (mlbSignal) return mlbSignal;
-  }
-
-  const modelSpread = modelSpreadForDisplay(game);
-  if (Number.isFinite(modelSpread) && Number.isFinite(marketSpread)) {
-    const edge = modelSpread - marketSpread;
-    const prob = derivedSpreadProbabilityForDisplay(game, edge);
-    if (edge >= 0) {
-      return `${signedLineText(game?.homeTeam || 'Home', -marketSpread)} ${fmtPct(prob, 0)}`;
-    }
-    return `${signedLineText(game?.awayTeam || 'Away', marketSpread)} ${fmtPct(prob, 0)}`;
-  }
-
-  const marketCoverProb = coerceProbability(game?.marketCoverProb);
-  if (game?.marketCoverLabel && Number.isFinite(marketCoverProb)) {
-    return `${game.marketCoverLabel} ${fmtPct(marketCoverProb, 0)}`;
-  }
-
-  return Number.isFinite(marketSpread) ? `${spreadTeamLabel(game, marketSpread)} prob pending` : 'Spread pending';
+  const pick = actualSpreadPick(game);
+  if (!pick) return 'Line pending';
+  const prob = Number.isFinite(pick.prob) ? ` · ${fmtPct(pick.prob, 0)}` : '';
+  return `${pick.team} ${fmtSigned(pick.line, 1)}${lineOddsText(pick.odds)}${prob}`;
 }
 
 function totalSignalText(game) {
-  if (game?.totalRepriceRequired === true) return 'Reprice required';
-  const blocked = recommendationBlockedText(game?.totalFinalRecommendation, 'No total bet');
-  if (blocked) return blocked;
-  const marketTotal = Number(game?.marketTotal);
-  const modelTotal = Number(game?.modelTotal);
-  const storedTotalProb = coerceProbability(game?.modelTotalPickProb);
-  if (game?.modelTotalPickLabel && Number.isFinite(storedTotalProb)) {
-    return `${game.modelTotalPickLabel} ${fmtPct(storedTotalProb, 0)}`;
-  }
-
-  const over = coerceProbability(game?.marketOverProb);
-  const under = coerceProbability(game?.marketUnderProb);
-
-  if (Number.isFinite(marketTotal) && (Number.isFinite(over) || Number.isFinite(under))) {
-    if ((Number.isFinite(over) ? over : 0) >= (Number.isFinite(under) ? under : 0)) {
-      return `Over ${fmt(marketTotal, 1)} ${fmtPct(over, 0)}`;
-    }
-    return `Under ${fmt(marketTotal, 1)} ${fmtPct(under, 0)}`;
-  }
-
-  if (Number.isFinite(marketTotal) && Number.isFinite(modelTotal)) {
-    const gap = modelTotal - marketTotal;
-    const side = gap >= 0 ? 'Over' : 'Under';
-    const prob = derivedTotalProbabilityForDisplay(game, gap);
-    return `${side} ${fmt(marketTotal, 1)} ${fmtPct(prob, 0)}`;
-  }
-
-  return Number.isFinite(marketTotal) ? `Total ${fmt(marketTotal, 1)} prob pending` : 'Total pending';
+  const pick = actualTotalPick(game);
+  if (!pick) return 'Line pending';
+  const prob = Number.isFinite(pick.prob) ? ` · ${fmtPct(pick.prob, 0)}` : '';
+  return `${pick.side === 'OVER' ? 'Over' : 'Under'} ${fmt(pick.line, 1)}${lineOddsText(pick.odds)}${prob}`;
 }
 
 function moneylineSignalText(game) {
-  if (game?.moneylineRepriceRequired === true) return 'Reprice required';
-  if (game?.calibratedProbabilityRejectsScorePick === true || String(game?.modelPickStatus || '').toUpperCase() === 'SCORE_PICK_REJECTED_BY_CALIBRATION') return 'No ML bet';
-  const blocked = recommendationBlockedText(game?.betRecommendation, 'No ML bet');
-  if (blocked) return blocked;
-  const storedProb = coerceProbability(game?.modelMoneylineProb ?? game?.favoriteWinProb);
-  const storedLabel = game?.modelMoneylineLabel || game?.favoriteWinLabel || '';
-  if (storedLabel && Number.isFinite(storedProb)) {
-    return `${storedLabel.replace(/ win$/i, ' ML')} ${fmtPct(storedProb, 0)}`;
-  }
-
-  const home = Number(game?.modelHomeScore);
-  const away = Number(game?.modelAwayScore);
-  if (Number.isFinite(home) && Number.isFinite(away)) {
-    const team = home >= away ? (game?.homeTeam || 'Home') : (game?.awayTeam || 'Away');
-    return `${team} ML prob pending`;
-  }
-  return 'ML pending';
+  const pick = actualMoneylinePick(game);
+  const prob = Number.isFinite(pick.prob) ? ` · ${fmtPct(pick.prob, 0)}` : '';
+  return `${pick.team} ML${lineOddsText(pick.odds)}${prob}`;
 }
 
 function gameMarketSignalsHtml(game) {
   return `
-    <div class="game-signal-row" aria-label="Model picks for current market lines">
-      <span class="game-signal-chip"><b>ML</b> ${escapeHtml(moneylineSignalText(game))}</span>
-      <span class="game-signal-chip"><b>Spread</b> ${escapeHtml(spreadSignalText(game))}</span>
-      <span class="game-signal-chip"><b>Total</b> ${escapeHtml(totalSignalText(game))}</span>
+    <div class="game-signal-row" aria-label="Model picks at current scraped market lines">
+      <span class="game-signal-chip"><b>ML model pick</b> ${escapeHtml(moneylineSignalText(game))}</span>
+      <span class="game-signal-chip"><b>Spread model pick</b> ${escapeHtml(spreadSignalText(game))}</span>
+      <span class="game-signal-chip"><b>Total model pick</b> ${escapeHtml(totalSignalText(game))}</span>
     </div>
   `;
 }
@@ -445,6 +468,18 @@ function fmtSigned(num, digits = 1) {
   const n = Number(num);
   if (!Number.isFinite(n)) return 'N/A';
   return `${n >= 0 ? '+' : ''}${n.toFixed(digits)}`;
+}
+
+function fmtAmerican(num) {
+  if (!hasNumericValue(num)) return '—';
+  const rounded = Math.round(Number(num));
+  return rounded > 0 ? `+${rounded}` : String(rounded);
+}
+
+function americanToDecimal(num) {
+  if (!hasNumericValue(num) || Number(num) === 0) return NaN;
+  const value = Number(num);
+  return value > 0 ? 1 + value / 100 : 1 + 100 / Math.abs(value);
 }
 
 function fmtPct(num, digits = 1) {
@@ -1961,6 +1996,51 @@ function renderHomeTopPicks(homeTopPicks) {
   root.innerHTML = cards.map(topPickCardHtml).join('');
 }
 
+function marketValueCardHtml(card) {
+  const status = String(card?.valueStatus || 'WATCH').toUpperCase();
+  const edge = coerceProbability(card?.probabilityEdge);
+  const roi = coerceProbability(card?.expectedRoi);
+  const prob = coerceProbability(card?.probability);
+  const marketProb = coerceProbability(card?.marketProbability);
+  const age = hasNumericValue(card?.marketAgeHours) ? `${fmt(card.marketAgeHours, 1)}h old` : 'age unavailable';
+  const book = card?.bookmakerTitle || card?.bookmakerKey || 'Sportsbook';
+  return `
+    <article class="top-pick-card ${status === 'VALUE' ? 'trend-hot' : ''}">
+      <div class="top-pick-head">
+        <span class="tag">${escapeHtml(status)}</span>
+        <span class="trend-pill">${escapeHtml(book)}</span>
+      </div>
+      <p class="top-pick-category">${escapeHtml(card?.category || 'Player prop')}</p>
+      <h3>${escapeHtml(card?.pick || '')}</h3>
+      <p class="muted top-pick-matchup">${escapeHtml(card?.matchup || '')}</p>
+      <div class="mini-chip-row">
+        <span class="mini-chip">Price ${escapeHtml(fmtAmerican(card?.selectedOdds))}</span>
+        <span class="mini-chip">Model ${escapeHtml(Number.isFinite(prob) ? fmtPct(prob, 0) : '—')}</span>
+        <span class="mini-chip">Market ${escapeHtml(Number.isFinite(marketProb) ? fmtPct(marketProb, 0) : '—')}</span>
+        <span class="mini-chip">Edge ${escapeHtml(Number.isFinite(edge) ? fmtPct(edge, 1) : '—')}</span>
+        <span class="mini-chip">ROI ${escapeHtml(Number.isFinite(roi) ? fmtPct(roi, 1) : '—')}</span>
+      </div>
+      <p class="insight-copy">${escapeHtml(card?.reason || '')}</p>
+      <div class="tracking-strip"><span>${escapeHtml(age)}</span><strong>${escapeHtml(card?.probabilitySource || '')}</strong></div>
+      <a class="button-link button-link-subtle top-pick-link" href="${escapeHtml(card?.href || '#')}">Analyze</a>
+    </article>
+  `;
+}
+
+function renderHomeMarketValues(homeTopPicks) {
+  const section = byId('home-market-value-section');
+  const root = byId('home-market-value-grid');
+  if (!section || !root) return;
+  const cards = Array.isArray(homeTopPicks?.bestValueProps) ? homeTopPicks.bestValueProps : [];
+  if (!cards.length) {
+    section.hidden = true;
+    root.innerHTML = '';
+    return;
+  }
+  section.hidden = false;
+  root.innerHTML = cards.slice(0, 8).map(marketValueCardHtml).join('');
+}
+
 function compactPickRowHtml(card, options = {}) {
   const prob = coerceProbability(card?.probability);
   const probText = Number.isFinite(prob) ? fmtPct(prob, 0) : (hasNumericValue(card?.model) ? `Model ${fmt(card.model, 1)}` : 'Model');
@@ -2247,7 +2327,7 @@ function weightedPick(items, style, minProb) {
   return shortlist[shortlist.length - 1];
 }
 
-function filterParlayCandidates(pool, { sport, style, minProb }) {
+function filterParlayCandidates(pool, { sport, bookmaker, style, minProb }) {
   let candidates = (pool || [])
     .map(item => ({
       ...item,
@@ -2257,6 +2337,7 @@ function filterParlayCandidates(pool, { sport, style, minProb }) {
     .filter(item => parlayIsPlayable(item) && Number.isFinite(item.probability) && Number.isFinite(item.effectiveProbability));
 
   if (sport && sport !== 'ALL') candidates = candidates.filter(item => String(item.league || '').toUpperCase() === sport);
+  if (bookmaker) candidates = candidates.filter(item => String(item.bookmakerKey || '').toLowerCase() === String(bookmaker).toLowerCase());
 
   candidates = candidates.filter(item => {
     const tracking = parlayTrackingRate(item);
@@ -2289,13 +2370,13 @@ function sameGameParlayCandidates(candidates, count, style) {
   return eligible[0] || [];
 }
 
-function selectParlayLegs(pool, { count, sport, style, correlationMode }) {
+function selectParlayLegs(pool, { count, sport, bookmaker, style, correlationMode }) {
   const baseMinProb = parlayBaseThreshold(style);
   const thresholds = [baseMinProb, Math.max(0.52, baseMinProb - 0.03), Math.max(0.50, baseMinProb - 0.06)];
   let bestSelection = [];
 
   for (const minProb of thresholds) {
-    const candidates = filterParlayCandidates(pool, { sport, style, minProb });
+    const candidates = filterParlayCandidates(pool, { sport, bookmaker, style, minProb });
     const workingPool = correlationMode === 'same-game' ? sameGameParlayCandidates(candidates, count, style) : candidates;
     if (!workingPool.length) continue;
 
@@ -2363,6 +2444,22 @@ function adjustedParlayProbability(legs, correlationMode) {
   return raw * penalty;
 }
 
+function parlayDecimalPayout(legs) {
+  if (!legs.length) return NaN;
+  let payout = 1;
+  for (const leg of legs) {
+    const decimal = americanToDecimal(leg?.selectedOdds);
+    if (!Number.isFinite(decimal)) return NaN;
+    payout *= decimal;
+  }
+  return payout;
+}
+
+function bookmakerLabel(key, pool) {
+  const row = (pool || []).find(item => String(item?.bookmakerKey || '').toLowerCase() === String(key || '').toLowerCase());
+  return row?.bookmakerTitle || key || 'Available book';
+}
+
 function renderParlayBuilder(homeTopPicks) {
   const output = byId('parlay-builder-output');
   if (!output) return;
@@ -2370,33 +2467,47 @@ function renderParlayBuilder(homeTopPicks) {
   const controls = {
     count: byId('parlay-leg-count'),
     sport: byId('parlay-sport-filter'),
+    bookmaker: byId('parlay-bookmaker-filter'),
     style: byId('parlay-risk-style'),
     correlationMode: byId('parlay-correlation-mode'),
     reroll: byId('parlay-reroll'),
   };
 
+  const books = Array.from(new Set((homeTopPicks?.bookmakers || pool.map(item => item?.bookmakerKey))
+    .map(value => String(value || '').toLowerCase()).filter(Boolean)));
+  if (controls.bookmaker) {
+    const current = controls.bookmaker.value;
+    if (books.length) {
+      controls.bookmaker.innerHTML = books.map((key, index) => `<option value="${escapeHtml(key)}"${key === current || (!current && index === 0) ? ' selected' : ''}>${escapeHtml(bookmakerLabel(key, pool))}</option>`).join('');
+    } else {
+      controls.bookmaker.innerHTML = '<option value="">Model watch card</option>';
+    }
+  }
+
   const rerender = () => {
     const count = Number(controls.count?.value || 3);
     const sport = controls.sport?.value || 'MLB';
+    const bookmaker = controls.bookmaker?.value || '';
     const style = controls.style?.value || 'balanced';
     const correlationMode = controls.correlationMode?.value || 'avoid';
     const minProb = parlayBaseThreshold(style);
-    const matchingCandidates = filterParlayCandidates(pool, { sport, style, minProb });
-    const legs = selectParlayLegs(pool, { count, sport, style, correlationMode });
+    const matchingCandidates = filterParlayCandidates(pool, { sport, bookmaker, style, minProb });
+    const legs = selectParlayLegs(pool, { count, sport, bookmaker, style, correlationMode });
     if (!legs.length) {
       output.innerHTML = '<div class="empty-state">No playable MLB candidates meet those filters. Try a broader style or fewer legs.</div>';
       return;
     }
     const estimate = adjustedParlayProbability(legs, correlationMode);
+    const decimalPayout = parlayDecimalPayout(legs);
     output.innerHTML = `
       <article class="parlay-card">
         <div class="parlay-card-head">
           <div>
             <p class="eyebrow">Generated MLB card</p>
             <h3>${legs.length}-pick ${style === 'safe' ? 'safer' : style === 'upside' ? 'upside' : 'balanced'} card</h3>
-            <p class="muted">${escapeHtml(String(matchingCandidates.length))} playable candidates passed the line, category-form, and conflict filters.</p>
+            <p class="muted">${escapeHtml(String(matchingCandidates.length))} playable ${escapeHtml(bookmaker ? bookmakerLabel(bookmaker, pool) : 'model')} candidates passed the price, value, category-form, and conflict filters.</p>
           </div>
-          <div class="parlay-prob"><span>Model joint estimate</span><strong>${escapeHtml(Number.isFinite(estimate) ? fmtPct(estimate, 1) : 'N/A')}</strong></div>
+          <div class="parlay-prob"><span>Model joint estimate</span><strong>${escapeHtml(Number.isFinite(estimate) ? fmtPct(estimate, 1) : 'N/A')}</strong><small>${escapeHtml(Number.isFinite(decimalPayout) ? `${decimalPayout.toFixed(2)}x listed payout` : 'watch-card only')}</small></div>
         </div>
         <ol class="parlay-leg-list">
           ${legs.map(leg => {
@@ -2406,13 +2517,13 @@ function renderParlayBuilder(homeTopPicks) {
             <li>
               <div>
                 <strong>${escapeHtml(leg.pick || leg.title || '')}</strong>
-                <span>${escapeHtml([leg.league, leg.matchup || leg.category, leg?.tracking?.record ? `Category ${leg.tracking.record}` : ''].filter(Boolean).join(' • '))}</span>
+                <span>${escapeHtml([leg.league, leg.matchup || leg.category, leg.bookmakerTitle || '', hasNumericValue(leg.selectedOdds) ? fmtAmerican(leg.selectedOdds) : '', leg?.tracking?.record ? `Category ${leg.tracking.record}` : ''].filter(Boolean).join(' • '))}</span>
               </div>
               <a href="${escapeHtml(leg.href || '#')}">${escapeHtml(fmtPct(adjusted, 0))}<small> adj.${Number.isFinite(raw) ? ` / ${fmtPct(raw, 0)} model` : ''}</small></a>
             </li>`;
           }).join('')}
         </ol>
-        <p class="muted">The builder excludes pitcher average-only projections, blocked or repriced game markets, duplicate player exposure, and contradictory same-game legs. The estimate is not sportsbook odds.</p>
+        <p class="muted">With market data, all legs use the same selected sportsbook and its exact prices. The builder excludes average-only projections, stale or blocked markets, duplicate player exposure, and contradictory same-game legs.</p>
       </article>
     `;
   };
@@ -2530,6 +2641,7 @@ const nextProps = selectHomepageTopProps(nextPool, 10);
     renderProps(nextProps, 'props-next-body');
     renderTopPickPulse(homeTopPicks);
     renderHomeTopPicks(homeTopPicks);
+    renderHomeMarketValues(homeTopPicks);
     renderParlayBuilder(homeTopPicks);
     renderMlbHomeBoardsSnapshot(homeTopPicks);
     renderHighConfidenceGames(homeTopPicks, activeGames, meta);
