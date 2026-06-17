@@ -220,26 +220,36 @@ function lineOddsText(value) {
 function actualMoneylinePick(game) {
   const awayTeam = String(game?.awayTeam || 'Away').toUpperCase();
   const homeTeam = String(game?.homeTeam || 'Home').toUpperCase();
-  let team = String(game?.modelPickTeam || '').toUpperCase();
-  let prob = coerceProbability(game?.calibratedModelPickWinProb ?? game?.modelMoneylineProb);
+  const awayProb = coerceProbability(game?.awayWinProb);
+  const homeProb = coerceProbability(game?.homeWinProb);
 
-  if (![awayTeam, homeTeam].includes(team)) {
-    const awayProb = coerceProbability(game?.awayWinProb);
-    const homeProb = coerceProbability(game?.homeWinProb);
-    if (Number.isFinite(awayProb) || Number.isFinite(homeProb)) {
-      team = (Number.isFinite(awayProb) ? awayProb : 0) >= (Number.isFinite(homeProb) ? homeProb : 0)
-        ? awayTeam : homeTeam;
-      prob = team === awayTeam ? awayProb : homeProb;
+  // The public pick must be the side with the larger calibrated win
+  // probability. Do not pair modelPickTeam with a sub-50% probability.
+  let team = '';
+  let prob = NaN;
+  if (Number.isFinite(awayProb) || Number.isFinite(homeProb)) {
+    if ((Number.isFinite(awayProb) ? awayProb : -1) >= (Number.isFinite(homeProb) ? homeProb : -1)) {
+      team = awayTeam;
+      prob = awayProb;
     } else {
-      const awayScore = Number(game?.modelAwayScore);
-      const homeScore = Number(game?.modelHomeScore);
-      team = awayScore >= homeScore ? awayTeam : homeTeam;
+      team = homeTeam;
+      prob = homeProb;
     }
   }
 
-  if (!Number.isFinite(prob)) {
-    prob = team === awayTeam ? coerceProbability(game?.awayWinProb) : coerceProbability(game?.homeWinProb);
+  if (!team) {
+    team = String(game?.modelPickTeam || '').toUpperCase();
+    prob = coerceProbability(game?.calibratedModelPickWinProb ?? game?.modelMoneylineProb);
   }
+  if (![awayTeam, homeTeam].includes(team)) {
+    const awayScore = Number(game?.modelAwayScore);
+    const homeScore = Number(game?.modelHomeScore);
+    team = awayScore >= homeScore ? awayTeam : homeTeam;
+  }
+  if (!Number.isFinite(prob)) {
+    prob = team === awayTeam ? awayProb : homeProb;
+  }
+
   const odds = team === awayTeam
     ? (game?.marketAwayML ?? game?.awayML ?? game?.awayMoneyline)
     : (game?.marketHomeML ?? game?.homeML ?? game?.homeMoneyline);
@@ -263,42 +273,76 @@ function actualSpreadPick(game) {
   const awaySpread = marketSpreadForDisplay(game);
   if (!Number.isFinite(awaySpread) || game?.spreadLinePairValid === false) return null;
   const homeSpread = hasNumericValue(game?.homeSpread) ? Number(game.homeSpread) : -awaySpread;
+
+  const candidates = [
+    {
+      side: 'away',
+      team: game?.awayTeam || 'Away',
+      line: awaySpread,
+      odds: game?.awaySpreadOdds,
+      prob: exactRunLineProbability(game, 'away', awaySpread),
+    },
+    {
+      side: 'home',
+      team: game?.homeTeam || 'Home',
+      line: homeSpread,
+      odds: game?.homeSpreadOdds,
+      prob: exactRunLineProbability(game, 'home', homeSpread),
+    },
+  ];
+
+  // When exact probabilities exist for both current run-line sides, choose the
+  // larger one. This keeps the displayed pick and probability on the same side.
+  const exactBest = candidates
+    .filter(item => Number.isFinite(item.prob))
+    .sort((a, b) => b.prob - a.prob)[0];
+  if (exactBest) return exactBest;
+
   const storedSide = String(game?.spreadPickSide || '').toUpperCase();
   const edge = spreadEdgeForDisplay(game);
-  let side = storedSide === 'HOME_SPREAD' ? 'home'
+  const side = storedSide === 'HOME_SPREAD' ? 'home'
     : storedSide === 'AWAY_SPREAD' ? 'away'
     : (Number.isFinite(edge) && edge > 0 ? 'home' : 'away');
-  const team = side === 'home' ? (game?.homeTeam || 'Home') : (game?.awayTeam || 'Away');
-  const line = side === 'home' ? homeSpread : awaySpread;
-  const odds = side === 'home' ? game?.homeSpreadOdds : game?.awaySpreadOdds;
-
-  let prob = exactRunLineProbability(game, side, line);
+  const fallback = candidates.find(item => item.side === side) || candidates[0];
   const selectedLine = Number(game?.selectedSpreadLine);
   const storedProb = coerceProbability(game?.spreadCoverProbEst ?? game?.modelSpreadPickProb);
-  const storedMatchesSide = (side === 'home' && storedSide === 'HOME_SPREAD') || (side === 'away' && storedSide === 'AWAY_SPREAD');
-  const storedMatchesLine = !Number.isFinite(selectedLine) || Math.abs(selectedLine - line) < 0.01;
-  if (!Number.isFinite(prob) && storedMatchesSide && storedMatchesLine && Number.isFinite(storedProb)) prob = storedProb;
-  if (!Number.isFinite(prob) && Number.isFinite(edge)) prob = derivedSpreadProbabilityForDisplay(game, edge);
-  return { team, side, line, odds, prob };
+  const storedMatchesLine = !Number.isFinite(selectedLine) || Math.abs(selectedLine - fallback.line) < 0.01;
+  if (storedMatchesLine && Number.isFinite(storedProb)) fallback.prob = storedProb;
+  if (!Number.isFinite(fallback.prob) && Number.isFinite(edge)) {
+    fallback.prob = derivedSpreadProbabilityForDisplay(game, edge);
+  }
+  return fallback;
 }
 
 function actualTotalPick(game) {
   const line = Number(game?.marketTotal);
   if (!Number.isFinite(line)) return null;
-  let side = String(game?.totalPickSide || '').toUpperCase();
   const overProb = coerceProbability(game?.marketOverProb);
   const underProb = coerceProbability(game?.marketUnderProb);
-  if (!['OVER', 'UNDER'].includes(side)) {
-    if (Number.isFinite(overProb) || Number.isFinite(underProb)) {
-      side = (Number.isFinite(overProb) ? overProb : 0) >= (Number.isFinite(underProb) ? underProb : 0) ? 'OVER' : 'UNDER';
+
+  // Exact probabilities for the current market line take precedence over a
+  // stored side label. This prevents a side from being paired with the other
+  // side's probability.
+  let side = '';
+  let prob = NaN;
+  if (Number.isFinite(overProb) || Number.isFinite(underProb)) {
+    if ((Number.isFinite(overProb) ? overProb : -1) >= (Number.isFinite(underProb) ? underProb : -1)) {
+      side = 'OVER';
+      prob = overProb;
     } else {
-      side = Number(game?.modelTotal) >= line ? 'OVER' : 'UNDER';
+      side = 'UNDER';
+      prob = underProb;
     }
   }
 
-  let prob = side === 'OVER' ? overProb : underProb;
-  const storedProb = coerceProbability(game?.totalPickProbEst ?? game?.modelTotalPickProb);
-  if (!Number.isFinite(prob) && game?.totalRepriceRequired !== true && Number.isFinite(storedProb)) prob = storedProb;
+  if (!side) side = String(game?.totalPickSide || '').toUpperCase();
+  if (!['OVER', 'UNDER'].includes(side)) {
+    side = Number(game?.modelTotal) >= line ? 'OVER' : 'UNDER';
+  }
+  if (!Number.isFinite(prob)) {
+    const storedProb = coerceProbability(game?.totalPickProbEst ?? game?.modelTotalPickProb);
+    if (game?.totalRepriceRequired !== true && Number.isFinite(storedProb)) prob = storedProb;
+  }
   if (!Number.isFinite(prob) && Number.isFinite(Number(game?.modelTotal))) {
     prob = derivedTotalProbabilityForDisplay(game, Number(game.modelTotal) - line);
   }
@@ -2137,27 +2181,104 @@ function quickGameCardHtml(item) {
   `;
 }
 
+function strongestGameBoardSignal(game) {
+  const matchup = `${game?.awayTeam || ''} @ ${game?.homeTeam || ''}`.trim();
+  const href = `game.html?id=${encodeURIComponent(game?.id || '')}`;
+  const candidates = [];
+
+  const ml = actualMoneylinePick(game);
+  if (Number.isFinite(ml?.prob) && hasNumericValue(ml?.odds)) {
+    candidates.push({
+      id: game?.id,
+      league: game?.league || 'MLB',
+      matchup,
+      pick: `ML · ${ml.team}${lineOddsText(ml.odds)}`,
+      probability: ml.prob,
+      modelScore: `Model win probability ${fmtPct(ml.prob, 0)}`,
+      href,
+      market: 'ML',
+      priced: true,
+    });
+  }
+
+  const spread = actualSpreadPick(game);
+  if (spread && Number.isFinite(spread.prob) && hasNumericValue(spread.odds)) {
+    candidates.push({
+      id: game?.id,
+      league: game?.league || 'MLB',
+      matchup,
+      pick: `SPREAD · ${spread.team} ${fmtSigned(spread.line, 1)}${lineOddsText(spread.odds)}`,
+      probability: spread.prob,
+      modelScore: `Cover probability ${fmtPct(spread.prob, 0)}`,
+      href,
+      market: 'SPREAD',
+      priced: true,
+    });
+  }
+
+  const total = actualTotalPick(game);
+  if (total && Number.isFinite(total.prob) && hasNumericValue(total.odds)) {
+    const sideText = total.side === 'OVER' ? 'Over' : 'Under';
+    candidates.push({
+      id: game?.id,
+      league: game?.league || 'MLB',
+      matchup,
+      pick: `TOTAL · ${sideText} ${fmt(total.line, 1)}${lineOddsText(total.odds)}`,
+      probability: total.prob,
+      modelScore: `Model total ${fmt(game?.modelTotal, 1)} · ${sideText} probability ${fmtPct(total.prob, 0)}`,
+      href,
+      market: 'TOTAL',
+      priced: true,
+    });
+  }
+
+  if (String(game?.league || '').toUpperCase() === 'MLB') {
+    const nrfi = coerceProbability(game?.nrfiProb);
+    const yrfi = coerceProbability(game?.yrfiProb);
+    if (Number.isFinite(nrfi) || Number.isFinite(yrfi)) {
+      const isNrfi = (Number.isFinite(nrfi) ? nrfi : -1) >= (Number.isFinite(yrfi) ? yrfi : -1);
+      const probability = isNrfi ? nrfi : yrfi;
+      candidates.push({
+        id: game?.id,
+        league: game?.league || 'MLB',
+        matchup,
+        pick: isNrfi ? 'NRFI' : 'YRFI',
+        probability,
+        modelScore: `NRFI ${Number.isFinite(nrfi) ? fmtPct(nrfi, 0) : '—'} / YRFI ${Number.isFinite(yrfi) ? fmtPct(yrfi, 0) : '—'}`,
+        href,
+        market: isNrfi ? 'NRFI' : 'YRFI',
+        priced: false,
+      });
+    }
+  }
+
+  return candidates
+    .filter(item => Number.isFinite(item.probability))
+    .sort((a, b) => (b.probability - a.probability) || (Number(b.priced) - Number(a.priced)))[0] || null;
+}
+
 function renderHighConfidenceGames(homeTopPicks, fallbackGames, meta) {
   const root = byId('high-confidence-games-grid');
   if (!root) return;
-  const cards = Array.isArray(homeTopPicks?.highConfidenceGames) ? homeTopPicks.highConfidenceGames : [];
-  if (cards.length) {
-    root.innerHTML = cards.slice(0, 8).map(quickGameCardHtml).join('');
+
+  // Recalculate from the current games payload so the board always compares
+  // ML, spread, total, and NRFI/YRFI on the same slate and current scraped lines.
+  const today = (fallbackGames || [])
+    .filter(game => game.gameDate === meta?.targetDate)
+    .map(strongestGameBoardSignal)
+    .filter(Boolean)
+    .sort((a, b) => (b.probability - a.probability) || (Number(b.priced) - Number(a.priced)))
+    .slice(0, 8);
+
+  if (today.length) {
+    root.innerHTML = today.map(quickGameCardHtml).join('');
     return;
   }
-  const today = (fallbackGames || []).filter(g => g.gameDate === meta?.targetDate)
-    .map(g => ({
-      league: g.league,
-      matchup: `${g.awayTeam} @ ${g.homeTeam}`,
-      pick: g.favoriteWinLabel || 'Game lean',
-      probability: g.favoriteWinProb,
-      modelScore: `${fmt(g.modelAwayScore, 1)} - ${fmt(g.modelHomeScore, 1)}`,
-      href: `game.html?id=${encodeURIComponent(g.id)}`,
-      reason: g.summary || ''
-    }))
-    .sort((a, b) => coerceProbability(b.probability) - coerceProbability(a.probability))
-    .slice(0, 8);
-  root.innerHTML = today.length ? today.map(quickGameCardHtml).join('') : '<div class="empty-state">No high-confidence games available yet.</div>';
+
+  const cards = Array.isArray(homeTopPicks?.highConfidenceGames) ? homeTopPicks.highConfidenceGames : [];
+  root.innerHTML = cards.length
+    ? cards.slice(0, 8).map(quickGameCardHtml).join('')
+    : '<div class="empty-state">No current game signals available yet.</div>';
 }
 
 function parlayItemKey(item) {

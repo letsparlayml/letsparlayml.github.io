@@ -54,6 +54,14 @@ def fmt_num(value: Any, digits: int = 1) -> str:
     return f"{n:.{digits}f}"
 
 
+def fmt_american(value: Any) -> str:
+    n = num(value)
+    if n is None:
+        return ""
+    rounded = int(round(n))
+    return f"+{rounded}" if rounded > 0 else str(rounded)
+
+
 def normalize_result(value: Any) -> str:
     raw = str(value or "").strip().lower()
     if "win" in raw:
@@ -122,6 +130,9 @@ def stat_label(stat: str) -> str:
     labels = {
         "H": "Hits",
         "HRR": "Hits + Runs + RBI",
+        "R": "Runs",
+        "RBI": "RBIs",
+        "OUTS": "Pitcher Outs",
         "TB": "Total Bases",
         "K": "Pitcher Ks",
         "HA": "Pitcher Hits Allowed",
@@ -368,6 +379,71 @@ def compact_prop(row: dict[str, Any], tracker: dict[str, Any] | None = None, *, 
     }
 
 
+def compact_market_value(row: dict[str, Any]) -> dict[str, Any]:
+    probability = pct(row.get("modelProbability"))
+    edge = pct(row.get("probabilityEdge"))
+    roi = pct(row.get("expectedRoi"))
+    status = str(row.get("recommendation") or "PASS").upper()
+    book_key = str(row.get("bookmakerKey") or "").lower()
+    price = num(row.get("price"))
+    line = num(row.get("line"))
+    player = str(row.get("player") or "")
+    stat = str(row.get("stat") or "").upper()
+    side = str(row.get("side") or "").upper()
+    pick = str(row.get("pick") or f"{player} {side.title()} {fmt_num(line, 1)} {stat_label(stat)}")
+    return {
+        "id": str(row.get("id") or f"VALUE|{book_key}|{player}|{stat}|{line}|{side}")[:180],
+        "type": "prop",
+        "league": "MLB",
+        "category": stat_label(stat),
+        "stat": stat,
+        "player": player,
+        "playerId": row.get("playerId"),
+        "team": row.get("team") or "",
+        "opp": row.get("opp") or "",
+        "matchup": row.get("matchup") or "",
+        "gameId": row.get("gameId") or row.get("eventId"),
+        "line": line,
+        "side": side,
+        "model": num(row.get("modelProjection")),
+        "probability": probability,
+        "marketProbability": pct(row.get("marketNoVigProbability")),
+        "probabilityEdge": edge,
+        "expectedRoi": roi,
+        "selectedOdds": price,
+        "bookmakerKey": book_key,
+        "bookmakerTitle": row.get("bookmakerTitle") or book_key,
+        "marketUpdatedAt": row.get("marketUpdatedAt"),
+        "marketAgeHours": num(row.get("marketAgeHours")),
+        "probabilitySource": row.get("probabilitySource"),
+        "valueStatus": status,
+        "title": f"{status}: {stat_label(stat)}",
+        "pick": pick,
+        "reason": row.get("recommendationReason") or "Model-versus-market value signal.",
+        "href": row.get("href") or "props_analyzer.html?league=MLB",
+        "tracking": row.get("tracking") or {},
+        "playable": status in {"VALUE", "LEAN"} and price is not None and row.get("marketPairValid") is True,
+        "actionable": status in {"VALUE", "LEAN"} and price is not None and row.get("marketPairValid") is True,
+        "priceRequired": price is None,
+        "linePairValid": row.get("marketPairValid") is True,
+        "roleGate": row.get("roleGate"),
+        "matchStatus": row.get("matchStatus"),
+    }
+
+
+def bookmaker_from_game(game: dict[str, Any]) -> tuple[str, str]:
+    key = str(game.get("bookmakerKey") or game.get("marketBookmakerKey") or "").strip().lower()
+    title = str(game.get("bookmakerTitle") or game.get("marketBookmakerTitle") or "").strip()
+    source = str(game.get("marketLineSource") or game.get("marketSource") or "")
+    if not title and "•" in source:
+        title = source.split("•", 1)[1].strip()
+    if not key and title:
+        normalized = re.sub(r"[^a-z0-9]+", "", title.lower())
+        aliases = {"draftkings": "draftkings", "fanduel": "fanduel", "betmgm": "betmgm", "caesars": "caesars", "espnbet": "espnbet", "betrivers": "betrivers", "pinnacle": "pinnacle", "bet365": "bet365"}
+        key = aliases.get(normalized, normalized)
+    return key, title or key
+
+
 def nba_prop_url(row: dict[str, Any]) -> str:
     from urllib.parse import urlencode
 
@@ -590,6 +666,9 @@ def game_leg_metadata(game: dict[str, Any], kind: str) -> dict[str, Any]:
         "linePairValid": line_pair_valid,
         "calibrationRejected": calibration_rejected,
         "expectedRoi": num(game.get("expectedRoi") if market == "ML" else game.get("spreadExpectedRoi") if market == "SPREAD" else game.get("totalExpectedRoi") if market == "TOTAL" else None),
+        "bookmakerKey": bookmaker_from_game(game)[0],
+        "bookmakerTitle": bookmaker_from_game(game)[1],
+        "marketUpdatedAt": game.get("marketLineUpdated") or game.get("marketUpdatedAt"),
     }
 
 
@@ -634,62 +713,127 @@ def total_pick_from_game(g: dict[str, Any]) -> tuple[float, str, str]:
 
 def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     today = [g for g in games if safe_date(g.get("gameDate")) == date]
-    high_conf = []
-    cards = []
+    high_conf: list[dict[str, Any]] = []
+    cards: list[dict[str, Any]] = []
+
+    # The condensed game board should show one strongest signal per game after
+    # comparing ML, spread, total, and NRFI/YRFI. The old logic omitted spread,
+    # only considered Overs, and applied a separate gate to ML, which caused the
+    # board to be filled almost entirely by first-inning signals.
     for g in today:
-        favorite_prob = pct(g.get("favoriteWinProb"))
-        over_prob = pct(g.get("marketOverProb") if g.get("marketOverProb") is not None else g.get("fallbackOverProb"))
-        nrfi_prob = pct(g.get("nrfiProb"))
-        yrfi_prob = pct(g.get("yrfiProb"))
-        close_prob = pct(g.get("oneRunGameProb"))
         league = str(g.get("league") or "").upper()
-        ml_allowed = g.get('moneylineActionable') is not False and not g.get('calibratedProbabilityRejectsScorePick')
-        if ml_allowed and favorite_prob is not None and favorite_prob >= 0.60:
-            high_conf.append({
-                "id": g.get("id"), "league": league,
-                "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
-                "pick": g.get("favoriteWinLabel") or "Favorite win",
-                "probability": favorite_prob,
-                "modelScore": f"{fmt_num(g.get('awayTeam') and g.get('modelAwayScore'))} - {fmt_num(g.get('modelHomeScore'))}",
-                "href": game_url(g),
-                "reason": g.get("summary") or "Win-probability edge from model score projection.",
-            })
-        if g.get('totalRepriceRequired') is not True and (not g.get('totalFinalRecommendation') or g.get('totalActionable') is not False) and over_prob is not None and over_prob >= 0.58:
-            high_conf.append({
-                "id": g.get("id"), "league": league,
-                "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
-                "pick": g.get("marketTotalLabel") or g.get("fallbackTotalLabel") or "Over signal",
-                "probability": over_prob,
-                "modelScore": f"Total {fmt_num(g.get('modelTotal'))}",
-                "href": game_url(g),
-                "reason": g.get("summary") or "Total probability edge from model total projection.",
-            })
-        if league == "MLB":
-            nrfi_pick = "NRFI" if (nrfi_prob or 0) >= (yrfi_prob or 0) else "YRFI"
-            nrfi_pick_prob = max(nrfi_prob or 0, yrfi_prob or 0)
-            if nrfi_pick_prob >= 0.54:
-                high_conf.append({
-                    "id": g.get("id"), "league": league,
-                    "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
-                    "pick": nrfi_pick,
-                    "probability": nrfi_pick_prob,
-                    "modelScore": f"NRFI {fmt_num((nrfi_prob or 0)*100,0)}% / YRFI {fmt_num((yrfi_prob or 0)*100,0)}%",
-                    "href": game_url(g),
-                    "reason": g.get("summary") or "First-inning probability signal.",
+        matchup = f"{g.get('awayTeam')} @ {g.get('homeTeam')}"
+        candidates: list[dict[str, Any]] = []
+
+        # Moneyline: always pair the team with its own calibrated probability and
+        # current scraped price.
+        away_prob = pct(g.get("awayWinProb"))
+        home_prob = pct(g.get("homeWinProb"))
+        if away_prob is not None or home_prob is not None:
+            if (away_prob if away_prob is not None else -1) >= (home_prob if home_prob is not None else -1):
+                team, probability, odds = g.get("awayTeam"), away_prob, num(g.get("awayML"))
+            else:
+                team, probability, odds = g.get("homeTeam"), home_prob, num(g.get("homeML"))
+            if probability is not None and odds is not None:
+                candidates.append({
+                    "id": g.get("id"), "league": league, "matchup": matchup,
+                    "pick": f"ML · {team} ({fmt_american(odds)})",
+                    "probability": probability,
+                    "modelScore": f"Model win probability {probability * 100:.0f}%",
+                    "href": game_url(g), "market": "ML", "priced": True,
                 })
-        if close_prob is not None and close_prob >= 0.22:
-            high_conf.append({
-                "id": g.get("id"), "league": league,
-                "matchup": f"{g.get('awayTeam')} @ {g.get('homeTeam')}",
-                "pick": "Close-game watch",
-                "probability": close_prob,
-                "modelScore": f"One-run probability {fmt_num(close_prob*100,0)}%",
-                "href": game_url(g),
-                "reason": "Model sees a higher-than-usual chance this lands tight.",
+
+        # Spread: compare both sides when the exact +/-1.5 probabilities exist.
+        away_line = num(g.get("awaySpread") if g.get("awaySpread") is not None else g.get("marketSpread"))
+        home_line = num(g.get("homeSpread"))
+        if home_line is None and away_line is not None:
+            home_line = -away_line
+        spread_candidates: list[tuple[float, str, float, float | None]] = []
+        if away_line is not None and home_line is not None:
+            if abs(away_line - 1.5) < 0.11:
+                ap = pct(g.get("awayPlus1p5Prob")); hp = pct(g.get("homeMinus1p5Prob"))
+            elif abs(away_line + 1.5) < 0.11:
+                ap = pct(g.get("awayMinus1p5Prob")); hp = pct(g.get("homePlus1p5Prob"))
+            else:
+                ap = hp = None
+            if ap is not None:
+                spread_candidates.append((ap, str(g.get("awayTeam") or "Away"), away_line, num(g.get("awaySpreadOdds"))))
+            if hp is not None:
+                spread_candidates.append((hp, str(g.get("homeTeam") or "Home"), home_line, num(g.get("homeSpreadOdds"))))
+
+        if not spread_candidates:
+            stored_prob = pct(g.get("spreadCoverProbEst") if g.get("spreadCoverProbEst") is not None else g.get("modelSpreadPickProb"))
+            stored_side = str(g.get("spreadPickSide") or "").upper()
+            if stored_side == "HOME_SPREAD" and home_line is not None:
+                spread_candidates.append((stored_prob or 0.0, str(g.get("homeTeam") or "Home"), home_line, num(g.get("homeSpreadOdds"))))
+            elif stored_side == "AWAY_SPREAD" and away_line is not None:
+                spread_candidates.append((stored_prob or 0.0, str(g.get("awayTeam") or "Away"), away_line, num(g.get("awaySpreadOdds"))))
+
+        valid_spreads = [item for item in spread_candidates if item[0] > 0 and item[3] is not None]
+        if valid_spreads:
+            probability, team, line, odds = max(valid_spreads, key=lambda item: item[0])
+            sign = "+" if line > 0 else ""
+            candidates.append({
+                "id": g.get("id"), "league": league, "matchup": matchup,
+                "pick": f"SPREAD · {team} {sign}{fmt_num(line, 1)} ({fmt_american(odds)})",
+                "probability": probability,
+                "modelScore": f"Cover probability {probability * 100:.0f}%",
+                "href": game_url(g), "market": "SPREAD", "priced": True,
             })
 
-    high_conf.sort(key=lambda x: x.get("probability") or 0, reverse=True)
+        # Total: compare both exact current-line probabilities. If unavailable,
+        # use the selected total side/probability only as a fallback.
+        market_total = num(g.get("marketTotal"))
+        over_prob = pct(g.get("marketOverProb"))
+        under_prob = pct(g.get("marketUnderProb"))
+        total_side = ""
+        total_prob = None
+        if over_prob is not None or under_prob is not None:
+            if (over_prob if over_prob is not None else -1) >= (under_prob if under_prob is not None else -1):
+                total_side, total_prob = "Over", over_prob
+            else:
+                total_side, total_prob = "Under", under_prob
+        else:
+            stored_side = str(g.get("totalPickSide") or "").upper()
+            stored_prob = pct(g.get("totalPickProbEst") if g.get("totalPickProbEst") is not None else g.get("modelTotalPickProb"))
+            if stored_side in {"OVER", "UNDER"} and stored_prob is not None:
+                total_side, total_prob = stored_side.title(), stored_prob
+        total_odds = num(g.get("overOdds")) if total_side == "Over" else num(g.get("underOdds")) if total_side == "Under" else None
+        if market_total is not None and total_prob is not None and total_odds is not None:
+            candidates.append({
+                "id": g.get("id"), "league": league, "matchup": matchup,
+                "pick": f"TOTAL · {total_side} {fmt_num(market_total, 1)} ({fmt_american(total_odds)})",
+                "probability": total_prob,
+                "modelScore": f"Model total {fmt_num(g.get('modelTotal'), 1)} · {total_side} probability {total_prob * 100:.0f}%",
+                "href": game_url(g), "market": "TOTAL", "priced": True,
+            })
 
+        # First inning remains eligible, but it competes against the three main
+        # markets instead of being appended automatically for every game.
+        if league == "MLB":
+            nrfi_prob = pct(g.get("nrfiProb"))
+            yrfi_prob = pct(g.get("yrfiProb"))
+            if nrfi_prob is not None or yrfi_prob is not None:
+                if (nrfi_prob if nrfi_prob is not None else -1) >= (yrfi_prob if yrfi_prob is not None else -1):
+                    side, probability = "NRFI", nrfi_prob
+                else:
+                    side, probability = "YRFI", yrfi_prob
+                if probability is not None:
+                    candidates.append({
+                        "id": g.get("id"), "league": league, "matchup": matchup,
+                        "pick": side, "probability": probability,
+                        "modelScore": f"NRFI {(nrfi_prob or 0) * 100:.0f}% / YRFI {(yrfi_prob or 0) * 100:.0f}%",
+                        "href": game_url(g), "market": side, "priced": False,
+                    })
+
+        if candidates:
+            best = max(candidates, key=lambda item: (item.get("probability") or 0, bool(item.get("priced"))))
+            high_conf.append(best)
+
+    high_conf.sort(key=lambda x: ((x.get("probability") or 0), bool(x.get("priced"))), reverse=True)
+
+    # Preserve the featured-card selection below; this is separate from the
+    # condensed one-best-market-per-game board.
     top_ml = next((g for g in sorted(today, key=lambda x: pct(x.get('favoriteWinProb')) or 0, reverse=True) if g.get('moneylineActionable') is not False and not g.get('calibratedProbabilityRejectsScorePick') and (pct(g.get('favoriteWinProb')) or 0) >= 0.58), None)
     if top_ml:
         cards.append(compact_game(
@@ -730,7 +874,6 @@ def choose_game_cards(games: list[dict[str, Any]], date: str, results_history: l
         ))
 
     return cards, high_conf[:12]
-
 
 def parse_summary_probability(summary: str, pattern: str) -> float | None:
     match = re.search(pattern, summary or "", flags=re.IGNORECASE)
@@ -972,6 +1115,9 @@ def main() -> None:
     games = read_json(DATA / "games.json", [])
     analyzer = read_json(DATA / "mlb_props_analyzer.json", {"entries": []})
     entries = analyzer.get("entries", []) if isinstance(analyzer, dict) else []
+    prop_value_payload = read_json(DATA / "mlb_prop_values.json", {"values": [], "allOffers": []})
+    prop_value_rows = prop_value_payload.get("values", []) if isinstance(prop_value_payload, dict) else []
+    prop_value_all_offers = prop_value_payload.get("allOffers", []) if isinstance(prop_value_payload, dict) else []
     feature_config = read_json(DATA / 'site_features.json', {})
     active_leagues = {str(x).upper() for x in feature_config.get('activeLeagues', ['MLB'])}
     nba_analyzer = read_json(DATA / "nba_props_analyzer.json", {"entries": []}) if 'NBA' in active_leagues else {'entries': []}
@@ -1020,6 +1166,16 @@ def main() -> None:
                 if "-" in str(raw_key):
                     game_matchups[str(raw_key).split("-")[-1]] = matchup
 
+    market_value_cards = [
+        compact_market_value(row) for row in prop_value_rows
+        if safe_date(row.get("date")) == target and str(row.get("recommendation") or "").upper() in {"VALUE", "LEAN", "WATCH"}
+    ]
+    market_value_cards.sort(key=lambda card: (
+        {"VALUE": 3, "LEAN": 2, "WATCH": 1}.get(str(card.get("valueStatus") or ""), 0),
+        card.get("expectedRoi") if card.get("expectedRoi") is not None else -999,
+        card.get("probabilityEdge") if card.get("probabilityEdge") is not None else -999,
+    ), reverse=True)
+
     top_cards: list[dict[str, Any]] = []
     if game_cards:
         top_cards.extend(game_cards[:3])
@@ -1042,13 +1198,22 @@ def main() -> None:
     top_cards = sorted(top_cards, key=lambda c: (c.get("probability") is not None, c.get("probability") or 0), reverse=True)[:10]
 
     parlay_pool = []
-    # MLB props: include more than just the top table rows so the frontend has room
-    # to reshuffle while still staying inside stronger model candidates.
-    for group in (hits[:10], hrr[:10], tb15[:10]):
-        for row in group:
-            card = compact_prop(row, trackers.get(str(row.get("stat") or "").upper(), {}), card_type="parlay")
-            if card.get("playable") is True and card.get("probability") is not None and card["probability"] >= 0.53:
-                parlay_pool.append(card)
+    # Once real prop prices exist, use exact book/line/price value rows. Until the
+    # first successful scrape, preserve the older static MLB prop pool as a
+    # research/watch-card fallback.
+    market_parlay_cards = [
+        compact_market_value(row) for row in prop_value_all_offers
+        if safe_date(row.get("date")) == target
+        and str(row.get("recommendation") or "").upper() in {"VALUE", "LEAN"}
+    ]
+    if market_parlay_cards:
+        parlay_pool.extend(card for card in market_parlay_cards if card.get("playable") is True)
+    else:
+        for group in (hits[:10], hrr[:10], tb15[:10]):
+            for row in group:
+                card = compact_prop(row, trackers.get(str(row.get("stat") or "").upper(), {}), card_type="parlay")
+                if card.get("playable") is True and card.get("probability") is not None and card["probability"] >= 0.53:
+                    parlay_pool.append(card)
 
     # NBA props: the site already has analyzer entries, so expose a compact slice
     # to the parlay builder instead of making the builder look MLB-only.
@@ -1088,12 +1253,14 @@ def main() -> None:
         "targetDate": target,
         "nextDate": next_date,
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "parlayLogicVersion": "mlb-playable-v2",
+        "parlayLogicVersion": "mlb-priced-value-v3",
         "parlayRules": {
             "activeLeagues": sorted(active_leagues),
             "requiresPlayableLine": True,
             "pitcherAverageOnlyProjectionsExcluded": True,
             "blockedOrRepricedGameMarketsExcluded": True,
+            "sameBookLineAndPriceRequiredWhenMarketDataExists": True,
+            "valueRecommendationsPreferred": True,
         },
         "trackingSummary": {
             "props": trackers,
@@ -1105,6 +1272,11 @@ def main() -> None:
             },
         },
         "topCards": top_cards,
+        "bestValueProps": market_value_cards[:12],
+        "bookmakers": sorted({
+            str(card.get("bookmakerKey") or "") for card in parlay_pool if card.get("bookmakerKey")
+        }),
+        "marketValueGeneratedAt": prop_value_payload.get("generatedAt") if isinstance(prop_value_payload, dict) else None,
         "mlbBoards": {
             "hits": board_payload(hits, trackers["H"]),
             "hrr": board_payload(hrr, trackers["HRR"]),

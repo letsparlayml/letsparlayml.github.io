@@ -75,6 +75,17 @@
 
       <div id="home-top-picks-pulse" class="top-pick-pulse-grid"></div>
       <div id="home-top-picks-grid" class="top-pick-grid"></div>
+
+      <div id="home-market-value-section" class="subsection-stack" hidden>
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="eyebrow">Real lines and prices</p>
+            <h3>Best market value</h3>
+            <p class="muted">These compare the model probability with the sportsbook’s no-vig probability at the exact listed line and price. WATCH entries still need lineup or workload confirmation.</p>
+          </div>
+        </div>
+        <div id="home-market-value-grid" class="top-pick-grid"></div>
+      </div>
     </section>
 
     <section class="panel" id="builder" data-site-feature="parlayBuilder">
@@ -106,6 +117,12 @@
               </select>
             </label>
             <label>
+              Sportsbook
+              <select id="parlay-bookmaker-filter">
+                <option value="">Available book</option>
+              </select>
+            </label>
+            <label>
               Style
               <select id="parlay-risk-style">
                 <option value="safe">Safer</option>
@@ -125,7 +142,7 @@
           <div class="button-link-row builder-action-row">
             <button type="button" id="parlay-reroll" class="button-link">Generate new card</button>
           </div>
-          <p class="muted builder-note">The estimate is a model-based joint hit estimate, not sportsbook odds. Non-playable projections, blocked recommendations, duplicate exposure, and conflicting same-game combinations are removed before a card is built.</p>
+          <p class="muted builder-note">When real prop markets are available, every leg comes from the same selected sportsbook and uses its exact line and price. Non-playable projections, blocked recommendations, duplicate exposure, and conflicting same-game combinations are removed.</p>
         </div>
         <div id="parlay-builder-output" class="builder-output"></div>
       </div>
@@ -306,6 +323,6 @@
     </section>
   </main>
 
-  <script src="assets/app.js?v=10"></script>
+  <script src="assets/app.js?v=11"></script>
 </body>
 </html>

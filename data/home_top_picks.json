@@ -1,15 +1,17 @@
 {
   "targetDate": "2026-06-17",
   "nextDate": "2026-06-18",
-  "generatedAt": "2026-06-17T16:58:56+00:00",
-  "parlayLogicVersion": "mlb-playable-v2",
+  "generatedAt": "2026-06-17T18:57:35+00:00",
+  "parlayLogicVersion": "mlb-priced-value-v3",
   "parlayRules": {
     "activeLeagues": [
       "MLB"
     ],
     "requiresPlayableLine": true,
     "pitcherAverageOnlyProjectionsExcluded": true,
-    "blockedOrRepricedGameMarketsExcluded": true
+    "blockedOrRepricedGameMarketsExcluded": true,
+    "sameBookLineAndPriceRequiredWhenMarketDataExists": true,
+    "valueRecommendationsPreferred": true
   },
   "trackingSummary": {
     "props": {
@@ -341,7 +343,52 @@
       "repriceRequired": false,
       "linePairValid": true,
       "calibrationRejected": true,
-      "expectedRoi": null
+      "expectedRoi": null,
+      "bookmakerKey": "draftkings",
+      "bookmakerTitle": "DraftKings",
+      "marketUpdatedAt": "2026-06-17T16:45:25Z"
+    },
+    {
+      "id": "mlb-823940",
+      "type": "game",
+      "league": "MLB",
+      "category": "Best Game Total Signal",
+      "stat": "TOTAL",
+      "matchup": "TBR @ LAD",
+      "title": "Best Game Total Signal",
+      "pick": "Over 7.0",
+      "probability": 0.5878,
+      "modelAwayScore": 3.998075141286316,
+      "modelHomeScore": 4.905729929802195,
+      "modelTotal": 8.903805071088511,
+      "marketTotal": 7.0,
+      "confidence": "Medium",
+      "reason": "Exact probability for the current market total.",
+      "href": "game.html?id=mlb-823940",
+      "tracking": {
+        "sample": 40,
+        "wins": 16,
+        "losses": 23,
+        "pushes": 1,
+        "record": "16-23-1",
+        "winRate": 0.41025641025641024,
+        "pctText": "41%",
+        "trend": "Cold",
+        "tone": "cold",
+        "label": "Last 40: 16-23-1 (41%)",
+        "scope": "MLB Total results"
+      },
+      "playable": true,
+      "actionable": true,
+      "selectedOdds": -120.0,
+      "priceRequired": false,
+      "repriceRequired": false,
+      "linePairValid": true,
+      "calibrationRejected": false,
+      "expectedRoi": 0.1761833333333334,
+      "bookmakerKey": "draftkings",
+      "bookmakerTitle": "DraftKings",
+      "marketUpdatedAt": "2026-06-17T18:42:57Z"
     },
     {
       "id": "2026-06-17|MLB|666182|TB|1.5",
@@ -461,6 +508,11 @@
       "modelEdge": null
     }
   ],
+  "bestValueProps": [],
+  "bookmakers": [
+    "draftkings"
+  ],
+  "marketValueGeneratedAt": null,
   "mlbBoards": {
     "hits": [
       {
@@ -2429,6 +2481,50 @@
   },
   "highConfidenceGames": [
     {
+      "id": "mlb-823774",
+      "league": "MLB",
+      "matchup": "CLE @ MIL",
+      "pick": "SPREAD · CLE +1.5 (-206)",
+      "probability": 0.73255,
+      "modelScore": "Cover probability 73%",
+      "href": "game.html?id=mlb-823774",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
+      "id": "mlb-824503",
+      "league": "MLB",
+      "matchup": "NYM @ CIN",
+      "pick": "SPREAD · CIN +1.5 (-144)",
+      "probability": 0.7206,
+      "modelScore": "Cover probability 72%",
+      "href": "game.html?id=mlb-824503",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
+      "id": "mlb-823450",
+      "league": "MLB",
+      "matchup": "MIA @ PHI",
+      "pick": "SPREAD · PHI +1.5 (-195)",
+      "probability": 0.69445,
+      "modelScore": "Cover probability 69%",
+      "href": "game.html?id=mlb-823450",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
+      "id": "mlb-823044",
+      "league": "MLB",
+      "matchup": "SDP @ STL",
+      "pick": "SPREAD · SDP +1.5 (-186)",
+      "probability": 0.6941999999999999,
+      "modelScore": "Cover probability 69%",
+      "href": "game.html?id=mlb-823044",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
       "id": "mlb-822721",
       "league": "MLB",
       "matchup": "KCR @ WSN",
@@ -2436,27 +2532,63 @@
       "probability": 0.6915128394056559,
       "modelScore": "NRFI 31% / YRFI 69%",
       "href": "game.html?id=mlb-822721",
-      "reason": "NRFI 31% • WSN win 51%"
+      "market": "YRFI",
+      "priced": false
     },
     {
-      "id": "mlb-824503",
+      "id": "mlb-824913",
       "league": "MLB",
-      "matchup": "NYM @ CIN",
-      "pick": "YRFI",
-      "probability": 0.663431955356634,
-      "modelScore": "NRFI 34% / YRFI 66%",
-      "href": "game.html?id=mlb-824503",
-      "reason": "NRFI 34% • CIN win 55%"
+      "matchup": "SFG @ ATL",
+      "pick": "SPREAD · SFG +1.5 (-174)",
+      "probability": 0.68625,
+      "modelScore": "Cover probability 69%",
+      "href": "game.html?id=mlb-824913",
+      "market": "SPREAD",
+      "priced": true
     },
     {
-      "id": "mlb-823044",
+      "id": "mlb-823127",
       "league": "MLB",
-      "matchup": "SDP @ STL",
-      "pick": "YRFI",
-      "probability": 0.6480066948269813,
-      "modelScore": "NRFI 35% / YRFI 65%",
-      "href": "game.html?id=mlb-823044",
-      "reason": "NRFI 35% • SDP win 52%"
+      "matchup": "BAL @ SEA",
+      "pick": "SPREAD · BAL +1.5 (-197)",
+      "probability": 0.6859500000000001,
+      "modelScore": "Cover probability 69%",
+      "href": "game.html?id=mlb-823127",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
+      "id": "mlb-825072",
+      "league": "MLB",
+      "matchup": "LAA @ ARI",
+      "pick": "SPREAD · LAA +1.5 (-137)",
+      "probability": 0.66795,
+      "modelScore": "Cover probability 67%",
+      "href": "game.html?id=mlb-825072",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
+      "id": "mlb-824178",
+      "league": "MLB",
+      "matchup": "DET @ HOU",
+      "pick": "SPREAD · HOU +1.5 (-184)",
+      "probability": 0.6578999999999999,
+      "modelScore": "Cover probability 66%",
+      "href": "game.html?id=mlb-824178",
+      "market": "SPREAD",
+      "priced": true
+    },
+    {
+      "id": "mlb-824668",
+      "league": "MLB",
+      "matchup": "COL @ CHC",
+      "pick": "SPREAD · COL +1.5 (-123)",
+      "probability": 0.65665,
+      "modelScore": "Cover probability 66%",
+      "href": "game.html?id=mlb-824668",
+      "market": "SPREAD",
+      "priced": true
     },
     {
       "id": "mlb-824746",
@@ -2466,7 +2598,8 @@
       "probability": 0.6339836376302717,
       "modelScore": "NRFI 37% / YRFI 63%",
       "href": "game.html?id=mlb-824746",
-      "reason": "NRFI 37% • BOS win 54%"
+      "market": "YRFI",
+      "priced": false
     },
     {
       "id": "mlb-824992",
@@ -2476,77 +2609,8 @@
       "probability": 0.6333838538838692,
       "modelScore": "NRFI 37% / YRFI 63%",
       "href": "game.html?id=mlb-824992",
-      "reason": "NRFI 37% • PIT win 58%"
-    },
-    {
-      "id": "mlb-824668",
-      "league": "MLB",
-      "matchup": "COL @ CHC",
-      "pick": "YRFI",
-      "probability": 0.6176525185761765,
-      "modelScore": "NRFI 38% / YRFI 62%",
-      "href": "game.html?id=mlb-824668",
-      "reason": "NRFI 38% • CHC win 51%"
-    },
-    {
-      "id": "mlb-823127",
-      "league": "MLB",
-      "matchup": "BAL @ SEA",
-      "pick": "YRFI",
-      "probability": 0.6139555522380028,
-      "modelScore": "NRFI 39% / YRFI 61%",
-      "href": "game.html?id=mlb-823127",
-      "reason": "NRFI 39% • BAL win 51%"
-    },
-    {
-      "id": "mlb-824178",
-      "league": "MLB",
-      "matchup": "DET @ HOU",
-      "pick": "YRFI",
-      "probability": 0.6024962835240737,
-      "modelScore": "NRFI 40% / YRFI 60%",
-      "href": "game.html?id=mlb-824178",
-      "reason": "NRFI 40% • DET win 53%"
-    },
-    {
-      "id": "mlb-824912",
-      "league": "MLB",
-      "matchup": "SFG @ ATL",
-      "pick": "YRFI",
-      "probability": 0.5664317673598323,
-      "modelScore": "NRFI 43% / YRFI 57%",
-      "href": "game.html?id=mlb-824912",
-      "reason": "NRFI 43% • ATL win 59%"
-    },
-    {
-      "id": "mlb-823940",
-      "league": "MLB",
-      "matchup": "TBR @ LAD",
-      "pick": "NRFI",
-      "probability": 0.5546447858243437,
-      "modelScore": "NRFI 55% / YRFI 45%",
-      "href": "game.html?id=mlb-823940",
-      "reason": "NRFI 55% • LAD win 60%"
-    },
-    {
-      "id": "mlb-824178",
-      "league": "MLB",
-      "matchup": "DET @ HOU",
-      "pick": "Close-game watch",
-      "probability": 0.238,
-      "modelScore": "One-run probability 24%",
-      "href": "game.html?id=mlb-824178",
-      "reason": "Model sees a higher-than-usual chance this lands tight."
-    },
-    {
-      "id": "mlb-823774",
-      "league": "MLB",
-      "matchup": "CLE @ MIL",
-      "pick": "Close-game watch",
-      "probability": 0.23265,
-      "modelScore": "One-run probability 23%",
-      "href": "game.html?id=mlb-823774",
-      "reason": "Model sees a higher-than-usual chance this lands tight."
+      "market": "YRFI",
+      "priced": false
     }
   ],
   "parlayPool": [
@@ -3173,6 +3237,49 @@
       "recentHitRate10": 0.9,
       "recentHitRate25": 0.7,
       "modelEdge": 0.880860509186848
+    },
+    {
+      "id": "mlb-823940",
+      "type": "game",
+      "league": "MLB",
+      "category": "Game Total",
+      "stat": "TOTAL",
+      "matchup": "TBR @ LAD",
+      "title": "Over 7.0",
+      "pick": "Over 7.0",
+      "probability": 0.5878,
+      "modelAwayScore": 3.998075141286316,
+      "modelHomeScore": 4.905729929802195,
+      "modelTotal": 8.903805071088511,
+      "marketTotal": 7.0,
+      "confidence": "Medium",
+      "reason": "Exact probability for the current market total.",
+      "href": "game.html?id=mlb-823940",
+      "tracking": {
+        "sample": 40,
+        "wins": 16,
+        "losses": 23,
+        "pushes": 1,
+        "record": "16-23-1",
+        "winRate": 0.41025641025641024,
+        "pctText": "41%",
+        "trend": "Cold",
+        "tone": "cold",
+        "label": "Last 40: 16-23-1 (41%)",
+        "scope": "MLB Total results"
+      },
+      "playable": true,
+      "actionable": true,
+      "selectedOdds": -120.0,
+      "priceRequired": false,
+      "repriceRequired": false,
+      "linePairValid": true,
+      "calibrationRejected": false,
+      "expectedRoi": 0.1761833333333334,
+      "bookmakerKey": "draftkings",
+      "bookmakerTitle": "DraftKings",
+      "marketUpdatedAt": "2026-06-17T18:42:57Z",
+      "gameId": "mlb-823940"
     },
     {
       "id": "2026-06-17|MLB|666182|TB|1.5",
