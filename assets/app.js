@@ -108,7 +108,7 @@ function modelSpreadForDisplay(game) {
 }
 
 function marketSpreadForDisplay(game) {
-  const spread = Number(game?.marketSpread);
+  const spread = Number(game?.awaySpread ?? game?.marketSpread);
   if (!Number.isFinite(spread)) return NaN;
   return spread;
 }
@@ -206,7 +206,22 @@ function mlbMarketRunLineSignal(game) {
   return best ? `${best.label} ${fmtPct(best.prob, 0)}` : '';
 }
 
+function recommendationStatusText(value) {
+  return String(value || '').trim().toUpperCase().replace(/\s+/g, '_');
+}
+
+function recommendationBlockedText(value, fallback) {
+  const status = recommendationStatusText(value);
+  if (status.includes('PRICE_REQUIRED')) return 'Price required';
+  if (status.includes('NO_BET') || status === 'PASS' || status === 'AVOID') return fallback;
+  return '';
+}
+
 function spreadSignalText(game) {
+  if (game?.spreadRepriceRequired === true) return 'Reprice required';
+  if (game?.spreadLinePairValid === false) return 'Spread unavailable';
+  const blocked = recommendationBlockedText(game?.spreadFinalRecommendation, 'No spread bet');
+  if (blocked) return blocked;
   const league = String(game?.league || '').toUpperCase();
   const marketSpread = marketSpreadForDisplay(game);
   const storedModelPickProb = coerceProbability(game?.modelSpreadPickProb);
@@ -238,6 +253,9 @@ function spreadSignalText(game) {
 }
 
 function totalSignalText(game) {
+  if (game?.totalRepriceRequired === true) return 'Reprice required';
+  const blocked = recommendationBlockedText(game?.totalFinalRecommendation, 'No total bet');
+  if (blocked) return blocked;
   const marketTotal = Number(game?.marketTotal);
   const modelTotal = Number(game?.modelTotal);
   const storedTotalProb = coerceProbability(game?.modelTotalPickProb);
@@ -266,6 +284,10 @@ function totalSignalText(game) {
 }
 
 function moneylineSignalText(game) {
+  if (game?.moneylineRepriceRequired === true) return 'Reprice required';
+  if (game?.calibratedProbabilityRejectsScorePick === true || String(game?.modelPickStatus || '').toUpperCase() === 'SCORE_PICK_REJECTED_BY_CALIBRATION') return 'No ML bet';
+  const blocked = recommendationBlockedText(game?.betRecommendation, 'No ML bet');
+  if (blocked) return blocked;
   const storedProb = coerceProbability(game?.modelMoneylineProb ?? game?.favoriteWinProb);
   const storedLabel = game?.modelMoneylineLabel || game?.favoriteWinLabel || '';
   if (storedLabel && Number.isFinite(storedProb)) {
@@ -457,7 +479,7 @@ function modelAwaySpread(game) {
 }
 
 function marketAwaySpread(game) {
-  const spread = Number(game?.marketSpread);
+  const spread = Number(game?.awaySpread ?? game?.marketSpread);
   return Number.isFinite(spread) ? spread : NaN;
 }
 
@@ -2066,12 +2088,133 @@ function parlayGameKey(item) {
   return String(item?.gameId || item?.matchup || item?.id || '').trim();
 }
 
+function parlayStat(item) {
+  return String(item?.stat || item?.category || item?.type || '').toUpperCase();
+}
+
+function parlayPickDirection(item) {
+  const text = String(item?.pick || item?.title || '').toLowerCase();
+  if (/\bover\b/.test(text)) return 'OVER';
+  if (/\bunder\b/.test(text)) return 'UNDER';
+  if (/\bnrfi\b/.test(text)) return 'NRFI';
+  if (/\byrfi\b/.test(text)) return 'YRFI';
+  return '';
+}
+
+function parlayPickTeam(item) {
+  const text = String(item?.pick || '').trim();
+  const match = text.match(/^([A-Z]{2,4})\b/);
+  return match ? match[1] : '';
+}
+
+function parlayIsProp(item) {
+  return Boolean(normalizeLookupToken(item?.player || ''));
+}
+
+function parlayIsPlayable(item) {
+  if (!item) return false;
+  if (item.playable === false || item.actionable === false) return false;
+  if (item.priceRequired === true || item.repriceRequired === true) return false;
+  if (item.linePairValid === false || item.marketPairValid === false) return false;
+  if (item.calibrationRejected === true) return false;
+
+  if (String(item.type || '').toLowerCase() === 'game') {
+    // Game candidates must be explicitly approved by the v86n market router.
+    return item.playable === true || item.actionable === true;
+  }
+
+  if (!parlayIsProp(item)) return false;
+  const stat = parlayStat(item);
+  // Pitcher boards currently compare projections to averages, not real book lines.
+  // Keep those projections visible in Featured Picks, but never treat them as parlay legs.
+  if (!['H', 'HRR', 'TB'].includes(stat)) return false;
+  return hasNumericValue(item?.line);
+}
+
+function parlayTrackingRate(item) {
+  const rate = coerceProbability(item?.tracking?.winRate);
+  const sample = Number(item?.tracking?.sample || 0);
+  return Number.isFinite(rate) && sample > 0 ? { rate, sample } : null;
+}
+
+function parlayRecentRate(item) {
+  const values = [item?.recentHitRate10, item?.recentHitRate25]
+    .map(coerceProbability)
+    .filter(Number.isFinite);
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function parlayEdgeStrength(item) {
+  if (!hasNumericValue(item?.model) || !hasNumericValue(item?.line)) return 0;
+  const stat = parlayStat(item);
+  const scale = stat === 'H' ? 0.45 : stat === 'TB' ? 1.25 : stat === 'HRR' ? 1.35 : 1;
+  return Math.max(-1, Math.min(1, (Number(item.model) - Number(item.line)) / scale));
+}
+
+function parlayEffectiveProbability(item) {
+  const modelProbability = coerceProbability(item?.probability);
+  if (!Number.isFinite(modelProbability)) return NaN;
+
+  let effective = Math.max(0.50, Math.min(0.84, modelProbability));
+  const tracking = parlayTrackingRate(item);
+  if (tracking) {
+    const trackingWeight = Math.min(0.22, tracking.sample / 150);
+    const shrunkTracking = 0.50 + (tracking.rate - 0.50) * Math.min(1, tracking.sample / 30);
+    effective = effective * (1 - trackingWeight) + shrunkTracking * trackingWeight;
+    if (tracking.sample >= 12 && tracking.rate < 0.46) effective -= 0.025;
+    if (tracking.sample >= 12 && tracking.rate >= 0.62) effective += 0.012;
+  }
+
+  const recent = parlayRecentRate(item);
+  if (Number.isFinite(recent)) effective = effective * 0.90 + recent * 0.10;
+  effective += parlayEdgeStrength(item) * 0.012;
+  return Math.max(0.50, Math.min(0.82, effective));
+}
+
+function parlayQualityScore(item, style) {
+  const effective = parlayEffectiveProbability(item);
+  if (!Number.isFinite(effective)) return -Infinity;
+  const tracking = parlayTrackingRate(item);
+  const trackingLift = tracking ? Math.max(-0.035, Math.min(0.035, (tracking.rate - 0.50) * 0.14)) : 0;
+  const edgeLift = parlayEdgeStrength(item) * (style === 'upside' ? 0.035 : 0.02);
+  const typeLift = parlayStat(item) === 'H' && style === 'safe' ? 0.018 : 0;
+  return effective + trackingLift + edgeLift + typeLift;
+}
+
 function parlayConflict(a, b) {
-  const samePlayer = normalizeLookupToken(a?.player || '') && normalizeLookupToken(a?.player || '') === normalizeLookupToken(b?.player || '');
-  if (!samePlayer) return false;
-  const statA = String(a?.stat || '').toUpperCase();
-  const statB = String(b?.stat || '').toUpperCase();
-  return statA && statB && statA === statB;
+  const playerA = normalizeLookupToken(a?.player || '');
+  const playerB = normalizeLookupToken(b?.player || '');
+  if (playerA && playerA === playerB) return true;
+
+  const gameA = parlayGameKey(a);
+  const gameB = parlayGameKey(b);
+  if (!gameA || gameA !== gameB) return false;
+
+  const statA = parlayStat(a);
+  const statB = parlayStat(b);
+  const directionA = parlayPickDirection(a);
+  const directionB = parlayPickDirection(b);
+
+  // Never stack two versions of the same game market.
+  if (statA === statB && ['ML', 'SPREAD', 'TOTAL', 'NRFI', 'YRFI'].includes(statA)) return true;
+  if ((directionA === 'NRFI' && directionB === 'YRFI') || (directionA === 'YRFI' && directionB === 'NRFI')) return true;
+  if ((directionA === 'OVER' && directionB === 'UNDER') || (directionA === 'UNDER' && directionB === 'OVER')) return true;
+
+  // Moneyline + spread on the same team is duplicate exposure, not diversification.
+  if (new Set([statA, statB]).has('ML') && new Set([statA, statB]).has('SPREAD')) {
+    const teamA = parlayPickTeam(a);
+    const teamB = parlayPickTeam(b);
+    if (!teamA || !teamB || teamA === teamB) return true;
+  }
+
+  const batterStats = new Set(['H', 'HRR', 'TB']);
+  if ((directionA === 'NRFI' && batterStats.has(statB)) || (directionB === 'NRFI' && batterStats.has(statA))) return true;
+  if ((directionA === 'UNDER' && (directionB === 'YRFI' || batterStats.has(statB))) ||
+      (directionB === 'UNDER' && (directionA === 'YRFI' || batterStats.has(statA)))) return true;
+  if ((directionA === 'OVER' && directionB === 'NRFI') || (directionB === 'OVER' && directionA === 'NRFI')) return true;
+
+  return false;
 }
 
 function parlayBaseThreshold(style) {
@@ -2081,39 +2224,53 @@ function parlayBaseThreshold(style) {
 }
 
 function parlayCandidateWeight(item, style, minProb) {
-  const probability = coerceProbability(item?.probability);
-  if (!Number.isFinite(probability)) return 0;
-  const lift = Math.max(0.015, probability - minProb + 0.04);
-  const exponent = style === 'safe' ? 3.25 : style === 'upside' ? 1.45 : 2.2;
-  const categoryBonus = String(item?.type || '').toLowerCase() === 'game' ? 0.92 : 1;
-  const trackingRate = coerceProbability(item?.tracking?.winRate);
-  const trackingBonus = Number.isFinite(trackingRate) ? Math.max(0.82, Math.min(1.18, 0.92 + trackingRate * 0.35)) : 1;
-  return Math.pow(lift, exponent) * categoryBonus * trackingBonus;
+  const effective = parlayEffectiveProbability(item);
+  const quality = parlayQualityScore(item, style);
+  if (!Number.isFinite(effective) || !Number.isFinite(quality)) return 0;
+  const lift = Math.max(0.01, quality - minProb + 0.035);
+  const exponent = style === 'safe' ? 3.4 : style === 'upside' ? 1.7 : 2.5;
+  return Math.pow(lift, exponent);
 }
 
 function weightedPick(items, style, minProb) {
   if (!items.length) return null;
-  const weights = items.map(item => parlayCandidateWeight(item, style, minProb));
+  const ranked = items.slice().sort((a, b) => parlayQualityScore(b, style) - parlayQualityScore(a, style));
+  const shortlist = ranked.slice(0, Math.min(10, ranked.length));
+  const weights = shortlist.map(item => parlayCandidateWeight(item, style, minProb));
   const total = weights.reduce((sum, weight) => sum + weight, 0);
-  if (!Number.isFinite(total) || total <= 0) return items[Math.floor(Math.random() * items.length)];
+  if (!Number.isFinite(total) || total <= 0) return shortlist[0];
   let draw = Math.random() * total;
-  for (let i = 0; i < items.length; i += 1) {
+  for (let i = 0; i < shortlist.length; i += 1) {
     draw -= weights[i];
-    if (draw <= 0) return items[i];
+    if (draw <= 0) return shortlist[i];
   }
-  return items[items.length - 1];
+  return shortlist[shortlist.length - 1];
 }
 
 function filterParlayCandidates(pool, { sport, style, minProb }) {
   let candidates = (pool || [])
-    .map(item => ({ ...item, probability: coerceProbability(item?.probability) }))
-    .filter(item => Number.isFinite(item.probability) && item.probability >= minProb);
+    .map(item => ({
+      ...item,
+      probability: coerceProbability(item?.probability),
+      effectiveProbability: parlayEffectiveProbability(item),
+    }))
+    .filter(item => parlayIsPlayable(item) && Number.isFinite(item.probability) && Number.isFinite(item.effectiveProbability));
+
   if (sport && sport !== 'ALL') candidates = candidates.filter(item => String(item.league || '').toUpperCase() === sport);
-  candidates.sort((a, b) => b.probability - a.probability);
+
+  candidates = candidates.filter(item => {
+    const tracking = parlayTrackingRate(item);
+    if (item.effectiveProbability < minProb) return false;
+    if (style === 'safe' && tracking && tracking.sample >= 10 && tracking.rate < 0.50) return false;
+    if (style === 'balanced' && tracking && tracking.sample >= 12 && tracking.rate < 0.44 && item.probability < 0.72) return false;
+    return true;
+  });
+
+  candidates.sort((a, b) => parlayQualityScore(b, style) - parlayQualityScore(a, style));
   return candidates;
 }
 
-function sameGameParlayCandidates(candidates, count) {
+function sameGameParlayCandidates(candidates, count, style) {
   const groups = new Map();
   candidates.forEach(item => {
     const key = parlayGameKey(item);
@@ -2121,33 +2278,34 @@ function sameGameParlayCandidates(candidates, count) {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(item);
   });
-  const eligible = Array.from(groups.values()).filter(group => group.length >= Math.min(count, 2));
+  const eligible = Array.from(groups.values())
+    .filter(group => group.length >= Math.min(count, 2));
   if (!eligible.length) return [];
   eligible.sort((a, b) => {
-    const avgB = b.reduce((sum, item) => sum + item.probability, 0) / b.length;
-    const avgA = a.reduce((sum, item) => sum + item.probability, 0) / a.length;
-    return avgB - avgA;
+    const scoreA = a.slice(0, count).reduce((sum, item) => sum + parlayQualityScore(item, style), 0);
+    const scoreB = b.slice(0, count).reduce((sum, item) => sum + parlayQualityScore(item, style), 0);
+    return scoreB - scoreA;
   });
-  const topGroups = eligible.slice(0, Math.min(8, eligible.length));
-  return topGroups[Math.floor(Math.random() * topGroups.length)] || [];
+  return eligible[0] || [];
 }
 
 function selectParlayLegs(pool, { count, sport, style, correlationMode }) {
   const baseMinProb = parlayBaseThreshold(style);
-  const thresholds = [baseMinProb, Math.max(0.50, baseMinProb - 0.04), Math.max(0.48, baseMinProb - 0.08)];
+  const thresholds = [baseMinProb, Math.max(0.52, baseMinProb - 0.03), Math.max(0.50, baseMinProb - 0.06)];
   let bestSelection = [];
 
   for (const minProb of thresholds) {
     const candidates = filterParlayCandidates(pool, { sport, style, minProb });
-    const workingPool = correlationMode === 'same-game' ? sameGameParlayCandidates(candidates, count) : candidates;
+    const workingPool = correlationMode === 'same-game' ? sameGameParlayCandidates(candidates, count, style) : candidates;
     if (!workingPool.length) continue;
 
-    for (let attempt = 0; attempt < 45; attempt += 1) {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
       const selected = [];
       const seen = new Set();
       const usedGames = new Map();
       const usedCategories = new Map();
       let available = workingPool.slice();
+      const categoryCap = correlationMode === 'same-game' ? 2 : (count <= 2 ? 1 : count <= 4 ? 2 : 3);
 
       while (available.length && selected.length < count) {
         const valid = available.filter(item => {
@@ -2155,10 +2313,10 @@ function selectParlayLegs(pool, { count, sport, style, correlationMode }) {
           if (seen.has(key)) return false;
           if (selected.some(existing => parlayConflict(existing, item))) return false;
           const gameKey = parlayGameKey(item);
-          const category = String(item.category || item.stat || item.type || '').toUpperCase();
+          const category = parlayStat(item);
           if (correlationMode === 'avoid' && gameKey && usedGames.has(gameKey)) return false;
           if (correlationMode === 'allow' && gameKey && (usedGames.get(gameKey) || 0) >= 2) return false;
-          if (correlationMode !== 'same-game' && category && (usedCategories.get(category) || 0) >= 2) return false;
+          if (category && (usedCategories.get(category) || 0) >= categoryCap) return false;
           return true;
         });
         if (!valid.length) break;
@@ -2168,12 +2326,15 @@ function selectParlayLegs(pool, { count, sport, style, correlationMode }) {
         seen.add(parlayItemKey(choice));
         const gameKey = parlayGameKey(choice);
         if (gameKey) usedGames.set(gameKey, (usedGames.get(gameKey) || 0) + 1);
-        const category = String(choice.category || choice.stat || choice.type || '').toUpperCase();
+        const category = parlayStat(choice);
         if (category) usedCategories.set(category, (usedCategories.get(category) || 0) + 1);
         available = available.filter(item => parlayItemKey(item) !== parlayItemKey(choice));
       }
 
-      if (selected.length > bestSelection.length) bestSelection = selected;
+      if (selected.length > bestSelection.length ||
+          (selected.length === bestSelection.length && selected.reduce((s, x) => s + parlayQualityScore(x, style), 0) > bestSelection.reduce((s, x) => s + parlayQualityScore(x, style), 0))) {
+        bestSelection = selected;
+      }
       if (selected.length >= count) return selected;
     }
   }
@@ -2183,16 +2344,21 @@ function selectParlayLegs(pool, { count, sport, style, correlationMode }) {
 
 function adjustedParlayProbability(legs, correlationMode) {
   if (!legs.length) return NaN;
-  const raw = legs.reduce((acc, leg) => acc * coerceProbability(leg.probability), 1);
+  const raw = legs.reduce((acc, leg) => acc * parlayEffectiveProbability(leg), 1);
   const gameCounts = new Map();
+  const categoryCounts = new Map();
   legs.forEach(leg => {
     const key = parlayGameKey(leg);
-    if (!key) return;
-    gameCounts.set(key, (gameCounts.get(key) || 0) + 1);
+    if (key) gameCounts.set(key, (gameCounts.get(key) || 0) + 1);
+    const category = parlayStat(leg);
+    if (category) categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
   });
-  let penalty = correlationMode === 'same-game' ? 0.80 : 0.96;
+  let penalty = correlationMode === 'same-game' ? 0.84 : 0.98;
   gameCounts.forEach(count => {
-    if (count > 1) penalty *= Math.pow(0.86, count - 1);
+    if (count > 1) penalty *= Math.pow(0.88, count - 1);
+  });
+  categoryCounts.forEach(count => {
+    if (count > 1) penalty *= Math.pow(0.96, count - 1);
   });
   return raw * penalty;
 }
@@ -2211,40 +2377,42 @@ function renderParlayBuilder(homeTopPicks) {
 
   const rerender = () => {
     const count = Number(controls.count?.value || 3);
-    const sport = controls.sport?.value || 'ALL';
+    const sport = controls.sport?.value || 'MLB';
     const style = controls.style?.value || 'balanced';
     const correlationMode = controls.correlationMode?.value || 'avoid';
     const minProb = parlayBaseThreshold(style);
     const matchingCandidates = filterParlayCandidates(pool, { sport, style, minProb });
     const legs = selectParlayLegs(pool, { count, sport, style, correlationMode });
     if (!legs.length) {
-      output.innerHTML = '<div class="empty-state">No parlay candidates match those filters yet.</div>';
+      output.innerHTML = '<div class="empty-state">No playable MLB candidates meet those filters. Try a broader style or fewer legs.</div>';
       return;
     }
     const estimate = adjustedParlayProbability(legs, correlationMode);
-    const sportLabel = sport === 'ALL' ? 'mixed-sport' : sport;
     output.innerHTML = `
       <article class="parlay-card">
         <div class="parlay-card-head">
           <div>
-            <p class="eyebrow">Generated card</p>
-            <h3>${legs.length}-pick ${style === 'safe' ? 'safer' : style === 'upside' ? 'upside' : 'balanced'} ${sportLabel} card</h3>
-            <p class="muted">Pool: ${escapeHtml(String(matchingCandidates.length))} candidates. Generate again for a new weighted combination.</p>
+            <p class="eyebrow">Generated MLB card</p>
+            <h3>${legs.length}-pick ${style === 'safe' ? 'safer' : style === 'upside' ? 'upside' : 'balanced'} card</h3>
+            <p class="muted">${escapeHtml(String(matchingCandidates.length))} playable candidates passed the line, category-form, and conflict filters.</p>
           </div>
-          <div class="parlay-prob"><span>Est. probability</span><strong>${escapeHtml(Number.isFinite(estimate) ? fmtPct(estimate, 1) : 'N/A')}</strong></div>
+          <div class="parlay-prob"><span>Model joint estimate</span><strong>${escapeHtml(Number.isFinite(estimate) ? fmtPct(estimate, 1) : 'N/A')}</strong></div>
         </div>
         <ol class="parlay-leg-list">
-          ${legs.map(leg => `
+          ${legs.map(leg => {
+            const adjusted = parlayEffectiveProbability(leg);
+            const raw = coerceProbability(leg.probability);
+            return `
             <li>
               <div>
                 <strong>${escapeHtml(leg.pick || leg.title || '')}</strong>
-                <span>${escapeHtml([leg.league, leg.matchup || leg.category].filter(Boolean).join(' • '))}</span>
+                <span>${escapeHtml([leg.league, leg.matchup || leg.category, leg?.tracking?.record ? `Category ${leg.tracking.record}` : ''].filter(Boolean).join(' • '))}</span>
               </div>
-              <a href="${escapeHtml(leg.href || '#')}">${escapeHtml(fmtPct(leg.probability, 0))}</a>
-            </li>
-          `).join('')}
+              <a href="${escapeHtml(leg.href || '#')}">${escapeHtml(fmtPct(adjusted, 0))}<small> adj.${Number.isFinite(raw) ? ` / ${fmtPct(raw, 0)} model` : ''}</small></a>
+            </li>`;
+          }).join('')}
         </ol>
-        <p class="muted">This uses weighted random selection from higher-probability model picks, then excludes duplicate/conflicting legs and applies a conservative correlation penalty.</p>
+        <p class="muted">The builder excludes pitcher average-only projections, blocked or repriced game markets, duplicate player exposure, and contradictory same-game legs. The estimate is not sportsbook odds.</p>
       </article>
     `;
   };
@@ -2258,9 +2426,23 @@ function renderParlayBuilder(homeTopPicks) {
   rerender();
 }
 
+
+function applySiteFeatures(config) {
+  const flags = config?.features || {};
+  document.querySelectorAll('[data-site-feature]').forEach(node => {
+    const key = node.getAttribute('data-site-feature');
+    node.hidden = flags[key] !== true;
+  });
+}
+
+function activeLeagueSet(config, meta) {
+  const values = config?.activeLeagues || meta?.leagues || ['MLB'];
+  return new Set(values.map(v => String(v || '').toUpperCase()).filter(Boolean));
+}
+
 function fillHeader(meta, todayGames, tomorrowGames, props) {
   setText('site-title', meta?.siteTitle && meta.siteTitle !== 'Sports Predictions Showcase' ? meta.siteTitle : 'Lets Parlay ML');
-  setText('hero-leagues', Array.isArray(meta?.leagues) ? meta.leagues.join(' • ') : 'NBA • MLB • NHL');
+  setText('hero-leagues', Array.isArray(meta?.leagues) ? meta.leagues.join(' • ') : 'MLB');
   setText('hero-game-count', String((todayGames || []).length));
   setText('hero-next-game-count', String((tomorrowGames || []).length));
   setText('hero-prop-count', String((props || []).length));
@@ -2271,10 +2453,11 @@ function fillHeader(meta, todayGames, tomorrowGames, props) {
   setText('results-date-label', meta?.resultsDate || meta?.targetDate || '');
 }
 
-function setupLeagueFilter(allGames, meta) {
+function setupLeagueFilter(allGames, meta, featureConfig = {}) {
   const select = byId('league-filter');
   if (!select) return;
-  uniqueLeagues(allGames).forEach(league => {
+  const active = activeLeagueSet(featureConfig, meta);
+  uniqueLeagues(allGames).filter(league => active.has(String(league).toUpperCase())).forEach(league => {
     const option = document.createElement('option');
     option.value = league;
     option.textContent = league;
@@ -2294,8 +2477,9 @@ function setupLeagueFilter(allGames, meta) {
 (async function init() {
   const root = byId('today-games-grid') || byId('games-grid');
   try {
-    const [meta, games, rawProps, rawPropsLab, results, resultsSummary, resultsHistory, rawHomeInsights, injuries, mlbPropResults, mlbPropSummary, mlbPropPending, homeTopPicks, mlbResultsLaunchText] = await Promise.all([
+    const [meta, featureConfig, games, rawProps, rawPropsLab, results, resultsSummary, resultsHistory, rawHomeInsights, injuries, mlbPropResults, mlbPropSummary, mlbPropPending, homeTopPicks, mlbResultsLaunchText] = await Promise.all([
       loadJson('data/site.json'),
+      loadJson('data/site_features.json', { activeLeagues: ['MLB'], features: {} }),
       loadJson('data/games.json', []),
       loadJson('data/props.json', []),
       loadJson('data/nba_props_lab.json', null),
@@ -2310,11 +2494,14 @@ function setupLeagueFilter(allGames, meta) {
       loadJson('data/home_top_picks.json', {}),
       loadText('data/mlb_results_launch_date.txt', '')
     ]);
+    applySiteFeatures(featureConfig);
+    const activeLeagues = activeLeagueSet(featureConfig, meta);
     const injuryLookup = buildInjuryLookup(injuries);
     const gameLookup = buildGameLookup(games);
 
-    const propsSource = flattenPropsSource(rawPropsLab);
-    const baseProps = propsSource.length ? propsSource : rawProps;
+    const nbaEnabled = activeLeagues.has('NBA') && featureConfig?.features?.nbaPropsLab === true;
+    const propsSource = nbaEnabled ? flattenPropsSource(rawPropsLab) : [];
+    const baseProps = (propsSource.length ? propsSource : rawProps).filter(p => activeLeagues.has(String(p?.league || 'MLB').toUpperCase()));
 
     const props = applyInjuryContextToList(baseProps, injuryLookup)
       .map(prop => enrichHomepageProp(prop, gameLookup));
@@ -2332,19 +2519,24 @@ function setupLeagueFilter(allGames, meta) {
 const todayProps = selectHomepageTopProps(todayPool, 12);
 const nextProps = selectHomepageTopProps(nextPool, 10);
     const homeInsights = applyInjuryContextToHomeInsights(rawHomeInsights, injuryLookup);
-    const todayGames = (games || []).filter(g => g.gameDate === meta.targetDate);
-    const tomorrowGames = (games || []).filter(g => g.gameDate === meta.nextDate);
-    fillHeader(meta, todayGames, tomorrowGames, todayProps);
-    setupLeagueFilter(games, meta);
+    const activeGames = (games || []).filter(g => activeLeagues.has(String(g?.league || '').toUpperCase()));
+    const todayGames = activeGames.filter(g => g.gameDate === meta.targetDate);
+    const tomorrowGames = activeGames.filter(g => g.gameDate === meta.nextDate);
+    const activeMeta = { ...meta, leagues: Array.from(activeLeagues) };
+    fillHeader(activeMeta, todayGames, tomorrowGames, todayProps);
+    setText('hero-top-pick-count', String(Object.keys(homeTopPicks?.mlbBoards || {}).length));
+    setupLeagueFilter(activeGames, meta, featureConfig);
     renderProps(todayProps, 'props-body');
     renderProps(nextProps, 'props-next-body');
     renderTopPickPulse(homeTopPicks);
     renderHomeTopPicks(homeTopPicks);
     renderParlayBuilder(homeTopPicks);
     renderMlbHomeBoardsSnapshot(homeTopPicks);
-    renderHighConfidenceGames(homeTopPicks, games, meta);
-    renderNbaGameEdges(games, meta);
-    renderHomeInsights(homeInsights, meta);
+    renderHighConfidenceGames(homeTopPicks, activeGames, meta);
+    if (featureConfig?.features?.nbaQuickLooks === true) {
+      renderNbaGameEdges(activeGames, meta);
+      renderHomeInsights(homeInsights, meta);
+    }
     const mlbResultsLaunchDate = String(mlbResultsLaunchText || '').trim();
     const filteredResults = filterResultsForLaunch(results, mlbResultsLaunchDate);
     const filteredHistory = filterResultsForLaunch(resultsHistory, mlbResultsLaunchDate);

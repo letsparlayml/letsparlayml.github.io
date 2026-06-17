@@ -37,6 +37,18 @@ function fmtMoneyline(value) {
   return `${n >= 0 ? '+' : ''}${Math.round(n)}`;
 }
 
+function fmtSpreadWithOdds(point, odds) {
+  const line = fmtSpread(point);
+  return line === '—' || !hasMeaningfulMoneyline(odds) ? line : `${line} (${fmtMoneyline(odds)})`;
+}
+
+function fmtTotalWithOdds(point, overOdds, underOdds) {
+  const line = fmtNumber(point);
+  if (line === '—') return line;
+  if (!hasMeaningfulMoneyline(overOdds) && !hasMeaningfulMoneyline(underOdds)) return line;
+  return `${line} (O ${fmtMoneyline(overOdds)} / U ${fmtMoneyline(underOdds)})`;
+}
+
 function hasMeaningfulMoneyline(value) {
   return hasNum(value) && Math.abs(Number(value)) >= 1;
 }
@@ -96,6 +108,18 @@ function fmtStart(value, fallbackDate = '') {
   return '—';
 }
 
+
+function currentLocalDate() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: DISPLAY_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date());
+  const lookup = Object.fromEntries(parts.map(p => [p.type, p.value]));
+  return `${lookup.year}-${lookup.month}-${lookup.day}`;
+}
+
 function fmtStamp(value) {
   const dt = toDate(value);
   if (!dt) return '—';
@@ -134,8 +158,19 @@ function normalizeArchiveRow(row) {
     startTimeUtc,
     asOf,
     source: row?.bookmakerTitle ? `The Odds API • ${row.bookmakerTitle}` : (row?.source || 'Archive'),
-    awaySpread: toNum(row?.marketSpread),
+    bookmakerKey: String(row?.bookmakerKey || ''),
+    bookmakerTitle: String(row?.bookmakerTitle || ''),
+    awaySpread: toNum(row?.awaySpread ?? row?.marketSpread),
+    homeSpread: toNum(row?.homeSpread),
+    awaySpreadOdds: toNum(row?.awaySpreadOdds ?? row?.awaySpreadPrice),
+    homeSpreadOdds: toNum(row?.homeSpreadOdds ?? row?.homeSpreadPrice),
+    spreadLinePairValid: row?.spreadLinePairValid ?? row?.spread_line_pair_valid ?? null,
+    spreadPricePairValid: row?.spreadPricePairValid ?? null,
     total: toNum(row?.marketTotal),
+    overOdds: toNum(row?.overOdds ?? row?.overPrice),
+    underOdds: toNum(row?.underOdds ?? row?.underPrice),
+    totalLinePairValid: row?.totalLinePairValid ?? null,
+    totalPricePairValid: row?.totalPricePairValid ?? null,
     awayML: toNum(row?.marketAwayML ?? row?.awayML ?? row?.awayMoneyline),
     homeML: toNum(row?.marketHomeML ?? row?.homeML ?? row?.homeMoneyline),
   };
@@ -159,10 +194,15 @@ function normalizeGame(game) {
     startTimeUtc,
     modelAwaySpread: hasNum(modelAwayScore) && hasNum(modelHomeScore) ? (modelHomeScore - modelAwayScore) : null,
     modelTotal: toNum(game?.modelTotal),
-    marketSpread: toNum(game?.marketSpread),
+    marketSpread: toNum(game?.awaySpread ?? game?.marketSpread),
+    homeSpread: toNum(game?.homeSpread),
+    awaySpreadOdds: toNum(game?.awaySpreadOdds),
+    homeSpreadOdds: toNum(game?.homeSpreadOdds),
     marketTotal: toNum(game?.marketTotal),
-    marketAwayML: toNum(game?.marketAwayML),
-    marketHomeML: toNum(game?.marketHomeML),
+    overOdds: toNum(game?.overOdds),
+    underOdds: toNum(game?.underOdds),
+    marketAwayML: toNum(game?.marketAwayML ?? game?.awayML ?? game?.awayMoneyline),
+    marketHomeML: toNum(game?.marketHomeML ?? game?.homeML ?? game?.homeMoneyline),
     marketLineUpdated: String(game?.marketLineUpdated || ''),
   };
 }
@@ -230,7 +270,12 @@ function buildTrackerEntries(games, archiveRows) {
             asOf: game.marketLineUpdated || '',
             source: 'games.json',
             awaySpread: currentSpread,
+            homeSpread: toNum(game.homeSpread),
+            awaySpreadOdds: toNum(game.awaySpreadOdds),
+            homeSpreadOdds: toNum(game.homeSpreadOdds),
             total: currentTotal,
+            overOdds: toNum(game.overOdds),
+            underOdds: toNum(game.underOdds),
             awayML: toNum(game.marketAwayML),
             homeML: toNum(game.marketHomeML),
           }];
@@ -250,7 +295,7 @@ function buildTrackerEntries(games, archiveRows) {
       const currentTotal = current?.total ?? game.marketTotal ?? null;
       const currentAwayML = hasMeaningfulMoneyline(current?.awayML) ? current.awayML : (hasMeaningfulMoneyline(game.marketAwayML) ? game.marketAwayML : null);
       const currentHomeML = hasMeaningfulMoneyline(current?.homeML) ? current.homeML : (hasMeaningfulMoneyline(game.marketHomeML) ? game.marketHomeML : null);
-      const displayDate = game.date || opening?.localDate || current?.localDate || opening?.utcDate || current?.utcDate || (resolvedStartTimeUtc ? localDateFromIso(resolvedStartTimeUtc) : '');
+      const displayDate = game.date || opening?.localDate || current?.localDate || opening?.utcDate || current?.utcDate || '';
       return {
         ...game,
         date: displayDate,
@@ -428,10 +473,10 @@ function renderTable(entries) {
         <td>${escapeHtml(entry.league)}</td>
         <td><div class="tracker-link-stack"><button class="tracker-link" type="button" data-entry-id="${escapeHtml(entry.id)}">${escapeHtml(entry.matchup)}</button><a class="tracker-detail-link" href="${gameDetailHref(entry)}">Open detail</a></div></td>
         <td>${escapeHtml(String(entry.snapshotCount || 0))}</td>
-        <td>${escapeHtml(fmtSpread(entry.opening?.awaySpread))} → ${escapeHtml(fmtSpread(entry.current?.awaySpread ?? entry.marketSpread))}</td>
+        <td>${escapeHtml(fmtSpreadWithOdds(entry.opening?.awaySpread, entry.opening?.awaySpreadOdds))} → ${escapeHtml(fmtSpreadWithOdds(entry.current?.awaySpread ?? entry.marketSpread, entry.current?.awaySpreadOdds ?? entry.awaySpreadOdds))}</td>
         <td>${escapeHtml(fmtSpread(entry.bestHomeSpread))} to ${escapeHtml(fmtSpread(entry.bestAwaySpread))}</td>
         <td>Model ${escapeHtml(fmtSpread(entry.modelAwaySpread))}<br><span class="muted">Now ${escapeHtml(fmtSigned(entry.spreadEdgeCurrent))}</span></td>
-        <td>${escapeHtml(fmtNumber(entry.opening?.total))} → ${escapeHtml(fmtNumber(entry.current?.total ?? entry.marketTotal))}</td>
+        <td>${escapeHtml(fmtTotalWithOdds(entry.opening?.total, entry.opening?.overOdds, entry.opening?.underOdds))} → ${escapeHtml(fmtTotalWithOdds(entry.current?.total ?? entry.marketTotal, entry.current?.overOdds ?? entry.overOdds, entry.current?.underOdds ?? entry.underOdds))}</td>
         <td>${escapeHtml(fmtNumber(entry.bestOverTotal))} to ${escapeHtml(fmtNumber(entry.bestUnderTotal))}</td>
         <td>Model ${escapeHtml(fmtNumber(entry.modelTotal))}<br><span class="muted">Now ${escapeHtml(fmtSigned(entry.totalEdgeCurrent))}</span></td>
         <td>${escapeHtml(mlText)}</td>
@@ -457,12 +502,12 @@ function renderDetail(entry) {
   if (cards) {
     cards.innerHTML = [
       summaryCard('Spread', 'Opening vs current', [
-        `Open ${fmtSpread(entry.opening?.awaySpread)} → ${entry.started ? 'Close' : 'Current'} ${fmtSpread(entry.current?.awaySpread ?? entry.marketSpread)}`,
+        `Open ${fmtSpreadWithOdds(entry.opening?.awaySpread, entry.opening?.awaySpreadOdds)} → ${entry.started ? 'Close' : 'Current'} ${fmtSpreadWithOdds(entry.current?.awaySpread ?? entry.marketSpread, entry.current?.awaySpreadOdds ?? entry.awaySpreadOdds)}`,
         `Best away ${fmtSpread(entry.bestAwaySpread)} • Best home ${fmtSpread(entry.bestHomeSpread)}`,
         `Model ${fmtSpread(entry.modelAwaySpread)} • Edge now ${fmtSigned(entry.spreadEdgeCurrent)}`,
       ]),
       summaryCard('Total', 'Opening vs current', [
-        `Open ${fmtNumber(entry.opening?.total)} → ${entry.started ? 'Close' : 'Current'} ${fmtNumber(entry.current?.total ?? entry.marketTotal)}`,
+        `Open ${fmtTotalWithOdds(entry.opening?.total, entry.opening?.overOdds, entry.opening?.underOdds)} → ${entry.started ? 'Close' : 'Current'} ${fmtTotalWithOdds(entry.current?.total ?? entry.marketTotal, entry.current?.overOdds ?? entry.overOdds, entry.current?.underOdds ?? entry.underOdds)}`,
         `Best over ${fmtNumber(entry.bestOverTotal)} • Best under ${fmtNumber(entry.bestUnderTotal)}`,
         `Model ${fmtNumber(entry.modelTotal)} • Edge now ${fmtSigned(entry.totalEdgeCurrent)}`,
       ]),
@@ -477,8 +522,8 @@ function renderDetail(entry) {
     body.innerHTML = entry.snapshots.map(snapshot => `
       <tr>
         <td>${escapeHtml(fmtStamp(snapshot.asOf))}</td>
-        <td>${escapeHtml(fmtSpread(snapshot.awaySpread))}</td>
-        <td>${escapeHtml(fmtNumber(snapshot.total))}</td>
+        <td>${escapeHtml(fmtSpreadWithOdds(snapshot.awaySpread, snapshot.awaySpreadOdds))}</td>
+        <td>${escapeHtml(fmtTotalWithOdds(snapshot.total, snapshot.overOdds, snapshot.underOdds))}</td>
         <td>${escapeHtml(fmtMoneyline(snapshot.awayML))}</td>
         <td>${escapeHtml(fmtMoneyline(snapshot.homeML))}</td>
         <td>${escapeHtml(snapshot.source || 'Archive')}</td>
@@ -519,6 +564,14 @@ async function init() {
   ]);
   state.entries = buildTrackerEntries(games, archive);
   populateFilters(state.entries);
+  const dateSel = byId('tracker-date-filter');
+  if (dateSel) {
+    const today = currentLocalDate();
+    const options = Array.from(dateSel.options).map(opt => opt.value);
+    if (options.includes(today)) {
+      dateSel.value = today;
+    }
+  }
   setHero(state.entries);
   attachHandlers();
   const rows = filteredEntries();

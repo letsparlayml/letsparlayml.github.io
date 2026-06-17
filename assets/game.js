@@ -39,13 +39,31 @@ function fmtMoneyline(value) {
   return `${n >= 0 ? '+' : ''}${Math.round(n)}`;
 }
 
+function fmtSpreadPrice(value) {
+  return hasNumericValue(value) ? fmtMoneyline(value) : '—';
+}
+
+function spreadWithPrice(game, awaySpread, awayOdds, homeOdds) {
+  const label = spreadTeamLabel(game, Number(awaySpread));
+  if (label === 'N/A') return label;
+  const selectedOdds = Number(awaySpread) > 0 ? homeOdds : awayOdds;
+  return hasNumericValue(selectedOdds) ? `${label} (${fmtMoneyline(selectedOdds)})` : label;
+}
+
+function totalWithPrices(total, overOdds, underOdds) {
+  if (!hasNumericValue(total)) return '—';
+  const label = fmt(total, 2);
+  if (!hasNumericValue(overOdds) && !hasNumericValue(underOdds)) return label;
+  return `${label} (O ${fmtMoneyline(overOdds)} / U ${fmtMoneyline(underOdds)})`;
+}
+
 
 function isNbaGame(game) {
   return String(game?.league || '').toUpperCase() === 'NBA';
 }
 
 function marketSpreadForDisplay(game) {
-  const spread = Number(game?.marketSpread);
+  const spread = Number(game?.awaySpread ?? game?.marketSpread);
   return Number.isFinite(spread) ? spread : NaN;
 }
 
@@ -2136,6 +2154,29 @@ function archiveMoneyline(row, side) {
   return null;
 }
 
+function archiveAwaySpread(row) {
+  return hasNumericValue(row?.awaySpread) ? Number(row.awaySpread)
+    : (hasNumericValue(row?.marketSpread) ? Number(row.marketSpread) : null);
+}
+
+function archiveSpreadOdds(row, side) {
+  const keys = side === 'away'
+    ? ['awaySpreadOdds', 'awaySpreadPrice']
+    : ['homeSpreadOdds', 'homeSpreadPrice'];
+  for (const key of keys) {
+    if (hasNumericValue(row?.[key])) return Number(row[key]);
+  }
+  return null;
+}
+
+function archiveTotalOdds(row, side) {
+  const keys = side === 'over' ? ['overOdds', 'overPrice'] : ['underOdds', 'underPrice'];
+  for (const key of keys) {
+    if (hasNumericValue(row?.[key])) return Number(row[key]);
+  }
+  return null;
+}
+
 
 function archiveMatchKeyFromGame(game) {
   return `${String(game?.gameDate || '').trim()}|${String(game?.awayTeam || '').trim()}|${String(game?.homeTeam || '').trim()}`;
@@ -2163,8 +2204,18 @@ function hydrateGameWithArchive(game, archiveRows) {
   const row = latestArchiveForGame(game, archiveRows);
   if (!row) return game;
   const merged = { ...game };
-  if (!hasNumericValue(merged.marketSpread) && hasNumericValue(row?.marketSpread)) merged.marketSpread = Number(row.marketSpread);
+  const archivedAwaySpread = archiveAwaySpread(row);
+  if (!hasNumericValue(merged.awaySpread) && hasNumericValue(archivedAwaySpread)) merged.awaySpread = Number(archivedAwaySpread);
+  if (!hasNumericValue(merged.marketSpread) && hasNumericValue(merged.awaySpread)) merged.marketSpread = Number(merged.awaySpread);
+  if (!hasNumericValue(merged.homeSpread) && hasNumericValue(row?.homeSpread)) merged.homeSpread = Number(row.homeSpread);
+  if (!hasNumericValue(merged.awaySpreadOdds) && hasNumericValue(archiveSpreadOdds(row, 'away'))) merged.awaySpreadOdds = archiveSpreadOdds(row, 'away');
+  if (!hasNumericValue(merged.homeSpreadOdds) && hasNumericValue(archiveSpreadOdds(row, 'home'))) merged.homeSpreadOdds = archiveSpreadOdds(row, 'home');
   if (!hasNumericValue(merged.marketTotal) && hasNumericValue(row?.marketTotal)) merged.marketTotal = Number(row.marketTotal);
+  if (!hasNumericValue(merged.overOdds) && hasNumericValue(archiveTotalOdds(row, 'over'))) merged.overOdds = archiveTotalOdds(row, 'over');
+  if (!hasNumericValue(merged.underOdds) && hasNumericValue(archiveTotalOdds(row, 'under'))) merged.underOdds = archiveTotalOdds(row, 'under');
+  ['spreadLinePairValid', 'spreadPricePairValid', 'totalLinePairValid', 'totalPricePairValid', 'marketPriceStatus', 'marketSpreadPerspective', 'bookmakerKey', 'bookmakerTitle'].forEach(key => {
+    if ((merged[key] === undefined || merged[key] === null || merged[key] === '') && row?.[key] !== undefined) merged[key] = row[key];
+  });
   if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.marketAwayML)) merged.marketAwayML = Number(row.marketAwayML);
   else if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.awayML)) merged.marketAwayML = Number(row.awayML);
   else if (!hasNumericValue(merged.marketAwayML) && hasNumericValue(row?.awayMoneyline)) merged.marketAwayML = Number(row.awayMoneyline);
@@ -2195,18 +2246,28 @@ function renderMlbOddsMovement(game, archiveRows) {
       awayTeamNorm: matchup.away,
       homeTeamNorm: matchup.home,
       localDate: archiveLocalDate(row),
-      asOf: row?.updatedAt || row?.archivedAt || row?.marketLineUpdated || ''
+      asOf: row?.updatedAt || row?.archivedAt || row?.marketLineUpdated || '',
+      awaySpread: archiveAwaySpread(row),
+      awaySpreadOdds: archiveSpreadOdds(row, 'away'),
+      homeSpreadOdds: archiveSpreadOdds(row, 'home'),
+      overOdds: archiveTotalOdds(row, 'over'),
+      underOdds: archiveTotalOdds(row, 'under')
     };
   }).filter(row => row.awayTeamNorm === String(game?.awayTeam || '').toUpperCase() && row.homeTeamNorm === String(game?.homeTeam || '').toUpperCase() && (!game?.gameDate || row.localDate === game.gameDate));
 
   rows.sort((a, b) => new Date(a.asOf || 0) - new Date(b.asOf || 0));
-  const snapshots = rows.length ? rows : ((hasNumericValue(game?.marketSpread) || hasNumericValue(game?.marketTotal)) ? [{
-    marketSpread: game.marketSpread,
+  const snapshots = rows.length ? rows : ((hasNumericValue(game?.awaySpread ?? game?.marketSpread) || hasNumericValue(game?.marketTotal)) ? [{
+    awaySpread: game.awaySpread ?? game.marketSpread,
+    marketSpread: game.awaySpread ?? game.marketSpread,
+    awaySpreadOdds: game.awaySpreadOdds,
+    homeSpreadOdds: game.homeSpreadOdds,
     marketTotal: game.marketTotal,
-    awayMoneyline: game.marketAwayML,
-    homeMoneyline: game.marketHomeML,
-    asOf: game.marketLineUpdated || '',
-    source: game.marketLineSource || 'games.json'
+    overOdds: game.overOdds,
+    underOdds: game.underOdds,
+    awayMoneyline: game.marketAwayML ?? game.awayML,
+    homeMoneyline: game.marketHomeML ?? game.homeML,
+    asOf: game.marketLineUpdated || game.marketUpdatedAt || '',
+    source: game.marketLineSource || game.marketSource || 'games.json'
   }] : []);
 
   if (!snapshots.length) {
@@ -2217,13 +2278,13 @@ function renderMlbOddsMovement(game, archiveRows) {
   section.style.display = '';
   const opening = snapshots[0];
   const current = snapshots[snapshots.length - 1];
-  const spreads = snapshots.map(s => Number(s.marketSpread)).filter(Number.isFinite);
+  const spreads = snapshots.map(s => Number(s.awaySpread ?? s.marketSpread)).filter(Number.isFinite);
   const totals = snapshots.map(s => Number(s.marketTotal)).filter(Number.isFinite);
   const spreadRange = spreads.length ? `${Math.min(...spreads).toFixed(1)} to ${Math.max(...spreads).toFixed(1)}` : '—';
   const totalRange = totals.length ? `${Math.min(...totals).toFixed(1)} to ${Math.max(...totals).toFixed(1)}` : '—';
   cards.innerHTML = [
-    metricCard('Opening spread', hasNumericValue(opening?.marketSpread) ? spreadTeamLabel(game, Number(opening.marketSpread)) : '—'),
-    metricCard('Current spread', hasNumericValue(current?.marketSpread) ? spreadTeamLabel(game, Number(current.marketSpread)) : '—'),
+    metricCard('Opening spread', hasNumericValue(opening?.awaySpread ?? opening?.marketSpread) ? spreadWithPrice(game, Number(opening.awaySpread ?? opening.marketSpread), opening.awaySpreadOdds, opening.homeSpreadOdds) : '—'),
+    metricCard('Current spread', hasNumericValue(current?.awaySpread ?? current?.marketSpread) ? spreadWithPrice(game, Number(current.awaySpread ?? current.marketSpread), current.awaySpreadOdds, current.homeSpreadOdds) : '—'),
     metricCard('Spread range', spreadRange),
     metricCard('Total range', totalRange),
     metricCard('Moneyline now', `${fmtMoneyline(archiveMoneyline(current, 'away'))} / ${fmtMoneyline(archiveMoneyline(current, 'home'))}`),
@@ -2233,8 +2294,8 @@ function renderMlbOddsMovement(game, archiveRows) {
   body.innerHTML = snapshots.map(s => `
     <tr>
       <td>${escapeHtml(String(s.asOf || '').replace('T', ' ').slice(0, 16) || '—')}</td>
-      <td>${escapeHtml(hasNumericValue(s.marketSpread) ? spreadTeamLabel(game, Number(s.marketSpread)) : '—')}</td>
-      <td>${escapeHtml(hasNumericValue(s.marketTotal) ? fmt(s.marketTotal, 2) : '—')}</td>
+      <td>${escapeHtml(hasNumericValue(s.awaySpread ?? s.marketSpread) ? spreadWithPrice(game, Number(s.awaySpread ?? s.marketSpread), s.awaySpreadOdds, s.homeSpreadOdds) : '—')}</td>
+      <td>${escapeHtml(hasNumericValue(s.marketTotal) ? totalWithPrices(s.marketTotal, s.overOdds, s.underOdds) : '—')}</td>
       <td>${escapeHtml(fmtMoneyline(archiveMoneyline(s, 'away')))}</td>
       <td>${escapeHtml(fmtMoneyline(archiveMoneyline(s, 'home')))}</td>
       <td>${escapeHtml(s.source || 'Archive')}</td>
@@ -2957,7 +3018,7 @@ function setupGamePagePolish() {
     const game = (games || []).find(g => g.id === id) || (games || [])[0];
     if (!game) throw new Error('No game records found.');
 
-    const propsData = mergePropCollections(rawPropsLab, rawProps);
+    const propsData = String(game?.league || '').toUpperCase() === 'MLB' ? rawProps : mergePropCollections(rawPropsLab, rawProps);
     const mlbDetail = String(game?.league || '').toUpperCase() === 'MLB' && game?.detailPath
       ? await loadJson(game.detailPath, null)
       : null;
@@ -2967,10 +3028,15 @@ function setupGamePagePolish() {
     byId('game-title').textContent = `${game.awayTeam} @ ${game.homeTeam}`;
     byId('game-summary').textContent = game.summary || '';
     byId('snapshot-score').textContent = `${fmt(game.modelAwayScore, 2)} - ${fmt(game.modelHomeScore, 2)}`;
-    byId('snapshot-spread').textContent = hasNumericValue(game.marketSpread)
-      ? spreadTeamLabel(game, marketSpreadForDisplay(game))
+    const marketStatus = String(game.marketLineStatus || game.market_line_status || '').toUpperCase();
+    const staleSuffix = marketStatus.includes('STALE') ? ' • stale' : '';
+    const displaySpread = marketSpreadForDisplay(game);
+    byId('snapshot-spread').textContent = Number.isFinite(displaySpread)
+      ? `${spreadWithPrice(game, displaySpread, game.awaySpreadOdds, game.homeSpreadOdds)}${staleSuffix}`
       : 'Pending';
-    byId('snapshot-total').textContent = hasNumericValue(game.marketTotal) ? fmt(game.marketTotal, 2) : 'Pending';
+    byId('snapshot-total').textContent = hasNumericValue(game.marketTotal)
+      ? `${totalWithPrices(game.marketTotal, game.overOdds, game.underOdds)}${staleSuffix}`
+      : 'Pending';
     byId('snapshot-confidence').textContent = game.confidence || 'N/A';
     renderGameQuickRead(game, mlbDetail);
 

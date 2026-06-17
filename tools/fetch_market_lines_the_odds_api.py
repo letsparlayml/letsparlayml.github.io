@@ -161,10 +161,15 @@ def game_sort_key(row: dict[str, Any]) -> tuple:
         idx = BOOK_PRIORITY.index(key)
     except ValueError:
         idx = len(BOOK_PRIORITY) + 50
-    has_spread = row.get('marketSpread') is not None
+    spread_pair = bool(row.get('spreadPricePairValid'))
+    total_pair = bool(row.get('totalPricePairValid'))
+    has_spread = row.get('awaySpread') is not None and row.get('homeSpread') is not None
     has_total = row.get('marketTotal') is not None
     has_ml = row.get('awayMoneyline') is not None and row.get('homeMoneyline') is not None
-    return (0 if has_spread else 1, 0 if has_total else 1, 0 if has_ml else 1, idx, key)
+    # Select one bookmaker snapshot as a unit. Complete point/price pairs win,
+    # then bookmaker priority breaks ties.
+    return (0 if spread_pair else 1, 0 if total_pair else 1, 0 if has_ml else 1,
+            0 if has_spread else 1, 0 if has_total else 1, idx, key)
 
 
 def api_get(session: requests.Session, sport_key: str, api_key: str, timeout: int, bookmakers: str) -> list[dict[str, Any]]:
@@ -187,8 +192,7 @@ def api_get(session: requests.Session, sport_key: str, api_key: str, timeout: in
 
 
 def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[str, Any]]:
-    team_map = TEAM_MAPS[league]
-    selected: dict[tuple[str, str, str], dict[str, Any]] = {}
+    selected: dict[tuple[str, str, str, str], dict[str, Any]] = {}
     now_utc = datetime.now(timezone.utc)
     skipped_started = 0
     for event in events:
@@ -208,6 +212,7 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
         local_date = local_date_from_iso(commence)
         if not away or not home or not local_date:
             continue
+
         for book in event.get('bookmakers') or []:
             row = {
                 'league': league,
@@ -218,7 +223,18 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
                 'homeTeam': home,
                 'matchup': f'{away} @ {home}',
                 'marketSpread': None,
+                'marketSpreadPerspective': 'away',
+                'awaySpread': None,
+                'homeSpread': None,
+                'awaySpreadOdds': None,
+                'homeSpreadOdds': None,
+                'spreadLinePairValid': False,
+                'spreadPricePairValid': False,
                 'marketTotal': None,
+                'totalLinePairValid': False,
+                'overOdds': None,
+                'underOdds': None,
+                'totalPricePairValid': False,
                 'awayMoneyline': None,
                 'homeMoneyline': None,
                 'marketAwayML': None,
@@ -230,6 +246,7 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
                 'bookmakerTitle': clean(book.get('title')),
                 'updatedAt': iso_z(clean(book.get('last_update'))),
             }
+            away_point = home_point = over_point = under_point = None
             for market in book.get('markets') or []:
                 mkey = clean(market.get('key'))
                 outcomes = {clean(o.get('name')): o for o in (market.get('outcomes') or [])}
@@ -237,28 +254,87 @@ def build_selected_rows(events: list[dict[str, Any]], league: str) -> list[dict[
                     row['awayMoneyline'] = to_float(outcome_for_team(outcomes, away_full).get('price'))
                     row['homeMoneyline'] = to_float(outcome_for_team(outcomes, home_full).get('price'))
                 elif mkey == 'spreads':
-                    row['marketSpread'] = to_float(outcome_for_team(outcomes, away_full).get('point'))
+                    away_outcome = outcome_for_team(outcomes, away_full)
+                    home_outcome = outcome_for_team(outcomes, home_full)
+                    away_point = to_float(away_outcome.get('point'))
+                    home_point = to_float(home_outcome.get('point'))
+                    away_price = to_float(away_outcome.get('price'))
+                    home_price = to_float(home_outcome.get('price'))
+                    line_pair_valid = (
+                        away_point is not None and home_point is not None
+                        and abs(away_point + home_point) < 0.001
+                    )
+                    row['spreadLinePairValid'] = line_pair_valid
+                    if line_pair_valid:
+                        row['awaySpread'] = away_point
+                        row['homeSpread'] = home_point
+                        row['marketSpread'] = away_point
+                        row['awaySpreadOdds'] = away_price
+                        row['homeSpreadOdds'] = home_price
+                        row['spreadPricePairValid'] = away_price is not None and home_price is not None
                 elif mkey == 'totals':
                     over = outcomes.get('Over') or {}
                     under = outcomes.get('Under') or {}
-                    row['marketTotal'] = to_float(over.get('point')) if to_float(over.get('point')) is not None else to_float(under.get('point'))
+                    over_point = to_float(over.get('point'))
+                    under_point = to_float(under.get('point'))
+                    over_price = to_float(over.get('price'))
+                    under_price = to_float(under.get('price'))
+                    total_pair_valid = (
+                        over_point is not None and under_point is not None
+                        and abs(over_point - under_point) < 0.001
+                    )
+                    row['totalLinePairValid'] = total_pair_valid
+                    if total_pair_valid:
+                        row['marketTotal'] = over_point
+                        row['overOdds'] = over_price
+                        row['underOdds'] = under_price
+                        row['totalPricePairValid'] = over_price is not None and under_price is not None
+
             row['marketAwayML'] = row['awayMoneyline']
             row['marketHomeML'] = row['homeMoneyline']
             row['awayML'] = row['awayMoneyline']
             row['homeML'] = row['homeMoneyline']
+            has_spread_points = row['marketSpread'] is not None
+            has_total_point = row['marketTotal'] is not None
+            has_ml_pair = row['awayMoneyline'] is not None and row['homeMoneyline'] is not None
+            invalid_spread_pair = any(v is not None for v in (away_point, home_point))
+            invalid_spread_pair = invalid_spread_pair and not row['spreadLinePairValid']
+            invalid_total_pair = any(v is not None for v in (over_point, under_point))
+            invalid_total_pair = invalid_total_pair and not row['totalLinePairValid']
+            missing_price_for_point = (has_spread_points and not row['spreadPricePairValid']) or (has_total_point and not row['totalPricePairValid'])
+            if invalid_spread_pair and invalid_total_pair:
+                row['marketPriceStatus'] = 'INVALID_SPREAD_AND_TOTAL_PAIR'
+            elif invalid_spread_pair:
+                row['marketPriceStatus'] = 'INVALID_SPREAD_PAIR'
+            elif invalid_total_pair:
+                row['marketPriceStatus'] = 'INVALID_TOTAL_PAIR'
+            elif missing_price_for_point:
+                row['marketPriceStatus'] = 'PRICE_REQUIRED'
+            elif has_ml_pair and (not has_spread_points or row['spreadPricePairValid']) and (not has_total_point or row['totalPricePairValid']):
+                row['marketPriceStatus'] = 'COMPLETE'
+            else:
+                row['marketPriceStatus'] = 'PARTIAL'
+
             key = (league, local_date, away, home)
             cur = selected.get(key)
             if cur is None or game_sort_key(row) < game_sort_key(cur):
                 selected[key] = row
+
     rows = sorted(selected.values(), key=lambda r: (r['date'], r['awayTeam'], r['homeTeam']))
     if skipped_started:
         print(f'[ODDS] {league}: skipped {skipped_started} started/live events to preserve pregame close')
     return rows
 
-
 def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, Any]]):
     lookup = {(r['league'], r['date'], r['awayTeam'], r['homeTeam']): r for r in selected_rows}
     applied = 0
+    passthrough = [
+        'awayML', 'homeML', 'awayMoneyline', 'homeMoneyline', 'marketAwayML', 'marketHomeML',
+        'marketSpread', 'marketSpreadPerspective', 'awaySpread', 'homeSpread',
+        'awaySpreadOdds', 'homeSpreadOdds', 'spreadLinePairValid', 'spreadPricePairValid',
+        'marketTotal', 'overOdds', 'underOdds', 'totalLinePairValid', 'totalPricePairValid', 'marketPriceStatus',
+        'bookmakerKey', 'bookmakerTitle', 'eventId',
+    ]
     for g in games:
         league = clean(g.get('league')).upper()
         away = clean(g.get('awayTeam')).upper()
@@ -267,34 +343,42 @@ def apply_to_games(games: list[dict[str, Any]], selected_rows: list[dict[str, An
         row = lookup.get((league, date, away, home))
         if not row:
             continue
-        g['marketSpread'] = row.get('marketSpread')
-        g['marketTotal'] = row.get('marketTotal')
-        g['marketAwayML'] = row.get('marketAwayML')
-        g['marketHomeML'] = row.get('marketHomeML')
+        for field in passthrough:
+            g[field] = row.get(field)
         g['marketLineSource'] = row.get('source')
-        g['marketLineUpdated'] = row.get('updatedAt') or datetime.utcnow().isoformat(timespec='seconds') + 'Z'
+        g['marketLineUpdated'] = row.get('updatedAt') or datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z')
+        g['marketUpdatedAt'] = g['marketLineUpdated']
+        g['marketLineAgeHours'] = 0.0
+        g['marketLineStatus'] = 'CURRENT'
         if row.get('gameDate'):
             g['gameDateTimeUtc'] = row['gameDate']
         applied += 1
     return applied
 
-
 def merge_archive(archive: list[dict[str, Any]], selected_rows: list[dict[str, Any]]):
-    same_game = {(r['league'], r['date'], r['awayTeam'], r['homeTeam']) for r in selected_rows}
-    cleaned = []
-    for row in archive:
-        league = clean(row.get('league')).upper()
-        away = clean(row.get('awayTeam') or (clean(row.get('matchup')).split('@')[0].strip() if '@' in clean(row.get('matchup')) else '')).upper()
-        home = clean(row.get('homeTeam') or (clean(row.get('matchup')).split('@')[1].strip() if '@' in clean(row.get('matchup')) else '')).upper()
-        date = clean(row.get('date'))
-        source = clean(row.get('source'))
-        key = (league, date, away, home)
-        if key in same_game and source in {'games.json', 'manual', 'manual_nhl_lines.csv', 'TeamRankings NBA matchup page'}:
-            continue
-        cleaned.append(row)
-    cleaned.extend(selected_rows)
-    return cleaned
-
+    # Preserve every existing historical snapshot. Only replace an exact snapshot
+    # identity when the newly fetched row carries richer fields.
+    merged = list(archive)
+    index: dict[tuple[str, ...], int] = {}
+    for i, row in enumerate(merged):
+        identity = (
+            clean(row.get('league')).upper(), clean(row.get('date')),
+            clean(row.get('awayTeam')).upper(), clean(row.get('homeTeam')).upper(),
+            clean(row.get('eventId')), clean(row.get('bookmakerKey')).lower(), clean(row.get('updatedAt')),
+        )
+        index[identity] = i
+    for row in selected_rows:
+        identity = (
+            clean(row.get('league')).upper(), clean(row.get('date')),
+            clean(row.get('awayTeam')).upper(), clean(row.get('homeTeam')).upper(),
+            clean(row.get('eventId')), clean(row.get('bookmakerKey')).lower(), clean(row.get('updatedAt')),
+        )
+        if identity in index:
+            merged[index[identity]] = {**merged[index[identity]], **row}
+        else:
+            index[identity] = len(merged)
+            merged.append(row)
+    return merged
 
 def main() -> int:
     ap = argparse.ArgumentParser(description='Fetch NBA/NHL/MLB market lines from The Odds API and update site data.')

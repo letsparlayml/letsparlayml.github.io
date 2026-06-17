@@ -111,6 +111,7 @@ PITCHER_MARKETS = [
         'stat': 'K',
         'display': 'Pitcher Strikeouts',
         'pred_col': 'pred_k',
+        'pred_cols': ['pred_k_authoritative', 'pred_k'],
         'value_col': 'strikeOuts',
         'avg_cols': ['strikeOuts_r10', 'strikeOuts_r5', 'strikeOuts_r3'],
         'prior_col': 'prior_sp_strikeOuts_prior',
@@ -122,12 +123,14 @@ PITCHER_MARKETS = [
         'stat': 'OUTS',
         'display': 'Pitcher Outs',
         'pred_col': 'pred_outs',
+        'pred_cols': ['pred_outs_authoritative', 'pred_outs'],
         'value_col': 'outsRecorded',
         'avg_cols': ['outsRecorded_r10', 'outsRecorded_r5', 'outsRecorded_r3'],
         'prior_col': 'prior_sp_outsRecorded_prior',
         'default_lines': [11.5, 14.5, 17.5, 20.5],
         'context_label': 'Outs',
         'workload_col': 'pred_outs',
+        'workload_cols': ['pred_outs_authoritative', 'pred_outs'],
     },
     {
         'stat': 'IP',
@@ -144,6 +147,7 @@ PITCHER_MARKETS = [
         'stat': 'BB',
         'display': 'Pitcher Walks Allowed',
         'pred_col': 'pred_bb',
+        'pred_cols': ['pred_bb_authoritative', 'pred_bb'],
         'value_col': 'baseOnBalls',
         'avg_cols': ['baseOnBalls_r10', 'baseOnBalls_r5', 'baseOnBalls_r3'],
         'prior_col': 'prior_sp_baseOnBalls_prior',
@@ -155,6 +159,7 @@ PITCHER_MARKETS = [
         'stat': 'HA',
         'display': 'Pitcher Hits Allowed',
         'pred_col': 'pred_hits_allowed',
+        'pred_cols': ['pred_hits_allowed_authoritative', 'pred_hits_allowed'],
         'value_col': 'hitsAllowed',
         'avg_cols': ['hitsAllowed_r10', 'hitsAllowed_r5', 'hitsAllowed_r3'],
         'prior_col': 'prior_sp_hitsAllowed_prior',
@@ -166,6 +171,7 @@ PITCHER_MARKETS = [
         'stat': 'ER',
         'display': 'Pitcher Earned Runs',
         'pred_col': 'pred_er',
+        'pred_cols': ['pred_er_authoritative', 'pred_er_dispersion_adj', 'pred_er'],
         'value_col': 'earnedRuns',
         'avg_cols': ['earnedRuns_r10', 'earnedRuns_r5', 'earnedRuns_r3'],
         'prior_col': 'prior_sp_earnedRuns_prior',
@@ -762,6 +768,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--batter-csv', type=Path)
     parser.add_argument('--pitcher-csv', type=Path)
     parser.add_argument('--game-csv', type=Path)
+    parser.add_argument('--model-workbook', type=Path, help='v86n workbook containing Games, Pitchers, and Batters sheets.')
     parser.add_argument('--recent-window', type=int, default=15)
     parser.add_argument('--max-games', type=int, default=40)
     parser.add_argument('--keep-old-details', action='store_true')
@@ -1044,6 +1051,30 @@ def approx_prob(row: pd.Series, market: dict[str, Any], line: float, pred: float
     needed = int(math.floor(line) + 1)
     return poisson_tail_prob(pred, needed)
 
+def pitcher_direct_prob(row: pd.Series, stat: str, line: float) -> float | None:
+    field_map = {
+        ('K', 3.5): 'prob_k_over_3p5',
+        ('K', 4.5): 'prob_k_over_4p5',
+        ('K', 5.5): 'prob_k_over_5p5',
+        ('K', 6.5): 'prob_k_over_6p5',
+        ('OUTS', 14.5): 'prob_15plus_outs',
+        ('OUTS', 17.5): 'prob_18plus_outs',
+        ('OUTS', 20.5): 'prob_21plus_outs',
+    }
+    field = field_map.get((stat, float(line)))
+    if field:
+        value = safe_float(row.get(field))
+        if value is not None:
+            return value
+    if stat == 'ER':
+        if abs(float(line) - 1.5) < 0.01:
+            p01 = safe_float(row.get('pitcher_er_prob_0_1'))
+            return None if p01 is None else max(0.0, min(1.0, 1.0 - p01))
+        if abs(float(line) - 3.5) < 0.01:
+            return safe_float(row.get('pitcher_er_prob_4plus'))
+    return None
+
+
 def valid_lines_for_pred(lines: list[float], pred: float | None) -> list[float]:
     if pred is None:
         return lines[:]
@@ -1075,7 +1106,7 @@ def batter_context_summary(row: pd.Series) -> str:
 
 def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game_lookup: dict[int, dict[str, Any]],
                                     batter_logs_lookup: dict[int, pd.DataFrame], recent_window: int, max_games: int) -> tuple[list[dict], dict | None]:
-    pred = safe_float(row.get(market['pred_col']))
+    pred = first_number_from(row, market.get('pred_cols') or [market['pred_col']])
     if pred is None:
         return [], None
     game_pk = safe_int(row.get('gamePk'))
@@ -1182,6 +1213,19 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
         'boardContext': batter_context_summary(row),
         'matchupContext': matchup_context,
         'currentMatchupContext': matchup_context,
+        'lineupSource': clean_str(row.get('lineup_source')),
+        'lineupStatus': clean_str(row.get('lineup_status')),
+        'officialLineup': safe_int(row.get('official_lineup')),
+        'lineupConfirmed': safe_int(row.get('lineup_confirmed')),
+        'lineupPaCertaintyScore': safe_float(row.get('lineup_pa_certainty_score')),
+        'projectedLineupMethod': clean_str(row.get('projected_lineup_method')),
+        'projectedHandStartRate': safe_float(row.get('projected_hand_start_rate')),
+        'projectedHandPaRate': safe_float(row.get('projected_hand_pa_rate')),
+        'projectedHandMatchGames': safe_float(row.get('projected_hand_match_games')),
+        'projectedHandReliability': safe_float(row.get('projected_hand_reliability')),
+        'playerVsOppHandGamesSampleEst': safe_float(row.get('player_vs_opp_hand_games_sample_est')),
+        'playerVsOppHandAbSampleEst': safe_float(row.get('player_vs_opp_hand_ab_sample_est')),
+        'playerVsOppHandSplitConfidence': safe_float(row.get('player_vs_opp_hand_split_confidence')),
     }
 
     entries = []
@@ -1244,6 +1288,19 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
             'park': matchup_context.get('park'),
             'opponentStarterName': matchup_context.get('opponentStarterName'),
             'opponentStarterId': matchup_context.get('opponentStarterId'),
+            'lineupSource': clean_str(row.get('lineup_source')),
+            'lineupStatus': clean_str(row.get('lineup_status')),
+            'officialLineup': safe_int(row.get('official_lineup')),
+            'lineupConfirmed': safe_int(row.get('lineup_confirmed')),
+            'lineupPaCertaintyScore': safe_float(row.get('lineup_pa_certainty_score')),
+            'projectedLineupMethod': clean_str(row.get('projected_lineup_method')),
+            'projectedHandStartRate': safe_float(row.get('projected_hand_start_rate')),
+            'projectedHandPaRate': safe_float(row.get('projected_hand_pa_rate')),
+            'projectedHandMatchGames': safe_float(row.get('projected_hand_match_games')),
+            'projectedHandReliability': safe_float(row.get('projected_hand_reliability')),
+            'playerVsOppHandGamesSampleEst': safe_float(row.get('player_vs_opp_hand_games_sample_est')),
+            'playerVsOppHandAbSampleEst': safe_float(row.get('player_vs_opp_hand_ab_sample_est')),
+            'playerVsOppHandSplitConfidence': safe_float(row.get('player_vs_opp_hand_split_confidence')),
             'hit_r5': hit_r5,
             'hit_r10': hit_r10,
             'hit_r25': hit_r20,
@@ -1255,7 +1312,7 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
 
 def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], game_lookup: dict[int, dict[str, Any]],
                                      pitcher_logs_lookup: dict[int, pd.DataFrame], max_games: int) -> tuple[list[dict], dict | None]:
-    pred = safe_float(row.get(market['pred_col']))
+    pred = first_number_from(row, market.get('pred_cols') or [market['pred_col']])
     if pred is None:
         return [], None
 
@@ -1308,7 +1365,7 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
                 'shortLabel': label,
                 'seq': seq,
                 'value': value,
-                'minutes': safe_float(row.get(market['workload_col'])),
+                'minutes': first_number_from(row, market.get('workload_cols') or [market['workload_col']]),
                 'opp': opp,
                 'isHome': safe_int(row.get('is_home')),
                 'location': 'Home' if safe_int(row.get('is_home')) == 1 else 'Away' if safe_int(row.get('is_home')) == 0 else '',
@@ -1321,7 +1378,7 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
         sample_note = 'Pitcher preview mode uses rolling-form snapshots and priors when pitcher logs are unavailable.'
         x_axis = 'snapshot'
 
-    workload_value = safe_float(row.get(market['workload_col']))
+    workload_value = first_number_from(row, market.get('workload_cols') or [market['workload_col']])
     series = {
         'playerId': player_id,
         'player': clean_str(row.get('player_name') or row.get('fullName')),
@@ -1358,12 +1415,34 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
         'boardContext': f'{team} vs {opp} • {clean_str(row.get("pitchHand"))}',
         'matchupContext': matchup_context,
         'currentMatchupContext': matchup_context,
+        'pitcherRoleType': clean_str(row.get('pitcher_role_type')),
+        'starterRoleScenario': clean_str(row.get('starter_role_scenario')),
+        'starterRoleUncertaintyScore': safe_float(row.get('starter_role_uncertainty_score')),
+        'starterRoleScenarioConfidence': safe_float(row.get('starter_role_scenario_confidence')),
+        'workloadScenarioMeanOuts': safe_float(row.get('workload_scenario_mean_outs')),
+        'roleExpectedOuts': safe_float(row.get('role_expected_outs')),
+        'roleOutsLeashCap': safe_float(row.get('role_outs_leash_cap')),
+        'predictionConfidenceScore': safe_float(row.get('prediction_confidence_score')),
+        'predictionConfidenceTier': clean_str(row.get('prediction_confidence_tier')),
+        'prob15PlusOuts': safe_float(row.get('prob_15plus_outs')),
+        'prob18PlusOuts': safe_float(row.get('prob_18plus_outs')),
+        'prob21PlusOuts': safe_float(row.get('prob_21plus_outs')),
+        'probKOver3p5': safe_float(row.get('prob_k_over_3p5')),
+        'probKOver4p5': safe_float(row.get('prob_k_over_4p5')),
+        'probKOver5p5': safe_float(row.get('prob_k_over_5p5')),
+        'probKOver6p5': safe_float(row.get('prob_k_over_6p5')),
+        'pitcherErProb01': safe_float(row.get('pitcher_er_prob_0_1')),
+        'pitcherErProb23': safe_float(row.get('pitcher_er_prob_2_3')),
+        'pitcherErProb4Plus': safe_float(row.get('pitcher_er_prob_4plus')),
+        'pitcherErRiskBucket': clean_str(row.get('pitcher_er_risk_bucket_individual')),
     }
 
     entries = []
     for line in valid_lines_for_pred(market['default_lines'], pred):
         threshold = int(math.floor(line) + 1) if market['stat'] != 'IP' else int(math.floor(line + 0.0001))
-        prob = poisson_tail_prob(pred, threshold) if market['stat'] != 'IP' else None
+        prob = pitcher_direct_prob(row, market['stat'], line)
+        if prob is None:
+            prob = poisson_tail_prob(pred, threshold) if market['stat'] != 'IP' else None
         entry = {
             'id': f'{game_date}|MLB|pitcher|{player_id}|{market["stat"]}|{line}',
             'seriesKey': f'{game_date}|MLB|pitcher|{player_id}|{market["stat"]}',
@@ -1415,6 +1494,26 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
             'temperatureF': matchup_context.get('temperatureF'),
             'windMph': matchup_context.get('windMph'),
             'park': matchup_context.get('park'),
+            'pitcherRoleType': clean_str(row.get('pitcher_role_type')),
+            'starterRoleScenario': clean_str(row.get('starter_role_scenario')),
+            'starterRoleUncertaintyScore': safe_float(row.get('starter_role_uncertainty_score')),
+            'starterRoleScenarioConfidence': safe_float(row.get('starter_role_scenario_confidence')),
+            'workloadScenarioMeanOuts': safe_float(row.get('workload_scenario_mean_outs')),
+            'roleExpectedOuts': safe_float(row.get('role_expected_outs')),
+            'roleOutsLeashCap': safe_float(row.get('role_outs_leash_cap')),
+            'predictionConfidenceScore': safe_float(row.get('prediction_confidence_score')),
+            'predictionConfidenceTier': clean_str(row.get('prediction_confidence_tier')),
+            'prob15PlusOuts': safe_float(row.get('prob_15plus_outs')),
+            'prob18PlusOuts': safe_float(row.get('prob_18plus_outs')),
+            'prob21PlusOuts': safe_float(row.get('prob_21plus_outs')),
+            'probKOver3p5': safe_float(row.get('prob_k_over_3p5')),
+            'probKOver4p5': safe_float(row.get('prob_k_over_4p5')),
+            'probKOver5p5': safe_float(row.get('prob_k_over_5p5')),
+            'probKOver6p5': safe_float(row.get('prob_k_over_6p5')),
+            'pitcherErProb01': safe_float(row.get('pitcher_er_prob_0_1')),
+            'pitcherErProb23': safe_float(row.get('pitcher_er_prob_2_3')),
+            'pitcherErProb4Plus': safe_float(row.get('pitcher_er_prob_4plus')),
+            'pitcherErRiskBucket': clean_str(row.get('pitcher_er_risk_bucket_individual')),
             'hit_r5': None,
             'hit_r10': None,
             'hit_r25': None,
@@ -1440,14 +1539,33 @@ def main() -> int:
     batter_csv = args.batter_csv or find_latest('batter_predictions_*.csv', args.mlb_output_dir)
     pitcher_csv = args.pitcher_csv or find_latest('pitcher_predictions_*.csv', args.mlb_output_dir)
     game_csv = args.game_csv or find_latest('game_predictions_*.csv', args.mlb_output_dir)
-    if not batter_csv or not batter_csv.exists():
-        raise SystemExit('Could not find batter_predictions CSV.')
-    if not game_csv or not game_csv.exists():
-        raise SystemExit('Could not find game_predictions CSV.')
+    model_workbook = args.model_workbook or (args.mlb_output_dir / 'mlb_predictions.xlsx')
 
-    batter_df = pd.read_csv(batter_csv)
-    pitcher_df = pd.read_csv(pitcher_csv) if pitcher_csv and pitcher_csv.exists() else pd.DataFrame()
-    game_df = pd.read_csv(game_csv)
+    workbook_sheets: dict[str, pd.DataFrame] = {}
+    if model_workbook.exists():
+        xls = pd.ExcelFile(model_workbook)
+        for sheet in ('Games', 'Pitchers', 'Batters'):
+            if sheet in xls.sheet_names:
+                workbook_sheets[sheet] = pd.read_excel(xls, sheet_name=sheet)
+
+    if 'Batters' in workbook_sheets:
+        batter_df = workbook_sheets['Batters']
+    elif batter_csv and batter_csv.exists():
+        batter_df = pd.read_csv(batter_csv)
+    else:
+        raise SystemExit('Could not find v86n Batters sheet or batter_predictions CSV.')
+
+    if 'Pitchers' in workbook_sheets:
+        pitcher_df = workbook_sheets['Pitchers']
+    else:
+        pitcher_df = pd.read_csv(pitcher_csv) if pitcher_csv and pitcher_csv.exists() else pd.DataFrame()
+
+    if 'Games' in workbook_sheets:
+        game_df = workbook_sheets['Games']
+    elif game_csv and game_csv.exists():
+        game_df = pd.read_csv(game_csv)
+    else:
+        raise SystemExit('Could not find v86n Games sheet or game_predictions CSV.')
     game_lookup = build_game_lookup(game_df)
 
     batter_logs_df = prep_batter_logs(load_table_latest(args.mlb_data_dir, 'batter_game_logs'))
@@ -1457,8 +1575,8 @@ def main() -> int:
     # exists in model-output history/current files and game/schedule/weather tables.
     # This fills the historical fields that Similarity v2 is designed to score.
     game_context_df = build_game_context(args)
-    batter_prediction_context = build_prediction_context(args, batter_csv, 'batter')
-    pitcher_prediction_context = build_prediction_context(args, pitcher_csv, 'pitcher')
+    batter_prediction_context = build_prediction_context(args, batter_csv, 'batter') if batter_csv and batter_csv.exists() else pd.DataFrame()
+    pitcher_prediction_context = build_prediction_context(args, pitcher_csv, 'pitcher') if pitcher_csv and pitcher_csv.exists() else pd.DataFrame()
     batter_logs_df = enrich_batter_logs_with_matchup_context(batter_logs_df, batter_prediction_context, game_context_df)
     pitcher_logs_df = enrich_pitcher_logs_with_matchup_context(pitcher_logs_df, pitcher_prediction_context, game_context_df)
 

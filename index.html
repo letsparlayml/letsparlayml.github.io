@@ -11,9 +11,9 @@
     <div class="wrap">
       <div class="brand-row">
         <div>
-          <p class="eyebrow">Daily model dashboard</p>
+          <p class="eyebrow">Daily MLB model dashboard</p>
           <h1 id="site-title">Lets Parlay ML</h1>
-          <p class="subhead">Start with the strongest model spots for today, check whether each category has been running hot or cold, then dig into props, game details, line movement, and results.</p>
+          <p class="subhead">Start with today’s strongest MLB model spots, build a model-supported card, then dig into the full boards, game details, line movement, and tracked results.</p>
         </div>
         <nav class="top-nav">
           <a href="#start-here">Top picks</a>
@@ -29,7 +29,7 @@
 
       <div class="hero-actions">
         <a class="button-link button-link-primary" href="#start-here">View today’s top picks</a>
-        <a class="button-link" href="#builder">Build a card</a>
+        <a class="button-link" href="#builder">Build an MLB card</a>
         <a class="button-link button-link-subtle" href="props_analyzer.html">Open prop analyzer</a>
         <a class="button-link button-link-subtle" href="results.html">View results</a>
       </div>
@@ -37,7 +37,7 @@
       <div class="hero-grid hero-grid-five">
         <div class="hero-card">
           <span class="stat-label">Leagues</span>
-          <strong id="hero-leagues">NBA • MLB • NHL</strong>
+          <strong id="hero-leagues">MLB</strong>
         </div>
         <div class="hero-card">
           <span class="stat-label">Today’s games</span>
@@ -60,12 +60,12 @@
   </header>
 
   <main class="wrap page-grid">
-    <section class="panel featured-panel" id="start-here">
+    <section class="panel featured-panel" id="start-here" data-site-feature="homeTopPicks">
       <div class="section-heading section-heading-start">
         <div>
           <p class="eyebrow">Start here</p>
-          <h2>Best model spots today</h2>
-          <p class="muted">The front page now focuses on the picks the model actually wants to highlight. Each card includes recent category tracking so users can see whether that type of pick has been hot, cold, or neutral.</p>
+          <h2>Best MLB model spots today</h2>
+          <p class="muted">The front page highlights the strongest MLB signals across games, batters, and pitchers. Recent category tracking stays visible so the probability is not viewed by itself.</p>
         </div>
         <div class="button-link-row">
           <a class="button-link button-link-subtle" href="results.html">Full results</a>
@@ -77,12 +77,12 @@
       <div id="home-top-picks-grid" class="top-pick-grid"></div>
     </section>
 
-    <section class="panel" id="builder">
+    <section class="panel" id="builder" data-site-feature="parlayBuilder">
       <div class="section-heading">
         <div>
           <p class="eyebrow">Build a card</p>
-          <h2>Parlay / watch-card builder</h2>
-          <p class="muted">Choose how many model spots you want. The estimate is probability-based and conservative when legs come from the same game.</p>
+          <h2>MLB parlay / watch-card builder</h2>
+          <p class="muted">Choose how many MLB spots you want. The builder prioritizes playable lines, category form, model support, and diversification instead of simply stacking the highest raw probabilities.</p>
         </div>
       </div>
 
@@ -102,10 +102,7 @@
             <label>
               Sport
               <select id="parlay-sport-filter">
-                <option value="ALL">All sports</option>
-                <option value="MLB">MLB</option>
-                <option value="NBA">NBA</option>
-                <option value="NHL">NHL</option>
+                <option value="MLB" selected>MLB</option>
               </select>
             </label>
             <label>
@@ -128,7 +125,7 @@
           <div class="button-link-row builder-action-row">
             <button type="button" id="parlay-reroll" class="button-link">Generate new card</button>
           </div>
-          <p class="muted builder-note">Estimated probability is not sportsbook odds. Same-game and same-player combinations receive an extra penalty or are excluded when they conflict. Click generate again to reshuffle the highest-probability candidates.</p>
+          <p class="muted builder-note">The estimate is a model-based joint hit estimate, not sportsbook odds. Non-playable projections, blocked recommendations, duplicate exposure, and conflicting same-game combinations are removed before a card is built.</p>
         </div>
         <div id="parlay-builder-output" class="builder-output"></div>
       </div>
@@ -137,8 +134,8 @@
     <section class="panel" id="mlb-home-props">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">MLB quick picks</p>
-          <h2>Fast boards by pick type</h2>
+          <p class="eyebrow">MLB quick boards</p>
+          <h2>MLB projections by category</h2>
           <p class="muted">Short lists only. Open the analyzer when you want player history, hit rates, home/away splits, and deeper filters.</p>
         </div>
         <a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open MLB prop analyzer</a>
@@ -151,8 +148,8 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">Games</p>
-          <h2>High-confidence games</h2>
-          <p class="muted">Condensed view of the strongest game, total, NRFI/YRFI, and close-game signals for <span id="today-date-label"></span>.</p>
+          <h2>Today’s MLB game board</h2>
+          <p class="muted">Condensed view of the current game, total, NRFI/YRFI, and close-game model signals for <span id="today-date-label"></span>.</p>
         </div>
         <div class="filter-row filter-row-actions">
           <label>
@@ -186,14 +183,14 @@
       </details>
     </section>
 
-    <section class="panel" id="props">
+    <section class="panel" id="props" data-site-feature="crossSportProps" hidden>
       <div class="section-heading">
         <div>
           <p class="eyebrow">Prop table</p>
           <h2>Today’s top prop rows</h2>
           <p class="muted">A compact table is still available for scanning. The cards above should be the first stop for newer users.</p>
         </div>
-        <div class="button-link-row"><a class="button-link" href="props_lab.html">Open NBA props lab</a><a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open prop analyzer</a></div>
+        <div class="button-link-row"><a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open MLB prop analyzer</a></div>
       </div>
       <div class="table-wrap">
         <table>
@@ -214,7 +211,7 @@
       </div>
     </section>
 
-    <section class="panel" id="nba-quick-looks">
+    <section class="panel" id="nba-quick-looks" data-site-feature="nbaQuickLooks" hidden>
       <div class="section-heading">
         <div>
           <p class="eyebrow">NBA / NHL edges</p>
@@ -269,7 +266,6 @@
       </div>
       <div class="tool-grid">
         <a class="tool-card" href="props_analyzer.html"><strong>Prop analyzer</strong><span>Player-level histories, lines, hit rates, splits, and supporting context.</span></a>
-        <a class="tool-card" href="props_lab.html"><strong>NBA props lab</strong><span>NBA prop filters, strategy buckets, and role/baseline quick looks.</span></a>
         <a class="tool-card" href="line_tracker.html"><strong>Line tracker</strong><span>Market movement, open/current/close snapshots, and line history.</span></a>
         <a class="tool-card" href="results.html"><strong>Results</strong><span>Game results, MLB prop tracking, historical filters, and hot/cold review.</span></a>
       </div>
@@ -285,11 +281,11 @@
       <div class="about-grid">
         <div class="info-card">
           <h3>Start with top picks</h3>
-          <p>The homepage is now curated around the strongest model spots instead of making every visitor scan one long board.</p>
+          <p>The featured section narrows today’s MLB slate to the strongest model-supported game and player angles.</p>
         </div>
         <div class="info-card">
-          <h3>Check the pulse</h3>
-          <p>Each featured pick shows recent category tracking. If a category has been cold, users can see that before deciding whether to follow or fade it.</p>
+          <h3>Build, then verify</h3>
+          <p>The builder creates a diversified MLB card from playable candidates, but each leg should still be checked in the game page or prop analyzer.</p>
         </div>
         <div class="info-card">
           <h3>Open details for research</h3>

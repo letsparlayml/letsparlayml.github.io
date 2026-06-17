@@ -1653,7 +1653,7 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
 }
 
 (function init() {
-  const initialLeague = String(qs('league') || 'NBA').toUpperCase();
+  const initialLeague = 'MLB';
   const state = {
     config: leagueConfig(initialLeague),
     data: null,
@@ -1772,7 +1772,7 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     const lineSelect = byId('analyzer-line');
     const searchInput = byId('analyzer-search');
 
-    populateSelect(leagueSelect, ['NBA', 'MLB'], item => item, item => item, state.config.league);
+    populateSelect(leagueSelect, ['MLB'], item => item, item => item, 'MLB');
 
     state.selection.date = pickPreferredDate(state.data, state.config.league, state.selection.date);
     populateSelect(dateSelect, state.data?.dates || [], item => item, item => item, state.selection.date);
@@ -1873,7 +1873,7 @@ function populateSelect(select, items, getValue, getLabel, selectedValue) {
     byId('analyzer-league')?.addEventListener('change', e => {
       state.view = 'overall';
       state.profileStats = null;
-      load(e.target.value || 'NBA');
+      load('MLB');
     });
     byId('analyzer-date')?.addEventListener('change', e => {
       state.selection.date = e.target.value;

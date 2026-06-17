@@ -600,11 +600,19 @@ function applyDate(lab, date) {
 
 (async function init() {
   try {
-    const [site, rawLab, injuries] = await Promise.all([
+    const [site, featureConfig, rawLab, injuries] = await Promise.all([
       loadJson('data/site.json', {}),
+      loadJson('data/site_features.json', { features: { nbaPropsLab: false } }),
       loadJson('data/nba_props_lab.json'),
       loadJson('data/nba_injuries.json', {})
     ]);
+
+    if (featureConfig?.features?.nbaPropsLab !== true) {
+      document.title = 'NBA Props Lab — Offseason';
+      const main = document.querySelector('main');
+      if (main) main.innerHTML = `<section class="panel"><div class="empty-state"><h2>NBA props lab is paused for the offseason</h2><p>${escapeHtml(featureConfig?.offseasonMessage || 'NBA historical results remain available on the Results page.')}</p><p><a class="button-link" href="results.html">View historical results</a> <a class="button-link button-link-subtle" href="props_analyzer.html?league=MLB">Open MLB prop analyzer</a></p></div></section>`;
+      return;
+    }
 
     const injuryLookup = buildInjuryLookup(injuries);
     const lab = applyInjuryContextToLab(rawLab, injuryLookup);

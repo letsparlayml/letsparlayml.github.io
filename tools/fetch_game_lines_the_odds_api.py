@@ -263,74 +263,163 @@ def normalize_date_strings(commence_time: str) -> tuple[str, str]:
     return local_date, utc_date
 
 
+def _safe_float(value: Any) -> Optional[float]:
+    try:
+        if value is None or value == '':
+            return None
+        return float(value)
+    except Exception:
+        return None
+
+
+def _book_priority(key: Any) -> int:
+    value = str(key or '').lower()
+    try:
+        return PREFERRED_BOOKS.index(value)
+    except ValueError:
+        return len(PREFERRED_BOOKS) + 50
+
+
 def extract_event_row(league: str, event: dict[str, Any]) -> dict[str, Any]:
-    bookmakers = event.get('bookmakers', []) or []
-    picked = pick_bookmaker(bookmakers)
-    home = team_abbrev(league, event.get('home_team', ''))
-    away = team_abbrev(league, event.get('away_team', ''))
+    home_full = event.get('home_team', '')
+    away_full = event.get('away_team', '')
+    home = team_abbrev(league, home_full)
+    away = team_abbrev(league, away_full)
     commence_time = event.get('commence_time') or event.get('commenceTime') or event.get('startTimeUtc') or ''
     local_date, utc_date = normalize_date_strings(commence_time)
-    row: dict[str, Any] = {
-        'league': league,
-        'sport_key': event.get('sport_key'),
-        'event_id': event.get('id'),
-        'date': local_date,
-        'utcDate': utc_date,
-        'gameDate': commence_time,
-        'startTimeUtc': commence_time,
-        'commence_time': commence_time,
-        'awayTeam': away,
-        'homeTeam': home,
-        'marketSpread': None,
-        'marketTotal': None,
-        'marketAwayML': None,
-        'marketHomeML': None,
-        'marketSpreadText': None,
-        'marketTotalText': None,
-        'bookmakerKey': None,
-        'bookmakerTitle': None,
-        'source': None,
-        'updatedAt': None,
-        'fetchedAtUtc': now_utc_iso(),
-    }
-    if not picked:
-        return row
+    fetched_at = now_utc_iso()
 
-    row['bookmakerKey'] = picked.get('key')
-    row['bookmakerTitle'] = picked.get('title')
-    row['source'] = f"The Odds API • {picked.get('title')}"
-    row['updatedAt'] = picked.get('last_update') or row['fetchedAtUtc']
+    def base_row() -> dict[str, Any]:
+        return {
+            'league': league,
+            'sport_key': event.get('sport_key'),
+            'event_id': event.get('id'),
+            'eventId': event.get('id'),
+            'date': local_date,
+            'utcDate': utc_date,
+            'gameDate': commence_time,
+            'startTimeUtc': commence_time,
+            'commence_time': commence_time,
+            'awayTeam': away,
+            'homeTeam': home,
+            'matchup': f'{away} @ {home}',
+            'marketSpread': None,
+            'marketSpreadPerspective': 'away',
+            'awaySpread': None,
+            'homeSpread': None,
+            'awaySpreadOdds': None,
+            'homeSpreadOdds': None,
+            'spreadLinePairValid': False,
+            'spreadPricePairValid': False,
+            'marketTotal': None,
+            'overOdds': None,
+            'underOdds': None,
+            'totalLinePairValid': False,
+            'totalPricePairValid': False,
+            'awayML': None,
+            'homeML': None,
+            'awayMoneyline': None,
+            'homeMoneyline': None,
+            'marketAwayML': None,
+            'marketHomeML': None,
+            'marketSpreadText': None,
+            'marketTotalText': None,
+            'bookmakerKey': None,
+            'bookmakerTitle': None,
+            'source': None,
+            'updatedAt': None,
+            'fetchedAtUtc': fetched_at,
+            'marketPriceStatus': 'PARTIAL',
+        }
 
-    for outcome in market_outcomes(picked, 'h2h'):
-        name = team_abbrev(league, outcome.get('name', ''))
-        if name == home:
-            row['marketHomeML'] = outcome.get('price')
-        elif name == away:
-            row['marketAwayML'] = outcome.get('price')
+    candidates: list[dict[str, Any]] = []
+    for book in event.get('bookmakers', []) or []:
+        row = base_row()
+        row['bookmakerKey'] = book.get('key')
+        row['bookmakerTitle'] = book.get('title')
+        row['source'] = f"The Odds API • {book.get('title') or book.get('key')}"
+        row['updatedAt'] = book.get('last_update') or fetched_at
 
-    for outcome in market_outcomes(picked, 'spreads'):
-        name = team_abbrev(league, outcome.get('name', ''))
-        if name == away:
-            row['marketSpread'] = outcome.get('point')
-            break
+        for outcome in market_outcomes(book, 'h2h'):
+            name = team_abbrev(league, outcome.get('name', ''))
+            if name == home:
+                row['homeMoneyline'] = _safe_float(outcome.get('price'))
+            elif name == away:
+                row['awayMoneyline'] = _safe_float(outcome.get('price'))
 
-    for outcome in market_outcomes(picked, 'totals'):
-        name = str(outcome.get('name', '')).lower()
-        if name in ('over', 'under') and row['marketTotal'] is None:
-            row['marketTotal'] = outcome.get('point')
+        away_point = home_point = away_price = home_price = None
+        for outcome in market_outcomes(book, 'spreads'):
+            name = team_abbrev(league, outcome.get('name', ''))
+            if name == away:
+                away_point = _safe_float(outcome.get('point'))
+                away_price = _safe_float(outcome.get('price'))
+            elif name == home:
+                home_point = _safe_float(outcome.get('point'))
+                home_price = _safe_float(outcome.get('price'))
+        spread_valid = away_point is not None and home_point is not None and abs(away_point + home_point) < 0.001
+        row['spreadLinePairValid'] = spread_valid
+        if spread_valid:
+            row['marketSpread'] = row['awaySpread'] = away_point
+            row['homeSpread'] = home_point
+            row['awaySpreadOdds'] = away_price
+            row['homeSpreadOdds'] = home_price
+            row['spreadPricePairValid'] = away_price is not None and home_price is not None
 
-    if row['marketSpread'] is not None:
-        try:
+        over_point = under_point = over_price = under_price = None
+        for outcome in market_outcomes(book, 'totals'):
+            name = str(outcome.get('name', '')).strip().lower()
+            if name == 'over':
+                over_point = _safe_float(outcome.get('point'))
+                over_price = _safe_float(outcome.get('price'))
+            elif name == 'under':
+                under_point = _safe_float(outcome.get('point'))
+                under_price = _safe_float(outcome.get('price'))
+        total_valid = over_point is not None and under_point is not None and abs(over_point - under_point) < 0.001
+        row['totalLinePairValid'] = total_valid
+        if total_valid:
+            row['marketTotal'] = over_point
+            row['overOdds'] = over_price
+            row['underOdds'] = under_price
+            row['totalPricePairValid'] = over_price is not None and under_price is not None
+
+        row['awayML'] = row['awayMoneyline']
+        row['homeML'] = row['homeMoneyline']
+        row['marketAwayML'] = row['awayMoneyline']
+        row['marketHomeML'] = row['homeMoneyline']
+        has_spread = row['awaySpread'] is not None
+        has_total = row['marketTotal'] is not None
+        has_ml = row['awayMoneyline'] is not None and row['homeMoneyline'] is not None
+        invalid_spread = (away_point is not None or home_point is not None) and not spread_valid
+        invalid_total = (over_point is not None or under_point is not None) and not total_valid
+        if invalid_spread and invalid_total:
+            row['marketPriceStatus'] = 'INVALID_SPREAD_AND_TOTAL_PAIR'
+        elif invalid_spread:
+            row['marketPriceStatus'] = 'INVALID_SPREAD_PAIR'
+        elif invalid_total:
+            row['marketPriceStatus'] = 'INVALID_TOTAL_PAIR'
+        elif (has_spread and not row['spreadPricePairValid']) or (has_total and not row['totalPricePairValid']):
+            row['marketPriceStatus'] = 'PRICE_REQUIRED'
+        elif has_ml and (not has_spread or row['spreadPricePairValid']) and (not has_total or row['totalPricePairValid']):
+            row['marketPriceStatus'] = 'COMPLETE'
+
+        if row['marketSpread'] is not None:
             row['marketSpreadText'] = f"{float(row['marketSpread']):+g}"
-        except Exception:
-            row['marketSpreadText'] = str(row['marketSpread'])
-    if row['marketTotal'] is not None:
-        try:
+        if row['marketTotal'] is not None:
             row['marketTotalText'] = f"{float(row['marketTotal']):g}"
-        except Exception:
-            row['marketTotalText'] = str(row['marketTotal'])
-    return row
+        candidates.append(row)
 
+    if not candidates:
+        return base_row()
+
+    def sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
+        return (
+            0 if row.get('spreadPricePairValid') else 1,
+            0 if row.get('totalPricePairValid') else 1,
+            0 if row.get('awayMoneyline') is not None and row.get('homeMoneyline') is not None else 1,
+            _book_priority(row.get('bookmakerKey')),
+        )
+
+    return min(candidates, key=sort_key)
 
 def read_games(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
@@ -388,14 +477,18 @@ def update_games_json(games_path: Path, rows: list[dict[str, Any]]) -> dict[str,
         row = lookup.get(key)
         if not row:
             continue
+        for field in (
+            'marketSpread', 'marketSpreadPerspective', 'awaySpread', 'homeSpread',
+            'awaySpreadOdds', 'homeSpreadOdds', 'spreadLinePairValid', 'spreadPricePairValid',
+            'marketTotal', 'overOdds', 'underOdds', 'totalLinePairValid', 'totalPricePairValid',
+            'marketPriceStatus', 'awayML', 'homeML', 'awayMoneyline', 'homeMoneyline',
+            'marketAwayML', 'marketHomeML', 'bookmakerKey', 'bookmakerTitle', 'eventId'
+        ):
+            game[field] = row.get(field)
         if row.get('marketSpread') is not None:
-            game['marketSpread'] = row['marketSpread']
             game['marketSpreadText'] = row.get('marketSpreadText')
         if row.get('marketTotal') is not None:
-            game['marketTotal'] = row['marketTotal']
             game['marketTotalText'] = row.get('marketTotalText')
-        game['marketHomeML'] = row.get('marketHomeML')
-        game['marketAwayML'] = row.get('marketAwayML')
         game['marketLineSource'] = row.get('source')
         game['marketLineUpdated'] = row.get('updatedAt') or row.get('fetchedAtUtc')
         if row.get('startTimeUtc') and not game.get('gameDateTimeUtc'):

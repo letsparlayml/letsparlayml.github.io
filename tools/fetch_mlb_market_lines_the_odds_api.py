@@ -1,7 +1,7 @@
 
 """
 set ODDS_API_KEY=YOUR_KEY_HERE
-python C:\Docs\letsparlayml.github.io\tools\fetch_mlb_market_lines_the_odds_api.py
+python C:/Docs/letsparlayml.github.io/tools/fetch_mlb_market_lines_the_odds_api.py
 """
 
 from __future__ import annotations
@@ -190,7 +190,7 @@ def build_rows(events: list[dict[str, Any]], prediction_games: list[PredictionGa
             away_ml = home_ml = None
             away_spread_point = away_spread_price = None
             home_spread_point = home_spread_price = None
-            total_point = over_price = under_price = None
+            over_total_point = under_total_point = over_price = under_price = None
             for market in book.get("markets") or []:
                 mkey = clean_str(market.get("key"))
                 outcomes = outcome_lookup(market)
@@ -207,11 +207,36 @@ def build_rows(events: list[dict[str, Any]], prediction_games: list[PredictionGa
                 elif mkey == 'totals':
                     over = outcomes.get('Over') or {}
                     under = outcomes.get('Under') or {}
-                    total_point = safe_float(over.get('point'))
-                    if total_point is None:
-                        total_point = safe_float(under.get('point'))
+                    over_total_point = safe_float(over.get('point'))
+                    under_total_point = safe_float(under.get('point'))
                     over_price = safe_float(over.get('price'))
                     under_price = safe_float(under.get('price'))
+            spread_line_pair_valid = (
+                away_spread_point is not None and home_spread_point is not None
+                and abs(away_spread_point + home_spread_point) < 0.001
+            )
+            total_line_pair_valid = (
+                over_total_point is not None and under_total_point is not None
+                and abs(over_total_point - under_total_point) < 0.001
+            )
+            market_spread = away_spread_point if spread_line_pair_valid else None
+            market_total = over_total_point if total_line_pair_valid else None
+            spread_price_pair_valid = spread_line_pair_valid and away_spread_price is not None and home_spread_price is not None
+            total_price_pair_valid = total_line_pair_valid and over_price is not None and under_price is not None
+            invalid_spread = (away_spread_point is not None or home_spread_point is not None) and not spread_line_pair_valid
+            invalid_total = (over_total_point is not None or under_total_point is not None) and not total_line_pair_valid
+            if invalid_spread and invalid_total:
+                price_status = 'INVALID_SPREAD_AND_TOTAL_PAIR'
+            elif invalid_spread:
+                price_status = 'INVALID_SPREAD_PAIR'
+            elif invalid_total:
+                price_status = 'INVALID_TOTAL_PAIR'
+            elif (market_spread is not None and not spread_price_pair_valid) or (market_total is not None and not total_price_pair_valid):
+                price_status = 'PRICE_REQUIRED'
+            elif away_ml is not None and home_ml is not None:
+                price_status = 'COMPLETE'
+            else:
+                price_status = 'PARTIAL'
             row = {
                 'league': 'MLB',
                 'gamePk': game_pk,
@@ -221,22 +246,39 @@ def build_rows(events: list[dict[str, Any]], prediction_games: list[PredictionGa
                 'awayTeam': away_abbr,
                 'homeTeam': home_abbr,
                 'matchup': matchup,
-                'marketSpread': away_spread_point,
-                'marketTotal': total_point,
+                'marketSpread': market_spread,
+                'marketSpreadPerspective': 'away',
+                'awaySpread': market_spread,
+                'homeSpread': home_spread_point if spread_line_pair_valid else None,
+                'awaySpreadOdds': away_spread_price if spread_line_pair_valid else None,
+                'homeSpreadOdds': home_spread_price if spread_line_pair_valid else None,
+                'spreadLinePairValid': spread_line_pair_valid,
+                'spreadPricePairValid': spread_price_pair_valid,
+                'marketTotal': market_total,
+                'overOdds': over_price if total_line_pair_valid else None,
+                'underOdds': under_price if total_line_pair_valid else None,
+                'totalLinePairValid': total_line_pair_valid,
+                'totalPricePairValid': total_price_pair_valid,
+                'marketPriceStatus': price_status,
+                'awayML': away_ml,
+                'homeML': home_ml,
                 'awayMoneyline': away_ml,
                 'homeMoneyline': home_ml,
-                'awaySpreadPrice': away_spread_price,
-                'homeSpreadPrice': home_spread_price,
-                'overPrice': over_price,
-                'underPrice': under_price,
+                'marketAwayML': away_ml,
+                'marketHomeML': home_ml,
+                # Legacy aliases retained for older consumers.
+                'awaySpreadPrice': away_spread_price if spread_line_pair_valid else None,
+                'homeSpreadPrice': home_spread_price if spread_line_pair_valid else None,
+                'overPrice': over_price if total_line_pair_valid else None,
+                'underPrice': under_price if total_line_pair_valid else None,
                 'source': f'The Odds API • {book_title or book_key}',
                 'bookmakerKey': book_key,
                 'bookmakerTitle': book_title,
                 'updatedAt': updated_iso,
             }
             raw_rows.append(row)
-            has_spread = away_spread_point is not None
-            has_total = total_point is not None
+            has_spread = spread_line_pair_valid
+            has_total = total_line_pair_valid
             has_ml = away_ml is not None and home_ml is not None
             game_key = str(game_pk) if game_pk is not None else f"{local_date}|{matchup}|{commence_iso}"
             current = selected_map.get(game_key)
@@ -258,17 +300,33 @@ def build_rows(events: list[dict[str, Any]], prediction_games: list[PredictionGa
 
 
 def merge_archive(existing: list[dict[str, Any]], mlb_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    def key(row: dict[str, Any]) -> str:
+    def key(row: dict[str, Any]) -> tuple[str, ...]:
         matchup = clean_str(row.get('matchup'))
         if not matchup and clean_str(row.get('awayTeam')) and clean_str(row.get('homeTeam')):
             matchup = f"{clean_str(row.get('awayTeam'))} @ {clean_str(row.get('homeTeam'))}"
-        return f"{clean_str(row.get('date'))}|{clean_str(row.get('league')).upper()}|{matchup}"
-    merged = {key(r): dict(r) for r in existing if isinstance(r, dict)}
+        return (
+            clean_str(row.get('date')),
+            clean_str(row.get('league')).upper(),
+            matchup,
+            clean_str(row.get('eventId') or row.get('event_id')),
+            clean_str(row.get('bookmakerKey')).lower(),
+            clean_str(row.get('updatedAt') or row.get('fetchedAtUtc') or row.get('archivedAt')),
+        )
+
+    merged = list(existing)
+    index = {key(r): i for i, r in enumerate(merged) if isinstance(r, dict)}
     for row in mlb_rows:
-        merged[key(row)] = dict(row)
-    out = list(merged.values())
-    out.sort(key=lambda r: (clean_str(r.get('date')), clean_str(r.get('league')), clean_str(r.get('matchup'))))
-    return out
+        identity = key(row)
+        if identity in index:
+            merged[index[identity]] = {**merged[index[identity]], **row}
+        else:
+            index[identity] = len(merged)
+            merged.append(dict(row))
+    merged.sort(key=lambda r: (
+        clean_str(r.get('date')), clean_str(r.get('league')), clean_str(r.get('matchup')),
+        clean_str(r.get('updatedAt') or r.get('fetchedAtUtc') or r.get('archivedAt')),
+    ))
+    return merged
 
 
 def write_outputs(selected_rows, raw_rows, output_dir: Path, repo_data_dir: Path | None):

@@ -6,6 +6,8 @@ set "REPO=C:\python\letsparlayml.github.io"
 set "TOOLS=%REPO%\tools"
 set "MLB_OUT=%ROOT%\mlb_model_outputs"
 set "NBA_MODELS=%ROOT%\data_nba\models_v1"
+set "NBA_ACTIVE=0"
+set "NHL_ACTIVE=0"
 set "NBA_ANALYZER_BUILD=%TOOLS%\build_nba_props_analyzer_json_builtin_fix.py"
 if not exist "%NBA_ANALYZER_BUILD%" set "NBA_ANALYZER_BUILD=%TOOLS%\build_nba_props_analyzer_json.py"
 
@@ -66,7 +68,9 @@ pushd "%REPO%"
 
 echo.
 echo [1/17] Rebuild NBA injuries JSON...
-if exist "%REPO%\data\nba_injuries.xlsx" (
+if "%NBA_ACTIVE%"=="0" (
+  echo NBA season inactive. Preserving existing injury/archive data and skipping rebuild.
+) else if exist "%REPO%\data\nba_injuries.xlsx" (
   "%PY%" "%TOOLS%\build_nba_injuries_json.py" --website-repo "%REPO%"
 ) else if exist "%REPO%\data\nba_injuries.csv" (
   "%PY%" "%TOOLS%\build_nba_injuries_json.py" --website-repo "%REPO%" --input "%REPO%\data\nba_injuries.csv"
@@ -92,17 +96,25 @@ if errorlevel 1 goto :fail
 
 echo.
 echo [5/17] Build NBA props lab JSON...
-"%PY%" "%TOOLS%\build_nba_props_lab.py" --website-repo "%REPO%"
-if errorlevel 1 goto :fail
+if "%NBA_ACTIVE%"=="0" (
+  echo NBA season inactive. Skipping props lab rebuild.
+) else (
+  "%PY%" "%TOOLS%\build_nba_props_lab.py" --website-repo "%REPO%"
+  if errorlevel 1 goto :fail
+)
 
 echo.
 echo [6/17] Build NBA props analyzer JSON...
-"%PY%" "%NBA_ANALYZER_BUILD%" --website-repo "%REPO%" --player-df "%NBA_MODELS%\player_df.parquet"
-if errorlevel 1 goto :fail
+if "%NBA_ACTIVE%"=="0" (
+  echo NBA season inactive. Skipping props analyzer rebuild.
+) else (
+  "%PY%" "%NBA_ANALYZER_BUILD%" --website-repo "%REPO%" --player-df "%NBA_MODELS%\player_df.parquet"
+  if errorlevel 1 goto :fail
+)
 
 echo.
-echo [7/17] Refresh market lines (NBA/NHL/MLB API only)...
-"%PY%" "%TOOLS%\refresh_all_market_lines.py" --root "%ROOT%" --website-repo "%REPO%"
+echo [7/17] Refresh active MLB market lines...
+"%PY%" "%TOOLS%\refresh_all_market_lines.py" --root "%ROOT%" --website-repo "%REPO%" --sports "baseball_mlb"
 if errorlevel 1 goto :fail
 
 echo.
@@ -112,7 +124,7 @@ if errorlevel 1 goto :fail
 
 echo.
 echo [9/17] Build MLB site JSON...
-"%PY%" "%TOOLS%\build_mlb_site_json.py" --website-repo "%REPO%"
+"%PY%" "%TOOLS%\build_mlb_site_json.py" --website-repo "%REPO%" --model-workbook "%MLB_OUT%\mlb_predictions.xlsx"
 if errorlevel 1 goto :fail
 
 echo.
@@ -122,7 +134,7 @@ if errorlevel 1 goto :fail
 
 echo.
 echo [11/17] Build MLB props analyzer JSON with historical matchup enrichment...
-"%PY%" "%MLB_PROPS_ANALYZER_BUILD%" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data"
+"%PY%" "%MLB_PROPS_ANALYZER_BUILD%" --website-repo "%REPO%" --mlb-data-dir "%ROOT%\mlb_data" --model-workbook "%MLB_OUT%\mlb_predictions.xlsx"
 if errorlevel 1 goto :fail
 
 echo.
@@ -141,7 +153,7 @@ echo [14/17] Refresh results rollup again after MLB board write...
 if errorlevel 1 goto :fail
 
 echo.
-echo [15/17] Build compact homepage top picks / parlay pool...
+echo [15/17] Build MLB featured top picks, quick boards, and parlay candidate pool...
 "%PY%" "%TOOLS%\build_home_top_picks_json.py"
 if errorlevel 1 goto :fail
 
