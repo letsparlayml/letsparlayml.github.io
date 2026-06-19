@@ -1,0 +1,74 @@
+{
+  "installedAt": "2026-06-19T09:33:33",
+  "rootCause": "Pitcher rows without a numeric player_id all generated the same None-based series key. Later pitchers overwrote earlier pitchers' detail files, breaking dropdown and homepage Analyze navigation.",
+  "repair": "Resolve numeric IDs from historical pitcher logs by normalized player name. When a real pitcher still has no numeric ID, assign a stable name-based identity. Skip TBD placeholder rows entirely.",
+  "builders": {
+    "build_mlb_props_analyzer_json.py": {
+      "action": "patched",
+      "passed": true,
+      "checks": {
+        "module_compiles": true,
+        "historical_name_resolves_numeric_id": true,
+        "alternate_name_column_resolves_numeric_id": true,
+        "unresolved_real_pitcher_gets_stable_key": true,
+        "placeholder_pitcher_is_skipped": true,
+        "series_keys_are_distinct": true,
+        "detail_paths_are_distinct": true,
+        "detail_paths_preserve_name_key": true,
+        "patch_is_active": true
+      }
+    },
+    "tools\\build_mlb_props_analyzer_json.py": {
+      "action": "patched",
+      "passed": true,
+      "checks": {
+        "module_compiles": true,
+        "historical_name_resolves_numeric_id": true,
+        "alternate_name_column_resolves_numeric_id": true,
+        "unresolved_real_pitcher_gets_stable_key": true,
+        "placeholder_pitcher_is_skipped": true,
+        "series_keys_are_distinct": true,
+        "detail_paths_are_distinct": true,
+        "detail_paths_preserve_name_key": true,
+        "patch_is_active": true
+      }
+    }
+  },
+  "analyzer": {
+    "passed": true,
+    "checks": {
+      "real_pitcher_entries_present": true,
+      "placeholder_pitchers_removed": true,
+      "every_real_pitcher_has_navigable_identity": true,
+      "no_null_or_zero_pitcher_series_keys": true,
+      "one_identity_per_date_player_name": true,
+      "one_player_name_per_date_identity": true,
+      "one_series_per_date_identity_stat": true,
+      "all_pitcher_series_are_indexed": true,
+      "all_pitcher_detail_files_exist": true,
+      "all_pitcher_detail_files_match_player": true,
+      "every_pitcher_dropdown_option_has_indexed_series": true
+    },
+    "counts": {
+      "allPitcherEntries": 1537,
+      "realPitcherEntries": 1537,
+      "placeholderEntries": 0,
+      "uniqueDatePitchers": 78,
+      "pitcherSeriesKeys": 468,
+      "numericIdentityEntries": 1537,
+      "fallbackIdentityEntries": 0,
+      "totalSeriesIndexEntries": 16308
+    },
+    "failures": {
+      "missingIdentities": [],
+      "badSeriesKeys": [],
+      "ambiguousNames": {},
+      "identityCollisions": {},
+      "missingSeriesIndex": [],
+      "missingDetailFiles": [],
+      "mismatchedDetailFiles": [],
+      "navigationFailures": [],
+      "placeholderEntries": []
+    }
+  }
+}

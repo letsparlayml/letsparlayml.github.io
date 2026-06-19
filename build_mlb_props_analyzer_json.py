@@ -1635,7 +1635,7 @@ def main() -> int:
 
     for series_key, series in series_store.items():
         player_type = clean_str(series.get('playerType') or 'batter')
-        rel = series_detail_relpath(clean_str(series.get('gameDate')), safe_int(series.get('playerId')), clean_str(series.get('stat')), player_type)
+        rel = series_detail_relpath(clean_str(series.get('gameDate')), series.get('playerId'), clean_str(series.get('stat')), player_type)
         series_index[series_key] = rel
         compact_write_json(repo / rel, series)
         if clean_str(series.get('sampleType')) == 'historical_games':
@@ -1672,6 +1672,207 @@ def main() -> int:
     print(f'Wrote {len(series_index)} split detail files under {detail_root}')
     print(f'Historical series: {historical_count} | Snapshot fallback: {preview_count}')
     return 0
+
+
+# --- MLB pitcher analyzer identity repair v3 ---
+# The model workbook can omit numeric pitcher IDs. Resolve them from historical
+# pitcher logs when possible and otherwise use a stable name-based identity so
+# pitcher series never collapse onto "None".
+import re as _re_v3
+_MLB_PITCHER_IDENTITY_REPAIR_V3 = True
+_original_build_pitcher_series_and_entries_v3 = build_pitcher_series_and_entries
+_original_series_detail_relpath_v3 = series_detail_relpath
+_pitcher_name_id_cache_v3: dict[int, dict[str, int]] = {}
+
+
+def _pitcher_name_key_v3(value: Any) -> str:
+    import unicodedata as _unicodedata
+    text = clean_str(value)
+    if not text:
+        return ''
+    text = _unicodedata.normalize('NFKD', text)
+    text = ''.join(ch for ch in text if not _unicodedata.combining(ch))
+    text = text.lower()
+    text = _re_v3.sub(r'\b(jr|sr|ii|iii|iv|v)\b', ' ', text)
+    text = _re_v3.sub(r'[^a-z0-9]+', ' ', text)
+    return _re_v3.sub(r'\s+', ' ', text).strip()
+
+
+def _placeholder_pitcher_v3(value: Any) -> bool:
+    key = _pitcher_name_key_v3(value)
+    if not key:
+        return True
+    return (
+        key == 'tbd'
+        or key == 'unknown'
+        or key.endswith(' tbd')
+        or 'probable starter tbd' in key
+        or key == 'probable starter'
+        or key == 'starter unknown'
+    )
+
+
+def _pitcher_name_id_map_v3(pitcher_logs_lookup: dict[int, pd.DataFrame]) -> dict[str, int]:
+    cache_key = id(pitcher_logs_lookup)
+    cached = _pitcher_name_id_cache_v3.get(cache_key)
+    if cached is not None:
+        return cached
+
+    candidates: dict[str, set[int]] = {}
+    for raw_id, frame in (pitcher_logs_lookup or {}).items():
+        player_id = safe_int(raw_id)
+        if player_id is None or player_id <= 0 or frame is None or frame.empty:
+            continue
+        names: set[str] = set()
+        for column in ('player_name', 'fullName', 'pitcher_name', 'name'):
+            if column not in frame.columns:
+                continue
+            for raw_name in frame[column].dropna().astype(str).head(20):
+                key = _pitcher_name_key_v3(raw_name)
+                if key:
+                    names.add(key)
+        for key in names:
+            candidates.setdefault(key, set()).add(player_id)
+
+    resolved = {
+        key: next(iter(ids))
+        for key, ids in candidates.items()
+        if len(ids) == 1
+    }
+    _pitcher_name_id_cache_v3.clear()
+    _pitcher_name_id_cache_v3[cache_key] = resolved
+    return resolved
+
+
+def _pitcher_identity_v3(
+    row: pd.Series,
+    pitcher_logs_lookup: dict[int, pd.DataFrame],
+) -> tuple[int | str | None, int | None, str]:
+    import hashlib as _hashlib
+
+    player_name = clean_str(
+        row.get('player_name')
+        or row.get('pitcher_name')
+        or row.get('fullName')
+        or row.get('name')
+    )
+    if _placeholder_pitcher_v3(player_name):
+        return None, None, player_name
+
+    numeric_id = None
+    for column in (
+        'player_id',
+        'pitcher_id',
+        'pitcherId',
+        'playerId',
+        'personId',
+        'mlb_id',
+        'mlbam_id',
+        'starter_id',
+        'starterId',
+    ):
+        numeric_id = safe_int(row.get(column))
+        if numeric_id is not None and numeric_id > 0:
+            break
+        numeric_id = None
+
+    if numeric_id is None:
+        numeric_id = _pitcher_name_id_map_v3(
+            pitcher_logs_lookup
+        ).get(_pitcher_name_key_v3(player_name))
+
+    if numeric_id is not None and numeric_id > 0:
+        return numeric_id, numeric_id, player_name
+
+    name_key = _pitcher_name_key_v3(player_name)
+    if not name_key:
+        return None, None, player_name
+
+    team_key = _re_v3.sub(
+        r'[^a-z0-9]+',
+        '',
+        clean_str(row.get('team')).lower(),
+    )
+    slug = _re_v3.sub(r'[^a-z0-9]+', '-', name_key).strip('-')[:36] or 'pitcher'
+    digest = _hashlib.sha1(
+        f'{name_key}|{team_key}'.encode('utf-8')
+    ).hexdigest()[:10]
+    return f'name-{slug}-{digest}', None, player_name
+
+
+def build_pitcher_series_and_entries(
+    row: pd.Series,
+    market: dict[str, Any],
+    game_lookup: dict[int, dict[str, Any]],
+    pitcher_logs_lookup: dict[int, pd.DataFrame],
+    max_games: int,
+) -> tuple[list[dict], dict | None]:
+    player_identity, numeric_id, player_name = _pitcher_identity_v3(
+        row,
+        pitcher_logs_lookup,
+    )
+    if player_identity is None:
+        return [], None
+
+    patched_row = row.copy()
+    if numeric_id is not None:
+        patched_row['player_id'] = numeric_id
+    if player_name:
+        patched_row['player_name'] = player_name
+
+    entries, series = _original_build_pitcher_series_and_entries_v3(
+        patched_row,
+        market,
+        game_lookup,
+        pitcher_logs_lookup,
+        max_games,
+    )
+    if series is None:
+        return entries, series
+
+    game_date = clean_str(series.get('gameDate'))
+    stat = clean_str(series.get('stat'))
+    series_key = f'{game_date}|MLB|pitcher|{player_identity}|{stat}'
+
+    series['playerId'] = player_identity
+    series['mlbPlayerId'] = numeric_id
+    series['player'] = player_name
+    for entry in entries:
+        line = entry.get('line')
+        entry['playerId'] = player_identity
+        entry['mlbPlayerId'] = numeric_id
+        entry['player'] = player_name
+        entry['seriesKey'] = series_key
+        entry['id'] = (
+            f'{game_date}|MLB|pitcher|{player_identity}|{stat}|{line}'
+        )
+    return entries, series
+
+
+def series_detail_relpath(
+    game_date: str,
+    player_id: Any,
+    stat: str,
+    player_type: str,
+) -> str:
+    if player_type != 'pitcher':
+        return _original_series_detail_relpath_v3(
+            game_date,
+            safe_int(player_id),
+            stat,
+            player_type,
+        )
+
+    token = _re_v3.sub(
+        r'[^A-Za-z0-9_-]+',
+        '_',
+        clean_str(player_id),
+    ).strip('_') or '0'
+    return (
+        f'data/mlb_props_analyzer/{game_date}/'
+        f'pitcher_{token}_{stat.lower()}.json'
+    )
+# --- end MLB pitcher analyzer identity repair v3 ---
 
 if __name__ == '__main__':
     raise SystemExit(main())
