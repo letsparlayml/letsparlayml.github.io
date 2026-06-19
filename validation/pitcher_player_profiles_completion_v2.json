@@ -1,0 +1,56 @@
+{
+  "completedAt": "2026-06-19T10:39:06",
+  "date": "2026-06-19",
+  "rootCause": "The pitcher identity repair rebuilt individual analyzer detail files but did not run the separate additive player-day profile builder afterward.",
+  "builder": "build_mlb_player_day_profiles.py",
+  "fallbackBuilderInstalled": false,
+  "normalBatch": {
+    "passed": true,
+    "checks": {
+      "profile_builder_referenced": true,
+      "profile_build_runs_after_analyzer_build": true,
+      "profile_build_is_required": true
+    }
+  },
+  "validation": {
+    "passed": true,
+    "date": "2026-06-19",
+    "checks": {
+      "realPitcherEntriesPresent": true,
+      "allPitcherIdsAreUrlSafe": true,
+      "allPitcherProfilesExist": true,
+      "allProfilesMatchTheirPitcher": true,
+      "allEntryStatsAreInProfiles": true,
+      "allMultiStatPitchersAreMultiPropReady": true,
+      "profileIndexExists": true,
+      "profileIndexCoversPitchers": true,
+      "jacobMisiorowskiProfileWorks": true
+    },
+    "counts": {
+      "pitcherEntries": 528,
+      "uniquePitchers": 27,
+      "validatedProfiles": 27,
+      "profileIndexCount": 279
+    },
+    "jacobMisiorowski": {
+      "presentOnBoard": true,
+      "profilePresent": true,
+      "multiPropReady": true,
+      "stats": [
+        "BB",
+        "ER",
+        "HA",
+        "IP",
+        "K",
+        "OUTS"
+      ]
+    },
+    "failures": {
+      "unsafeIds": [],
+      "missingProfiles": [],
+      "mismatchedProfiles": [],
+      "missingStats": [],
+      "notMultiPropReady": []
+    }
+  }
+}
