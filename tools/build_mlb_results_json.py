@@ -5,6 +5,7 @@ import argparse
 import json
 import math
 import os
+import re
 import urllib.request
 from collections import defaultdict
 from datetime import date, datetime, timedelta
@@ -143,6 +144,96 @@ def ml_result_label(pred_home: float | None, pred_away: float | None, actual_hom
 
 
 
+
+def score_pick_team(game: dict[str, Any]) -> str:
+    home_score = safe_float(game.get('modelHomeScore'))
+    away_score = safe_float(game.get('modelAwayScore'))
+    if home_score is None or away_score is None or abs(home_score - away_score) < 1e-12:
+        return ''
+    return clean_str(game.get('homeTeam') if home_score > away_score else game.get('awayTeam')).upper()
+
+
+def calibrated_pick(game: dict[str, Any]) -> tuple[str, float | None]:
+    away = clean_str(game.get('awayTeam')).upper()
+    home = clean_str(game.get('homeTeam')).upper()
+    team = clean_str(game.get('calibratedMoneylineTeam') or game.get('calibratedMlTeam')).upper()
+    prob = safe_float(
+        game.get('calibratedMoneylineWinProb')
+        if game.get('calibratedMoneylineWinProb') is not None
+        else game.get('calibratedMlWinProb')
+    )
+    if team in {away, home} and prob is not None:
+        return team, max(prob, 1.0 - prob) if prob < 0.5 else prob
+
+    score_team = clean_str(game.get('modelPickTeam')).upper() or score_pick_team(game)
+    raw_prob = safe_float(game.get('calibratedModelPickWinProb'))
+    if score_team not in {away, home} or raw_prob is None:
+        return '', None
+    if raw_prob >= 0.5:
+        return score_team, raw_prob
+    opponent = home if score_team == away else away
+    return opponent, 1.0 - raw_prob
+
+
+def calibrated_result_fields(game: dict[str, Any], actual_home: int, actual_away: int) -> dict[str, Any]:
+    calibrated_team, calibrated_prob = calibrated_pick(game)
+    score_team = score_pick_team(game)
+    away = clean_str(game.get('awayTeam')).upper()
+    home = clean_str(game.get('homeTeam')).upper()
+    discrepancy = bool(calibrated_team and score_team and calibrated_team != score_team)
+
+    if not calibrated_team or calibrated_prob is None:
+        result = 'Pending'
+    elif actual_home == actual_away:
+        result = f'{calibrated_team} {calibrated_prob * 100:.1f}% Push'
+    else:
+        actual_winner = home if actual_home > actual_away else away
+        result = (
+            f'{calibrated_team} {calibrated_prob * 100:.1f}% '
+            f'{"Win" if calibrated_team == actual_winner else "Loss"}'
+        )
+
+    return {
+        'scoreMlPickTeam': score_team,
+        'calibratedMlPickTeam': calibrated_team,
+        'calibratedMlPickProb': calibrated_prob,
+        'calibratedMlDiscrepancy': discrepancy,
+        'calibratedMlResult': result,
+        'calibratedFlipResult': result if discrepancy else '',
+        'calibratedTrackingVersion': 1,
+    }
+
+
+def parse_result_scores(text: Any) -> tuple[int | None, int | None]:
+    numbers = re.findall(r'-?\d+(?:\.\d+)?', clean_str(text))
+    if len(numbers) < 2:
+        return None, None
+    try:
+        return int(round(float(numbers[-2]))), int(round(float(numbers[-1])))
+    except Exception:
+        return None, None
+
+
+def enrich_existing_calibrated_rows(rows: list[dict[str, Any]], games_by_pk: dict[int, dict[str, Any]]) -> int:
+    updated = 0
+    for row in rows:
+        if clean_str(row.get('league')).upper() != 'MLB':
+            continue
+        game_pk = safe_int(row.get('gamePk'))
+        game = games_by_pk.get(game_pk) if game_pk is not None else None
+        if not game:
+            continue
+        actual_away, actual_home = parse_result_scores(row.get('actual'))
+        if actual_away is None or actual_home is None:
+            continue
+        fields = calibrated_result_fields(game, actual_home, actual_away)
+        before = {key: row.get(key) for key in fields}
+        row.update(fields)
+        if any(before.get(key) != value for key, value in fields.items()):
+            updated += 1
+    return updated
+
+
 def spread_result_label(game: dict[str, Any], actual_home: int, actual_away: int) -> str:
     market = safe_float(game.get('marketSpread'))
     if market is None:
@@ -199,7 +290,7 @@ def build_row(game: dict[str, Any], scraped: dict[str, Any]) -> dict[str, Any]:
     away_1 = safe_int(scraped.get('away_1'))
     home_1 = safe_int(scraped.get('home_1'))
     game_date = local_game_date(game, clean_str(scraped.get('gameDate')))
-    return {
+    row = {
         'date': game_date,
         'league': 'MLB',
         'matchup': f"{game.get('awayTeam')} @ {game.get('homeTeam')}",
@@ -209,7 +300,12 @@ def build_row(game: dict[str, Any], scraped: dict[str, Any]) -> dict[str, Any]:
             else f"{game.get('awayTeam')} @ {game.get('homeTeam')}"
         ),
         'actual': f"{game.get('awayTeam')} {away_runs} @ {game.get('homeTeam')} {home_runs}",
-        'mlResult': ml_result_label(safe_float(game.get('modelHomeScore')), safe_float(game.get('modelAwayScore')), home_runs, away_runs),
+        'mlResult': ml_result_label(
+            safe_float(game.get('modelHomeScore')),
+            safe_float(game.get('modelAwayScore')),
+            home_runs,
+            away_runs,
+        ),
         'spreadResult': spread_result_label(game, home_runs, away_runs),
         'totalResult': total_result_label(game, home_runs, away_runs),
         'nrfiResult': nrfi_result_label(game, away_1, home_1),
@@ -217,6 +313,8 @@ def build_row(game: dict[str, Any], scraped: dict[str, Any]) -> dict[str, Any]:
         'marketTotal': safe_float(game.get('marketTotal')),
         'gamePk': safe_int(game.get('gamePk')),
     }
+    row.update(calibrated_result_fields(game, home_runs, away_runs))
+    return row
 
 
 
@@ -249,24 +347,29 @@ def metric_summary(labels: list[str]) -> dict[str, Any]:
 
 
 def summarize_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    by_league = defaultdict(lambda: {'ML': [], 'Spread': [], 'Total': []})
-    overall = {'ML': [], 'Spread': [], 'Total': []}
+    metric_fields = {
+        'ML': 'mlResult',
+        'CalML': 'calibratedMlResult',
+        'CalFlip': 'calibratedFlipResult',
+        'Spread': 'spreadResult',
+        'Total': 'totalResult',
+    }
+    by_league = defaultdict(lambda: {key: [] for key in metric_fields})
+    overall = {key: [] for key in metric_fields}
 
     for row in rows:
         league = clean_str(row.get('league')).upper() or 'UNKNOWN'
-        ml = clean_str(row.get('mlResult'))
-        spread = clean_str(row.get('spreadResult'))
-        total = clean_str(row.get('totalResult'))
-        overall['ML'].append(ml)
-        overall['Spread'].append(spread)
-        overall['Total'].append(total)
-        by_league[league]['ML'].append(ml)
-        by_league[league]['Spread'].append(spread)
-        by_league[league]['Total'].append(total)
+        for metric, field in metric_fields.items():
+            value = clean_str(row.get(field))
+            overall[metric].append(value)
+            by_league[league][metric].append(value)
 
     return {
-        'overall': {k: metric_summary(v) for k, v in overall.items()},
-        'byLeague': {league: {k: metric_summary(v) for k, v in metrics.items()} for league, metrics in sorted(by_league.items())},
+        'overall': {key: metric_summary(values) for key, values in overall.items()},
+        'byLeague': {
+            league: {key: metric_summary(values) for key, values in metrics.items()}
+            for league, metrics in sorted(by_league.items())
+        },
         'rowCount': len(rows),
     }
 
@@ -363,6 +466,13 @@ def main() -> int:
     results_history = load_json(data_dir / 'results_history.json', [])
     launch_date = resolve_launch_date(data_dir, args.live_start_date)
 
+    games_by_pk = {
+        game_pk: game
+        for game in games_json
+        if (game_pk := safe_int(game.get('gamePk'))) is not None
+    }
+    calibrated_rows_enriched = enrich_existing_calibrated_rows(results_history, games_by_pk)
+
     scraper_games = load_table_latest(args.mlb_data_dir, 'games')
     scraper_lookup: dict[int, dict[str, Any]] = {}
     if not scraper_games.empty and 'gamePk' in scraper_games.columns:
@@ -425,11 +535,16 @@ def main() -> int:
 
     if not new_rows:
         history = results_history
+        if calibrated_rows_enriched:
+            write_json(data_dir / 'results_history.json', history)
         latest_date = max((clean_str(row.get('date')) for row in history if clean_str(row.get('date'))), default='')
         latest_rows = [row for row in history if clean_str(row.get('date')) == latest_date]
         write_json(data_dir / 'results.json', latest_rows)
         refresh_results_summary(data_dir, history)
-        print('No new MLB result rows added. Refreshed results.json from results_history.json.')
+        print(
+            'No new MLB result rows added. '
+            f'Calibrated fields enriched on {calibrated_rows_enriched} existing row(s).'
+        )
         if latest_date:
             print(f'Latest results date: {latest_date}')
         return 0
@@ -443,7 +558,7 @@ def main() -> int:
     write_json(data_dir / 'results.json', latest_rows)
     refresh_results_summary(data_dir, history)
 
-    print(f'Added {len(new_rows)} MLB rows.')
+    print(f'Added {len(new_rows)} MLB rows; enriched calibrated fields on {calibrated_rows_enriched} existing row(s).')
     print(f'Latest results date: {latest_date}')
     return 0
 

@@ -1,0 +1,59 @@
+{
+  "installed": true,
+  "liveRepo": "C:\\python\\letsparlayml.github.io",
+  "backup": "C:\\python\\site_backups\\calibrated_results_tracking_20260618_210126",
+  "dataFilesModified": false,
+  "gitCommitCreated": false,
+  "gitPushRun": false,
+  "preservedDirtyFiles": [
+    "data/games.json",
+    "data/market_line_snapshots.json",
+    "data/market_lines_archive.json",
+    "data/mlb_market_lines_api.json",
+    "data/prediction_snapshots/mlb/2026-06-18/822889_204236.json",
+    "data/prediction_snapshots/mlb/2026-06-18/823125_204235.json",
+    "data/prediction_snapshots/mlb/2026-06-18/823448_204236.json",
+    "data/prediction_snapshots/mlb/2026-06-18/823533_204235.json",
+    "data/prediction_snapshots/mlb/2026-06-18/823772_204236.json",
+    "data/prediction_snapshots/mlb/2026-06-18/824098_204237.json",
+    "data/prediction_snapshots/mlb/2026-06-18/824748_204237.json",
+    "data/prediction_snapshots/mlb/2026-06-18/824911_204237.json",
+    "data/prediction_snapshots/mlb/2026-06-18/824989_204236.json",
+    "tools/backfill_pitcher_first_inning_history.py",
+    "tools/first_inning_backfill_core.py",
+    "tools/validate_recent_first_inning_reports.py",
+    "update_live_site_after_predictions.bat",
+    "validation/first_inning_workflow_install.json"
+  ],
+  "tracking": {
+    "existingScoreMoneyline": "unchanged",
+    "calibratedMoneyline": "all graded calibrated picks",
+    "calibratedFlips": "only games where calibrated winner differs from projected-score winner"
+  },
+  "tomorrowNormalRun": {
+    "settlesPriorBoardBeforeModelSync": true,
+    "recordsJune18CalibratedResults": true,
+    "normalBatchCommitAndPush": true
+  },
+  "validation": {
+    "checks": {
+      "builder_validation": true,
+      "calibrated_table_column": true,
+      "calibrated_frontend_summary": true,
+      "score_flip_note": true,
+      "responsive_five_metric_grid": true,
+      "app_cache_bumped": true,
+      "style_cache_bumped": true
+    },
+    "builder": {
+      "passed": true,
+      "checks": {
+        "eight_rows": true,
+        "five_discrepancies": true,
+        "flip_record_5_0": true,
+        "calibrated_record_7_1": true,
+        "labels_include_team_probability": true
+      }
+    }
+  }
+}

@@ -1187,6 +1187,8 @@ function resultBucket(rows, field) {
 function summarizeRows(rows) {
   return {
     ML: resultBucket(rows, 'mlResult'),
+    CalML: resultBucket(rows, 'calibratedMlResult'),
+    CalFlip: resultBucket(rows, 'calibratedFlipResult'),
     Spread: resultBucket(rows, 'spreadResult'),
     Total: resultBucket(rows, 'totalResult'),
   };
@@ -1255,12 +1257,32 @@ function selectDisplayResultsRows(resultsRows, historyRows, preferredDate = '') 
   return sortResultsRows(resultsRows || []);
 }
 
+
+function calibratedResultDisplay(row) {
+  const label = String(row?.calibratedMlResult || '').trim();
+  return label && label.toLowerCase() !== 'pending' ? label : 'N/A';
+}
+
+function formatCalibratedResultCell(row) {
+  const label = calibratedResultDisplay(row);
+  const note = row?.calibratedMlDiscrepancy
+    ? '<small class="result-cell-note">Score flip</small>'
+    : '';
+  return `
+    <div class="result-cell-stack">
+      <span class="result-badge ${resultBadgeClass(label)}">${escapeHtml(label)}</span>
+      ${note}
+    </div>
+  `;
+}
+
+
 function renderResults(results) {
   const body = byId('results-body');
   if (!body) return;
   const items = Array.isArray(results) ? results : [];
   if (!items.length) {
-    body.innerHTML = '<tr><td colspan="8">No game results match this view yet.</td></tr>';
+    body.innerHTML = '<tr><td colspan="9">No game results match this view yet.</td></tr>';
     return;
   }
   body.innerHTML = items.map(r => `
@@ -1271,6 +1293,7 @@ function renderResults(results) {
       <td>${escapeHtml(r.predicted || '')}</td>
       <td>${escapeHtml(r.actual || '')}</td>
       <td><span class="result-badge ${resultBadgeClass(r.mlResult)}">${escapeHtml(r.mlResult || '')}</span></td>
+      <td>${formatCalibratedResultCell(r)}</td>
       <td><span class="result-badge ${resultBadgeClass(r.spreadResult)}">${escapeHtml(r.spreadResult || '')}</span></td>
       <td><span class="result-badge ${resultBadgeClass(r.totalResult)}">${escapeHtml(r.totalResult || '')}</span></td>
     </tr>
@@ -1285,6 +1308,9 @@ function resultRowSearchText(row) {
     row?.predicted,
     row?.actual,
     row?.mlResult,
+    row?.calibratedMlResult,
+    row?.calibratedMlPickTeam,
+    row?.calibratedMlDiscrepancy ? 'score flip calibrated flip' : '',
     row?.spreadResult,
     row?.totalResult,
   ].join(' '));
@@ -1376,15 +1402,26 @@ function summaryMetricParts(metric) {
 
 function sportSummaryBlockHtml(label, metrics, emphasized = false) {
   const classes = emphasized ? 'sport-summary sport-summary-overall' : 'sport-summary';
+  const metricDefinitions = [
+    ['ML', 'ML'],
+    ['CalML', 'Cal ML'],
+    ['CalFlip', 'Cal flips'],
+    ['Spread', 'Spread'],
+    ['Total', 'Total'],
+  ];
+  const visibleMetrics = metricDefinitions.filter(([key]) => {
+    if (key === 'ML' || key === 'Spread' || key === 'Total') return true;
+    return Number(metrics?.[key]?.graded || 0) > 0;
+  });
   return `
     <section class="${classes}">
       <div class="sport-summary-head"><h4>${escapeHtml(label)}</h4></div>
       <div class="sport-summary-metrics">
-        ${['ML', 'Spread', 'Total'].map(metricName => {
+        ${visibleMetrics.map(([metricName, metricLabel]) => {
           const parts = summaryMetricParts(metrics?.[metricName]);
           return `
             <div class="sport-metric-chip">
-              <span>${escapeHtml(metricName)}</span>
+              <span>${escapeHtml(metricLabel)}</span>
               <strong>${escapeHtml(parts.record)}</strong>
               <small>${escapeHtml(parts.pctText)}</small>
             </div>
