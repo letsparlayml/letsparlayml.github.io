@@ -1,0 +1,5826 @@
+{
+  "schemaVersion": "mlb-player-day-profile-v4",
+  "generatedAt": "2026-06-25T12:15:23+00:00",
+  "gameDate": "2026-06-28",
+  "profileKey": "605540",
+  "sourceFileKey": "pitcher_605540",
+  "playerId": "605540",
+  "player": "Brandon Woodruff",
+  "league": "MLB",
+  "playerType": "pitcher",
+  "team": "MIL",
+  "opp": "CHC",
+  "matchup": "CHC @ MIL",
+  "location": "Home",
+  "injuryStatus": "",
+  "injuryNote": "",
+  "injuryUpdated": "",
+  "boardContext": "MIL vs CHC • R",
+  "driverSummary": "Projected 1.5 pitcher walks allowed • projected 4.1 IP",
+  "matchupContext": {
+    "raw": "Projected 1.5 pitcher walks allowed • projected 4.1 IP",
+    "lineupOrder": null,
+    "lineupBand": null,
+    "batterHand": null,
+    "pitcherHand": "R",
+    "handednessText": null,
+    "handednessBucket": null,
+    "temperatureF": 77.3,
+    "temperatureBucket": "warm environment",
+    "windMph": 11.2,
+    "windBucket": "moderate wind",
+    "currentFeatures": [
+      {
+        "key": "temperature",
+        "label": "Temperature",
+        "value": "77°F",
+        "note": "warm environment",
+        "available": true
+      },
+      {
+        "key": "wind",
+        "label": "Wind",
+        "value": "11 mph",
+        "note": "moderate wind",
+        "available": true
+      },
+      {
+        "key": "park",
+        "label": "Park",
+        "value": "American Family Field",
+        "note": "current venue",
+        "available": true
+      }
+    ],
+    "summaryPieces": [
+      "77°F",
+      "Wind 11"
+    ],
+    "parsedFrom": "driverSummary/boardContext",
+    "featureCoverage": {
+      "lineupOrder": false,
+      "currentHandedness": false,
+      "currentTemperature": true,
+      "currentWind": true,
+      "currentPark": true,
+      "currentStarter": false,
+      "currentPitchMix": false,
+      "historicalHandedness": false,
+      "historicalPitchMix": false,
+      "historicalPark": false,
+      "historicalWeather": false
+    },
+    "similarityReadiness": {
+      "currentContextReady": true,
+      "canScoreCurrentHandedness": false,
+      "canScoreHistoricalHandedness": false,
+      "canScorePitchMix": false,
+      "nextRequiredInputs": [
+        "historical batter hand and pitcher hand per game-log row",
+        "current and historical opposing starter identity",
+        "pitch mix / pitch-type profile by opposing starter",
+        "park/weather values per historical row"
+      ]
+    },
+    "park": "American Family Field"
+  },
+  "pitcherLineupContext": {
+    "available": true,
+    "gameId": "mlb-823769",
+    "matchup": "CHC @ MIL",
+    "pitcherId": null,
+    "pitcher": "Brandon Woodruff",
+    "pitcherTeam": "MIL",
+    "pitcherHand": "R",
+    "opponentTeam": "CHC",
+    "lineupSize": 9,
+    "lineupHandCounts": {
+      "R": 5,
+      "L": 2,
+      "S": 2,
+      "Unknown": 0
+    },
+    "topThirdHandCounts": {
+      "R": 0,
+      "L": 2,
+      "S": 1,
+      "Unknown": 0
+    },
+    "middleThirdHandCounts": {
+      "R": 3,
+      "L": 0,
+      "S": 0,
+      "Unknown": 0
+    },
+    "bottomThirdHandCounts": {
+      "R": 2,
+      "L": 0,
+      "S": 1,
+      "Unknown": 0
+    },
+    "sideAdvantageCounts": {
+      "opposite": 2,
+      "same": 5,
+      "switch": 2,
+      "unknown": 0
+    },
+    "topThirdSideAdvantageCounts": {
+      "opposite": 2,
+      "same": 0,
+      "switch": 1,
+      "unknown": 0
+    },
+    "lineupPressure": {
+      "contact": "low",
+      "power": "medium",
+      "strikeoutOpportunity": "medium",
+      "walkRisk": "medium",
+      "contactValue": 0.5345,
+      "powerValue": 0.4816,
+      "strikeoutValue": 0.9759,
+      "walkValue": 0.4485
+    },
+    "contactThreats": [
+      {
+        "playerId": "691718",
+        "player": "Pete Crow-Armstrong",
+        "team": "CHC",
+        "order": 1,
+        "hand": "L",
+        "metric": 0.6033820802050189,
+        "metricLabel": "contact"
+      },
+      {
+        "playerId": "683737",
+        "player": "Michael Busch",
+        "team": "CHC",
+        "order": 2,
+        "hand": "L",
+        "metric": 0.5894091062738451,
+        "metricLabel": "contact"
+      },
+      {
+        "playerId": "664023",
+        "player": "Ian Happ",
+        "team": "CHC",
+        "order": 3,
+        "hand": "S",
+        "metric": 0.5796378347801692,
+        "metricLabel": "contact"
+      },
+      {
+        "playerId": "663538",
+        "player": "Nico Hoerner",
+        "team": "CHC",
+        "order": 6,
+        "hand": "R",
+        "metric": 0.570956789295598,
+        "metricLabel": "contact"
+      }
+    ],
+    "powerThreats": [
+      {
+        "playerId": "691718",
+        "player": "Pete Crow-Armstrong",
+        "team": "CHC",
+        "order": 1,
+        "hand": "L",
+        "metric": 0.4581792708687573,
+        "metricLabel": "power"
+      },
+      {
+        "playerId": "621020",
+        "player": "Dansby Swanson",
+        "team": "CHC",
+        "order": 4,
+        "hand": "R",
+        "metric": 0.3824895181481573,
+        "metricLabel": "power"
+      },
+      {
+        "playerId": "683737",
+        "player": "Michael Busch",
+        "team": "CHC",
+        "order": 2,
+        "hand": "L",
+        "metric": 0.354742316066296,
+        "metricLabel": "power"
+      },
+      {
+        "playerId": "664023",
+        "player": "Ian Happ",
+        "team": "CHC",
+        "order": 3,
+        "hand": "S",
+        "metric": 0.3507521477455496,
+        "metricLabel": "power"
+      }
+    ],
+    "strikeoutTargets": [
+      {
+        "playerId": "691718",
+        "player": "Pete Crow-Armstrong",
+        "team": "CHC",
+        "order": 1,
+        "hand": "L",
+        "metric": 1.418353087162298,
+        "metricLabel": "K risk"
+      },
+      {
+        "playerId": "664023",
+        "player": "Ian Happ",
+        "team": "CHC",
+        "order": 3,
+        "hand": "S",
+        "metric": 1.32068526426801,
+        "metricLabel": "K risk"
+      },
+      {
+        "playerId": "673548",
+        "player": "Seiya Suzuki",
+        "team": "CHC",
+        "order": 5,
+        "hand": "R",
+        "metric": 1.217860371372229,
+        "metricLabel": "K risk"
+      },
+      {
+        "playerId": "621020",
+        "player": "Dansby Swanson",
+        "team": "CHC",
+        "order": 4,
+        "hand": "R",
+        "metric": 1.119607017592826,
+        "metricLabel": "K risk"
+      }
+    ],
+    "walkRiskBats": [
+      {
+        "playerId": "683737",
+        "player": "Michael Busch",
+        "team": "CHC",
+        "order": 2,
+        "hand": "L",
+        "metric": 0.6174749289346637,
+        "metricLabel": "walk risk"
+      },
+      {
+        "playerId": "673548",
+        "player": "Seiya Suzuki",
+        "team": "CHC",
+        "order": 5,
+        "hand": "R",
+        "metric": 0.5984269023122563,
+        "metricLabel": "walk risk"
+      },
+      {
+        "playerId": "608324",
+        "player": "Alex Bregman",
+        "team": "CHC",
+        "order": 7,
+        "hand": "R",
+        "metric": 0.5772119328026285,
+        "metricLabel": "walk risk"
+      },
+      {
+        "playerId": "691718",
+        "player": "Pete Crow-Armstrong",
+        "team": "CHC",
+        "order": 1,
+        "hand": "L",
+        "metric": 0.5537716165094919,
+        "metricLabel": "walk risk"
+      }
+    ],
+    "summaryPieces": [
+      "CHC projected lineup",
+      "5 RHB",
+      "2 LHB",
+      "2 switch",
+      "2 opposite-side bats"
+    ]
+  },
+  "matchupFeatureSummary": {
+    "currentFeatures": [
+      {
+        "key": "temperature",
+        "label": "Temperature",
+        "value": "77°F",
+        "note": "warm environment",
+        "available": true
+      },
+      {
+        "key": "wind",
+        "label": "Wind",
+        "value": "11 mph",
+        "note": "moderate wind",
+        "available": true
+      },
+      {
+        "key": "park",
+        "label": "Park",
+        "value": "American Family Field",
+        "note": "current venue",
+        "available": true
+      }
+    ],
+    "summaryPieces": [
+      "77°F",
+      "Wind 11"
+    ],
+    "featureCoverage": {
+      "lineupOrder": false,
+      "currentHandedness": false,
+      "currentTemperature": true,
+      "currentWind": true,
+      "currentPark": true,
+      "currentStarter": false,
+      "currentPitchMix": false,
+      "historicalHandedness": false,
+      "historicalPitchMix": false,
+      "historicalPark": true,
+      "historicalWeather": true,
+      "sameOpponent": true,
+      "homeAway": true,
+      "lineupOrContext": false,
+      "abOrIpSample": true,
+      "recency": true,
+      "currentHandednessParsed": false,
+      "currentWeather": true,
+      "historicalStarter": false
+    },
+    "similarityReadiness": {
+      "currentContextReady": true,
+      "canScoreCurrentHandedness": false,
+      "canScoreHistoricalHandedness": false,
+      "canScorePitchMix": false,
+      "nextRequiredInputs": [
+        "historical batter hand and pitcher hand per game-log row",
+        "current and historical opposing starter identity",
+        "pitch mix / pitch-type profile by opposing starter"
+      ]
+    },
+    "missingForTrueSimilarity": [
+      "historical handedness",
+      "pitch mix"
+    ]
+  },
+  "availableStats": [
+    "BB",
+    "K",
+    "ER",
+    "HA",
+    "IP",
+    "OUTS"
+  ],
+  "availableProps": [
+    {
+      "stat": "BB",
+      "statDisplay": "Pitcher Walks Allowed",
+      "detailFile": "pitcher_605540_bb.json",
+      "sampleType": "historical_games",
+      "recentWindow": 7,
+      "playerType": "pitcher",
+      "modelPred": 1.538848299457569,
+      "modelPredDisplay": "1.54",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.1,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 1.0,
+      "allGamesAvg": 1.0,
+      "comparisonLine": 1.0,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 7,
+      "lineOptions": [
+        {
+          "line": 0.5,
+          "probability": 0.7853718535085612,
+          "probabilityDisplay": "78.5%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 1.5,
+          "probability": 0.4550916952644808,
+          "probabilityDisplay": "45.5%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 2.5,
+          "probability": 0.2009661653352408,
+          "probabilityDisplay": "20.1%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 7,
+        "avgValue": 1.0,
+        "maxSimScore": 20.0,
+        "bins": {
+          "Close 25%": 2,
+          "Closest 25%": 1,
+          "Far 25%": 2,
+          "Mid 25%": 2
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-04-30",
+            "opp": "ARI",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-04-24",
+            "opp": "PIT",
+            "location": "Home",
+            "value": 2.0,
+            "simScore": 20.0,
+            "simPct": 85.7
+          },
+          {
+            "gameDate": "2026-04-12",
+            "opp": "WSH",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 71.4
+          },
+          {
+            "gameDate": "2026-03-31",
+            "opp": "TB",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 20.0,
+            "simPct": 57.1
+          },
+          {
+            "gameDate": "2026-06-22",
+            "opp": "CIN",
+            "location": "Away",
+            "value": 0.0,
+            "simScore": 9.0,
+            "simPct": 42.9
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 7,
+        "totalHistoricalRows": 7,
+        "avgValue": 1.0,
+        "avgScore": 41.84,
+        "maxScore": 52.39,
+        "bins": {
+          "Loose v2": 4,
+          "Partial v2": 3
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 0.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 1.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 2.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 2.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 1.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 0.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "K",
+      "statDisplay": "Pitcher Strikeouts",
+      "detailFile": "pitcher_605540_k.json",
+      "sampleType": "historical_games",
+      "recentWindow": 7,
+      "playerType": "pitcher",
+      "modelPred": 5.764876682861539,
+      "modelPredDisplay": "5.76",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.1,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 5.0,
+      "allGamesAvg": 5.0,
+      "comparisonLine": 5.0,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 7,
+      "lineOptions": [
+        {
+          "line": 2.5,
+          "probability": 0.9266798397493025,
+          "probabilityDisplay": "92.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 3.5,
+          "probability": 0.8265497322418562,
+          "probabilityDisplay": "82.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 4.5,
+          "probability": 0.6822403017363323,
+          "probabilityDisplay": "68.2%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 5.5,
+          "probability": 0.5158550875286679,
+          "probabilityDisplay": "51.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 6.5,
+          "probability": 0.3559900472355534,
+          "probabilityDisplay": "35.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 7.5,
+          "probability": 0.22433258392262534,
+          "probabilityDisplay": "22.4%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 7,
+        "avgValue": 5.0,
+        "maxSimScore": 20.0,
+        "bins": {
+          "Close 25%": 2,
+          "Closest 25%": 1,
+          "Far 25%": 2,
+          "Mid 25%": 2
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-04-30",
+            "opp": "ARI",
+            "location": "Home",
+            "value": 2.0,
+            "simScore": 20.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-04-24",
+            "opp": "PIT",
+            "location": "Home",
+            "value": 3.0,
+            "simScore": 20.0,
+            "simPct": 85.7
+          },
+          {
+            "gameDate": "2026-04-12",
+            "opp": "WSH",
+            "location": "Home",
+            "value": 6.0,
+            "simScore": 20.0,
+            "simPct": 71.4
+          },
+          {
+            "gameDate": "2026-03-31",
+            "opp": "TB",
+            "location": "Home",
+            "value": 6.0,
+            "simScore": 20.0,
+            "simPct": 57.1
+          },
+          {
+            "gameDate": "2026-06-22",
+            "opp": "CIN",
+            "location": "Away",
+            "value": 10.0,
+            "simScore": 9.0,
+            "simPct": 42.9
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 7,
+        "totalHistoricalRows": 7,
+        "avgValue": 5.0,
+        "avgScore": 41.84,
+        "maxScore": 52.39,
+        "bins": {
+          "Loose v2": 4,
+          "Partial v2": 3
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 10.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 4.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 10.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "ER",
+      "statDisplay": "Pitcher Earned Runs",
+      "detailFile": "pitcher_605540_er.json",
+      "sampleType": "historical_games",
+      "recentWindow": 7,
+      "playerType": "pitcher",
+      "modelPred": 2.461321964432479,
+      "modelPredDisplay": "2.46",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.1,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 1.0,
+      "allGamesAvg": 1.7143,
+      "comparisonLine": 1.7143,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 7,
+      "lineOptions": [
+        {
+          "line": 0.5,
+          "probability": 0.914677916379402,
+          "probabilityDisplay": "91.5%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 1.5,
+          "probability": 0.5174610976929195,
+          "probabilityDisplay": "51.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 2.5,
+          "probability": 0.4462276925504314,
+          "probabilityDisplay": "44.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 3.5,
+          "probability": 0.2569353044766729,
+          "probabilityDisplay": "25.7%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 7,
+        "avgValue": 1.7143,
+        "maxSimScore": 20.0,
+        "bins": {
+          "Close 25%": 2,
+          "Closest 25%": 1,
+          "Far 25%": 2,
+          "Mid 25%": 2
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-04-30",
+            "opp": "ARI",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 20.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-04-24",
+            "opp": "PIT",
+            "location": "Home",
+            "value": 3.0,
+            "simScore": 20.0,
+            "simPct": 85.7
+          },
+          {
+            "gameDate": "2026-04-12",
+            "opp": "WSH",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 71.4
+          },
+          {
+            "gameDate": "2026-03-31",
+            "opp": "TB",
+            "location": "Home",
+            "value": 2.0,
+            "simScore": 20.0,
+            "simPct": 57.1
+          },
+          {
+            "gameDate": "2026-06-22",
+            "opp": "CIN",
+            "location": "Away",
+            "value": 0.0,
+            "simScore": 9.0,
+            "simPct": 42.9
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 7,
+        "totalHistoricalRows": 7,
+        "avgValue": 1.7143,
+        "avgScore": 41.84,
+        "maxScore": 52.39,
+        "bins": {
+          "Loose v2": 4,
+          "Partial v2": 3
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 0.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 1.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 5.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 2.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 5.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 1.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 0.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "HA",
+      "statDisplay": "Pitcher Hits Allowed",
+      "detailFile": "pitcher_605540_ha.json",
+      "sampleType": "historical_games",
+      "recentWindow": 7,
+      "playerType": "pitcher",
+      "modelPred": 4.492496210972102,
+      "modelPredDisplay": "4.49",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.1,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 2.6,
+      "allGamesAvg": 3.5714,
+      "comparisonLine": 3.5714,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 7,
+      "lineOptions": [
+        {
+          "line": 3.5,
+          "probability": 0.65643643786692,
+          "probabilityDisplay": "65.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 4.5,
+          "probability": 0.4664715560155953,
+          "probabilityDisplay": "46.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 5.5,
+          "probability": 0.2957882536286275,
+          "probabilityDisplay": "29.6%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 7,
+        "avgValue": 3.5714,
+        "maxSimScore": 20.0,
+        "bins": {
+          "Close 25%": 2,
+          "Closest 25%": 1,
+          "Far 25%": 2,
+          "Mid 25%": 2
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-04-30",
+            "opp": "ARI",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 20.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-04-24",
+            "opp": "PIT",
+            "location": "Home",
+            "value": 5.0,
+            "simScore": 20.0,
+            "simPct": 85.7
+          },
+          {
+            "gameDate": "2026-04-12",
+            "opp": "WSH",
+            "location": "Home",
+            "value": 3.0,
+            "simScore": 20.0,
+            "simPct": 71.4
+          },
+          {
+            "gameDate": "2026-03-31",
+            "opp": "TB",
+            "location": "Home",
+            "value": 4.0,
+            "simScore": 20.0,
+            "simPct": 57.1
+          },
+          {
+            "gameDate": "2026-06-22",
+            "opp": "CIN",
+            "location": "Away",
+            "value": 1.0,
+            "simScore": 9.0,
+            "simPct": 42.9
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 7,
+        "totalHistoricalRows": 7,
+        "avgValue": 3.5714,
+        "avgScore": 41.84,
+        "maxScore": 52.39,
+        "bins": {
+          "Loose v2": 4,
+          "Partial v2": 3
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 1.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 3.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 8.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 8.0,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 3.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 3.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 1.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "IP",
+      "statDisplay": "Pitcher Innings Pitched",
+      "detailFile": "pitcher_605540_ip.json",
+      "sampleType": "historical_games",
+      "recentWindow": 7,
+      "playerType": "pitcher",
+      "modelPred": 4.1,
+      "modelPredDisplay": "4.10",
+      "modelSigma": null,
+      "contextMetricLabel": "IP",
+      "contextMetricValue": 4.1,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 5.02,
+      "allGamesAvg": 5.0429,
+      "comparisonLine": 5.0429,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 7,
+      "lineOptions": [
+        {
+          "line": 4.0,
+          "probability": null,
+          "probabilityDisplay": null,
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 5.0,
+          "probability": null,
+          "probabilityDisplay": null,
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 7,
+        "avgValue": 5.0429,
+        "maxSimScore": 20.0,
+        "bins": {
+          "Close 25%": 2,
+          "Closest 25%": 1,
+          "Far 25%": 2,
+          "Mid 25%": 2
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-04-30",
+            "opp": "ARI",
+            "location": "Home",
+            "value": 1.1,
+            "simScore": 20.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-04-24",
+            "opp": "PIT",
+            "location": "Home",
+            "value": 5.0,
+            "simScore": 20.0,
+            "simPct": 85.7
+          },
+          {
+            "gameDate": "2026-04-12",
+            "opp": "WSH",
+            "location": "Home",
+            "value": 6.0,
+            "simScore": 20.0,
+            "simPct": 71.4
+          },
+          {
+            "gameDate": "2026-03-31",
+            "opp": "TB",
+            "location": "Home",
+            "value": 5.0,
+            "simScore": 20.0,
+            "simPct": 57.1
+          },
+          {
+            "gameDate": "2026-06-22",
+            "opp": "CIN",
+            "location": "Away",
+            "value": 6.0,
+            "simScore": 9.0,
+            "simPct": 42.9
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 7,
+        "totalHistoricalRows": 7,
+        "avgValue": 5.0429,
+        "avgScore": 41.84,
+        "maxScore": 52.39,
+        "bins": {
+          "Loose v2": 4,
+          "Partial v2": 3
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.1,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 7.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 5.2,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 5.2,
+            "minutes": 5.2,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (5.2)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (6)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 7.0,
+            "minutes": 7.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (7)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 5.0,
+            "minutes": 5.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (5)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.1,
+            "minutes": 1.1,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 41.75,
+            "simPctV2": 41.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 2.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 41.75,
+            "simPct": 41.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 6.0,
+            "minutes": 6.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (6)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          }
+        ]
+      }
+    },
+    {
+      "stat": "OUTS",
+      "statDisplay": "Pitcher Outs",
+      "detailFile": "pitcher_605540_outs.json",
+      "sampleType": "historical_games",
+      "recentWindow": 7,
+      "playerType": "pitcher",
+      "modelPred": 13.78883533484407,
+      "modelPredDisplay": "13.79",
+      "modelSigma": null,
+      "contextMetricLabel": "Outs",
+      "contextMetricValue": 13.78883533484407,
+      "samples": {
+        "prior": null,
+        "r10": null,
+        "r5": null,
+        "r3": null
+      },
+      "recent5Avg": 15.2,
+      "allGamesAvg": 15.4286,
+      "comparisonLine": 15.4286,
+      "comparisonLineSource": "full sample average",
+      "comparisonProbability": null,
+      "comparisonMode": "pitcher_average",
+      "gameCount": 7,
+      "lineOptions": [
+        {
+          "line": 11.5,
+          "probability": 0.7217450644231752,
+          "probabilityDisplay": "72.2%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        },
+        {
+          "line": 14.5,
+          "probability": 0.4433848829050485,
+          "probabilityDisplay": "44.3%",
+          "side": null,
+          "href": null,
+          "sourceScore": null
+        }
+      ],
+      "similarity": {
+        "count": 7,
+        "avgValue": 15.4286,
+        "maxSimScore": 20.0,
+        "bins": {
+          "Close 25%": 2,
+          "Closest 25%": 1,
+          "Far 25%": 2,
+          "Mid 25%": 2
+        },
+        "topGames": [
+          {
+            "gameDate": "2026-04-30",
+            "opp": "ARI",
+            "location": "Home",
+            "value": 4.0,
+            "simScore": 20.0,
+            "simPct": 100.0
+          },
+          {
+            "gameDate": "2026-04-24",
+            "opp": "PIT",
+            "location": "Home",
+            "value": 15.0,
+            "simScore": 20.0,
+            "simPct": 85.7
+          },
+          {
+            "gameDate": "2026-04-12",
+            "opp": "WSH",
+            "location": "Home",
+            "value": 18.0,
+            "simScore": 20.0,
+            "simPct": 71.4
+          },
+          {
+            "gameDate": "2026-03-31",
+            "opp": "TB",
+            "location": "Home",
+            "value": 15.0,
+            "simScore": 20.0,
+            "simPct": 57.1
+          },
+          {
+            "gameDate": "2026-06-22",
+            "opp": "CIN",
+            "location": "Away",
+            "value": 18.0,
+            "simScore": 9.0,
+            "simPct": 42.9
+          }
+        ]
+      },
+      "similarityV2": {
+        "method": "available-feature-similarity-v2",
+        "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
+        "count": 7,
+        "totalHistoricalRows": 7,
+        "avgValue": 15.4286,
+        "avgScore": 42.27,
+        "maxScore": 52.39,
+        "bins": {
+          "Loose v2": 4,
+          "Partial v2": 3
+        },
+        "featureCoverage": {
+          "sameOpponent": true,
+          "homeAway": true,
+          "lineupOrContext": false,
+          "abOrIpSample": true,
+          "recency": true,
+          "currentHandednessParsed": false,
+          "currentPark": true,
+          "currentWeather": true,
+          "currentPitchMix": false,
+          "historicalHandedness": false,
+          "historicalPitchMix": false,
+          "historicalWeather": true,
+          "historicalPark": true,
+          "historicalStarter": false
+        },
+        "warnings": [],
+        "topGames": [
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 15.0,
+            "minutes": 15.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (15)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 18.0,
+            "minutes": 18.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (18)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 18.0,
+            "minutes": 18.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (18)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 15.0,
+            "minutes": 15.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (15)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.0,
+            "minutes": 4.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 44.75,
+            "simPctV2": 44.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 5.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 44.75,
+            "simPct": 44.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 21.0,
+            "minutes": 21.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (21)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 17.0,
+            "minutes": 17.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (17)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          }
+        ],
+        "allGames": [
+          {
+            "gameKey": "id:823807",
+            "gameId": 823807,
+            "gameDate": "2026-03-31",
+            "label": "2026-03-31",
+            "shortLabel": "03-31",
+            "seq": 1,
+            "opp": "TB",
+            "location": "Home",
+            "isHome": 1,
+            "value": 15.0,
+            "minutes": 15.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 65.0,
+            "windMph": 0.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 49.81,
+            "simPctV2": 49.81,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.54,
+              "windSimilarity": 0.27,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (15)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 49.81,
+            "simPct": 49.81,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824783",
+            "gameId": 824783,
+            "gameDate": "2026-04-06",
+            "label": "2026-04-06",
+            "shortLabel": "04-06",
+            "seq": 2,
+            "opp": "BOS",
+            "location": "Away",
+            "isHome": 0,
+            "value": 17.0,
+            "minutes": 17.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "Fenway Park",
+            "temperatureF": 45.9,
+            "windMph": 23.1,
+            "pitchMixSummary": null,
+            "simScoreV2": 20.03,
+            "simPctV2": 20.03,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 0.03,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "usable IP/outs sample (17)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 20.03,
+            "simPct": 20.03,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823804",
+            "gameId": 823804,
+            "gameDate": "2026-04-12",
+            "label": "2026-04-12",
+            "shortLabel": "04-12",
+            "seq": 3,
+            "opp": "WSH",
+            "location": "Home",
+            "isHome": 1,
+            "value": 18.0,
+            "minutes": 18.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 72.1,
+            "windMph": 28.3,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.96,
+            "simPctV2": 50.96,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 4.96,
+              "windSimilarity": 0.0,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar temperature (72°F)",
+              "usable IP/outs sample (18)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.96,
+            "simPct": 50.96,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823882",
+            "gameId": 823882,
+            "gameDate": "2026-04-18",
+            "label": "2026-04-18",
+            "shortLabel": "04-18",
+            "seq": 4,
+            "opp": "MIA",
+            "location": "Away",
+            "isHome": 0,
+            "value": 21.0,
+            "minutes": 21.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "loanDepot park",
+            "temperatureF": 82.9,
+            "windMph": 15.5,
+            "pitchMixSummary": null,
+            "simScoreV2": 27.45,
+            "simPctV2": 27.45,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.88,
+              "windSimilarity": 2.57,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (83°F)",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (21)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 27.45,
+            "simPct": 27.45,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:823800",
+            "gameId": 823800,
+            "gameDate": "2026-04-24",
+            "label": "2026-04-24",
+            "shortLabel": "04-24",
+            "seq": 5,
+            "opp": "PIT",
+            "location": "Home",
+            "isHome": 1,
+            "value": 15.0,
+            "minutes": 15.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 66.6,
+            "windMph": 15.6,
+            "pitchMixSummary": null,
+            "simScoreV2": 52.39,
+            "simPctV2": 52.39,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 3.86,
+              "windSimilarity": 2.53,
+              "sampleContext": 8.0,
+              "recency": 0.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "similar wind (16 mph)",
+              "usable IP/outs sample (15)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 52.39,
+            "simPct": 52.39,
+            "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:823795",
+            "gameId": 823795,
+            "gameDate": "2026-04-30",
+            "label": "2026-04-30",
+            "shortLabel": "04-30",
+            "seq": 6,
+            "opp": "ARI",
+            "location": "Home",
+            "isHome": 1,
+            "value": 4.0,
+            "minutes": 4.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": "R",
+            "handednessText": null,
+            "park": "American Family Field",
+            "temperatureF": 45.1,
+            "windMph": 19.2,
+            "pitchMixSummary": null,
+            "simScoreV2": 44.75,
+            "simPctV2": 44.75,
+            "simBinV2": "Loose v2",
+            "simTierV2": "Loose match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 18.0,
+              "samePark": 8.0,
+              "temperatureSimilarity": 0.0,
+              "windSimilarity": 1.33,
+              "sampleContext": 5.0,
+              "recency": 0.42,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "same location Home",
+              "same park",
+              "usable IP/outs sample (4)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 44.75,
+            "simPct": 44.75,
+            "simBin": "Loose v2"
+          },
+          {
+            "gameKey": "id:824502",
+            "gameId": 824502,
+            "gameDate": "2026-06-22",
+            "label": "2026-06-22",
+            "shortLabel": "06-22",
+            "seq": 7,
+            "opp": "CIN",
+            "location": "Away",
+            "isHome": 0,
+            "value": 18.0,
+            "minutes": 18.0,
+            "contextValue": null,
+            "batterHand": null,
+            "pitcherHand": null,
+            "handednessText": null,
+            "park": "Great American Ball Park",
+            "temperatureF": 70.0,
+            "windMph": 11.0,
+            "pitchMixSummary": null,
+            "simScoreV2": 50.47,
+            "simPctV2": 50.47,
+            "simBinV2": "Partial v2",
+            "simTierV2": "Partial match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 4.54,
+              "windSimilarity": 3.93,
+              "sampleContext": 8.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "similar temperature (70°F)",
+              "similar wind (11 mph)",
+              "usable IP/outs sample (18)",
+              "recent sample (6d)"
+            ],
+            "simMissingV2": [
+              "historical lineup/context"
+            ],
+            "simScore": 50.47,
+            "simPct": 50.47,
+            "simBin": "Partial v2"
+          }
+        ]
+      }
+    }
+  ],
+  "combinedGameLog": [
+    {
+      "gameKey": "id:823807",
+      "gameId": 823807,
+      "gameDate": "2026-03-31",
+      "label": "2026-03-31",
+      "shortLabel": "03-31",
+      "seq": 1,
+      "opp": "TB",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 5.0,
+      "contextValue": 5.0,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 4.0,
+          "rawValue": 4.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 5.0,
+          "rawValue": 5.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 6.0,
+          "rawValue": 6.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 15.0,
+          "rawValue": 15.0,
+          "minutes": 15.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:824783",
+      "gameId": 824783,
+      "gameDate": "2026-04-06",
+      "label": "2026-04-06",
+      "shortLabel": "04-06",
+      "seq": 2,
+      "opp": "BOS",
+      "location": "Away",
+      "isHome": 0,
+      "minutes": 5.2,
+      "contextValue": 5.2,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 5.0,
+          "rawValue": 5.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 8.0,
+          "rawValue": 8.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 5.2,
+          "rawValue": 5.2,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 4.0,
+          "rawValue": 4.0,
+          "minutes": 5.2,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 17.0,
+          "rawValue": 17.0,
+          "minutes": 17.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:823804",
+      "gameId": 823804,
+      "gameDate": "2026-04-12",
+      "label": "2026-04-12",
+      "shortLabel": "04-12",
+      "seq": 3,
+      "opp": "WSH",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 6.0,
+      "contextValue": 6.0,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 6.0,
+          "rawValue": 6.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 6.0,
+          "rawValue": 6.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 18.0,
+          "rawValue": 18.0,
+          "minutes": 18.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:823882",
+      "gameId": 823882,
+      "gameDate": "2026-04-18",
+      "label": "2026-04-18",
+      "shortLabel": "04-18",
+      "seq": 4,
+      "opp": "MIA",
+      "location": "Away",
+      "isHome": 0,
+      "minutes": 7.0,
+      "contextValue": 7.0,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 7.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 7.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 7.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 7.0,
+          "rawValue": 7.0,
+          "minutes": 7.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 4.0,
+          "rawValue": 4.0,
+          "minutes": 7.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 21.0,
+          "rawValue": 21.0,
+          "minutes": 21.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:823800",
+      "gameId": 823800,
+      "gameDate": "2026-04-24",
+      "label": "2026-04-24",
+      "shortLabel": "04-24",
+      "seq": 5,
+      "opp": "PIT",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 5.0,
+      "contextValue": 5.0,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 5.0,
+          "rawValue": 5.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 5.0,
+          "rawValue": 5.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 3.0,
+          "rawValue": 3.0,
+          "minutes": 5.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 15.0,
+          "rawValue": 15.0,
+          "minutes": 15.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:823795",
+      "gameId": 823795,
+      "gameDate": "2026-04-30",
+      "label": "2026-04-30",
+      "shortLabel": "04-30",
+      "seq": 6,
+      "opp": "ARI",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 1.1,
+      "contextValue": 1.1,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 1.1,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.1,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 1.1,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 1.1,
+          "rawValue": 1.1,
+          "minutes": 1.1,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 2.0,
+          "rawValue": 2.0,
+          "minutes": 1.1,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 4.0,
+          "rawValue": 4.0,
+          "minutes": 4.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    },
+    {
+      "gameKey": "id:824502",
+      "gameId": 824502,
+      "gameDate": "2026-06-22",
+      "label": "2026-06-22",
+      "shortLabel": "06-22",
+      "seq": 7,
+      "opp": "CIN",
+      "location": "Away",
+      "isHome": 0,
+      "minutes": 6.0,
+      "contextValue": 6.0,
+      "rawContextValue": null,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "BB": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "ER": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HA": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "IP": {
+          "value": 6.0,
+          "rawValue": 6.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 10.0,
+          "rawValue": 10.0,
+          "minutes": 6.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "OUTS": {
+          "value": 18.0,
+          "rawValue": 18.0,
+          "minutes": 18.0,
+          "contextValue": null,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
+    }
+  ],
+  "chartSeries": [
+    {
+      "stat": "BB",
+      "label": "Pitcher Walks Allowed",
+      "modelPred": 1.538848299457569,
+      "sampleType": "historical_games",
+      "x": [
+        "03-31",
+        "04-06",
+        "04-12",
+        "04-18",
+        "04-24",
+        "04-30",
+        "06-22"
+      ],
+      "gameKeys": [
+        "id:823807",
+        "id:824783",
+        "id:823804",
+        "id:823882",
+        "id:823800",
+        "id:823795",
+        "id:824502"
+      ],
+      "y": [
+        0.0,
+        2.0,
+        1.0,
+        1.0,
+        2.0,
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "stat": "K",
+      "label": "Pitcher Strikeouts",
+      "modelPred": 5.764876682861539,
+      "sampleType": "historical_games",
+      "x": [
+        "03-31",
+        "04-06",
+        "04-12",
+        "04-18",
+        "04-24",
+        "04-30",
+        "06-22"
+      ],
+      "gameKeys": [
+        "id:823807",
+        "id:824783",
+        "id:823804",
+        "id:823882",
+        "id:823800",
+        "id:823795",
+        "id:824502"
+      ],
+      "y": [
+        6.0,
+        4.0,
+        6.0,
+        4.0,
+        3.0,
+        2.0,
+        10.0
+      ]
+    },
+    {
+      "stat": "ER",
+      "label": "Pitcher Earned Runs",
+      "modelPred": 2.461321964432479,
+      "sampleType": "historical_games",
+      "x": [
+        "03-31",
+        "04-06",
+        "04-12",
+        "04-18",
+        "04-24",
+        "04-30",
+        "06-22"
+      ],
+      "gameKeys": [
+        "id:823807",
+        "id:824783",
+        "id:823804",
+        "id:823882",
+        "id:823800",
+        "id:823795",
+        "id:824502"
+      ],
+      "y": [
+        2.0,
+        5.0,
+        1.0,
+        1.0,
+        3.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "stat": "HA",
+      "label": "Pitcher Hits Allowed",
+      "modelPred": 4.492496210972102,
+      "sampleType": "historical_games",
+      "x": [
+        "03-31",
+        "04-06",
+        "04-12",
+        "04-18",
+        "04-24",
+        "04-30",
+        "06-22"
+      ],
+      "gameKeys": [
+        "id:823807",
+        "id:824783",
+        "id:823804",
+        "id:823882",
+        "id:823800",
+        "id:823795",
+        "id:824502"
+      ],
+      "y": [
+        4.0,
+        8.0,
+        3.0,
+        3.0,
+        5.0,
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "stat": "IP",
+      "label": "Pitcher Innings Pitched",
+      "modelPred": 4.1,
+      "sampleType": "historical_games",
+      "x": [
+        "03-31",
+        "04-06",
+        "04-12",
+        "04-18",
+        "04-24",
+        "04-30",
+        "06-22"
+      ],
+      "gameKeys": [
+        "id:823807",
+        "id:824783",
+        "id:823804",
+        "id:823882",
+        "id:823800",
+        "id:823795",
+        "id:824502"
+      ],
+      "y": [
+        5.0,
+        5.2,
+        6.0,
+        7.0,
+        5.0,
+        1.1,
+        6.0
+      ]
+    },
+    {
+      "stat": "OUTS",
+      "label": "Pitcher Outs",
+      "modelPred": 13.78883533484407,
+      "sampleType": "historical_games",
+      "x": [
+        "03-31",
+        "04-06",
+        "04-12",
+        "04-18",
+        "04-24",
+        "04-30",
+        "06-22"
+      ],
+      "gameKeys": [
+        "id:823807",
+        "id:824783",
+        "id:823804",
+        "id:823882",
+        "id:823800",
+        "id:823795",
+        "id:824502"
+      ],
+      "y": [
+        15.0,
+        17.0,
+        18.0,
+        21.0,
+        15.0,
+        4.0,
+        18.0
+      ]
+    }
+  ],
+  "uiHints": {
+    "defaultSelectedStats": [
+      "BB",
+      "K",
+      "ER"
+    ],
+    "recommendedChartMode": "smallMultiples",
+    "canUseNormalizedMultiLine": true,
+    "primaryStat": "BB"
+  },
+  "dataQuality": {
+    "multiPropReady": true,
+    "coreBatterPropsReady": false,
+    "availableStatCount": 6,
+    "warnings": [
+      "historical opposing-lineup handedness not available in pitcher start rows yet",
+      "historical pitcher pitch mix not available in start rows yet"
+    ]
+  }
+}
