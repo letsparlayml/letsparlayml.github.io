@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import shutil
 from datetime import timezone
 from pathlib import Path
@@ -199,17 +200,6 @@ def safe_float(value: Any) -> float | None:
     except Exception:
         return None
 
-def first_number_from(row: Any, candidates: list[str]) -> float | None:
-    for col in candidates:
-        try:
-            value = row.get(col)
-        except Exception:
-            value = None
-        parsed = safe_float(value)
-        if parsed is not None:
-            return parsed
-    return None
-
 def safe_int(value: Any) -> int | None:
     try:
         if value is None or value == '':
@@ -217,6 +207,200 @@ def safe_int(value: Any) -> int | None:
         return int(float(value))
     except Exception:
         return None
+
+
+def first_text_from(row: Any, candidates: list[str]) -> str:
+    """Return the first non-empty text value from a pandas row or Series-like object."""
+    for col in candidates:
+        try:
+            value = row.get(col)
+        except Exception:
+            value = None
+        text = clean_str(value)
+        if text:
+            return text
+    return ''
+
+
+def first_number_from(row: Any, candidates: list[str]) -> float | None:
+    """Return the first usable numeric value from a pandas row or Series-like object."""
+    for col in candidates:
+        try:
+            value = row.get(col)
+        except Exception:
+            value = None
+        num = safe_float(value)
+        if num is not None:
+            return num
+    return None
+
+
+def normalize_hand(value: Any) -> str:
+    text = clean_str(value).upper()
+    if not text:
+        return ''
+    if text in {'L', 'LEFT', 'LHP', 'LH', 'LEFTY'}:
+        return 'L'
+    if text in {'R', 'RIGHT', 'RHP', 'RH', 'RIGHTY'}:
+        return 'R'
+    if text in {'B', 'S', 'SWITCH', 'BOTH'}:
+        return 'B'
+    return text[:1] if text[:1] in {'L', 'R', 'B'} else ''
+
+
+def f_from_c_or_f(value: Any, source_col: str = '') -> float | None:
+    """Return a Fahrenheit temperature without guessing from the numeric value.
+
+    The MLB weather pipeline currently writes Fahrenheit values into fields such as
+    ``temperature_2m`` as well as explicitly named ``*_f`` fields.  The previous
+    implementation assumed any value <= 60 was Celsius, which double-converted
+    already-Fahrenheit values (for example, 55°F became 131°F).
+
+    Conversion is now performed only when the source column explicitly declares
+    Celsius.  Ambiguous and Fahrenheit-labelled fields are preserved as Fahrenheit.
+    """
+    num = safe_float(value)
+    if num is None:
+        return None
+
+    col = (source_col or '').strip().lower()
+    explicit_celsius_cols = {
+        'temperature_c',
+        'temperaturec',
+        'temp_c',
+        'tempc',
+        'game_temp_c',
+        'weather_temp_c',
+        'apparent_temperature_c',
+        'temperature_2m_c',
+    }
+    is_celsius = (
+        'celsius' in col
+        or col in explicit_celsius_cols
+        or col.endswith('_degc')
+        or col.endswith('_celsius')
+    )
+
+    out = (num * 9 / 5) + 32 if is_celsius else num
+
+    # Reject impossible/corrupt display values instead of writing them into every
+    # analyzer summary and downstream site file.
+    if out < -100 or out > 150:
+        return None
+    return out
+
+
+def handedness_text(batter_hand: Any, pitcher_hand: Any) -> str:
+    b = normalize_hand(batter_hand)
+    p = normalize_hand(pitcher_hand)
+    return f'{b} vs {p}' if b and p else ''
+
+
+def matchup_context_from_batter_row(row: pd.Series, game: dict[str, Any] | None = None, location: str = '') -> dict[str, Any]:
+    """Structured current matchup context for batter rows.
+
+    This mirrors the text in driverSummary but stores it as real JSON fields so
+    the UI and Similarity v2 do not have to parse display text forever.
+    """
+    order = safe_int(row.get('projected_batting_order'))
+    batter_hand = normalize_hand(first_text_from(row, ['batSide','bat_side','stand','batterHand','batter_hand','bats']))
+    pitcher_hand = normalize_hand(first_text_from(row, ['opp_pitch_hand','opposing_pitcher_hand','pitcherHand','starterHand','oppStarterHand','opponentStarterHand','pitchHand']))
+    temp = None
+    for col in ['temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','temperature','temp']:
+        raw = row.get(col) if col in row.index else None
+        temp = f_from_c_or_f(raw, col)
+        if temp is not None:
+            break
+    wind = first_number_from(row, ['wind_speed_10m','windMph','wind_mph','wind','wind_speed'])
+    starter = first_text_from(row, ['opp_starter_name','opposing_starter_name','opponentStarter','starter_name','pitcher_name','opp_pitcher_name'])
+    starter_id = first_text_from(row, ['opp_starter_id','opposing_starter_id','opponentStarterId','pitcher_id','opp_pitcher_id'])
+    park = first_text_from(row, ['park','venue','venueName','venue_name','ballpark','stadium'])
+    pitch_mix = first_text_from(row, ['pitch_mix','pitchMix','starter_pitch_mix','opp_pitch_mix','opposing_pitch_mix']) or pitch_mix_summary_from_row(row)
+    out = {
+        'lineupOrder': order,
+        'batterHand': batter_hand or None,
+        'pitcherHand': pitcher_hand or None,
+        'handednessText': handedness_text(batter_hand, pitcher_hand) or None,
+        'temperatureF': round(temp, 1) if temp is not None else None,
+        'windMph': round(wind, 1) if wind is not None else None,
+        'park': park or None,
+        'location': location or None,
+        'opponentStarterName': starter or None,
+        'opponentStarterId': starter_id or None,
+        'pitchMixSummary': pitch_mix or None,
+        'source': 'build_mlb_props_analyzer_json current row',
+    }
+    return {k: v for k, v in out.items() if v not in [None, '']}
+
+
+def matchup_context_from_pitcher_row(row: pd.Series, game: dict[str, Any] | None = None, location: str = '') -> dict[str, Any]:
+    pitcher_hand = normalize_hand(first_text_from(row, ['pitchHand','pitch_hand','throws','throwingHand','hand']))
+    temp = None
+    for col in ['temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','temperature','temp']:
+        raw = row.get(col) if col in row.index else None
+        temp = f_from_c_or_f(raw, col)
+        if temp is not None:
+            break
+    wind = first_number_from(row, ['wind_speed_10m','windMph','wind_mph','wind','wind_speed'])
+    park = first_text_from(row, ['park','venue','venueName','venue_name','ballpark','stadium'])
+    pitch_mix = first_text_from(row, ['pitch_mix','pitchMix','starter_pitch_mix']) or pitch_mix_summary_from_row(row, pitcher=True)
+    out = {
+        'pitcherHand': pitcher_hand or None,
+        'temperatureF': round(temp, 1) if temp is not None else None,
+        'windMph': round(wind, 1) if wind is not None else None,
+        'park': park or None,
+        'location': location or None,
+        'pitchMixSummary': pitch_mix or None,
+        'source': 'build_mlb_props_analyzer_json current row',
+    }
+    return {k: v for k, v in out.items() if v not in [None, '']}
+
+
+def row_text_source(df: pd.DataFrame, candidates: list[str]) -> pd.Series:
+    out = pd.Series('', index=df.index, dtype='object')
+    for col in candidates:
+        if col not in df.columns:
+            continue
+        vals = df[col].map(clean_str)
+        out = out.where(out.astype(str).str.len() > 0, vals)
+    return out
+
+
+def row_number_source(df: pd.DataFrame, candidates: list[str], fahrenheit: bool = False) -> pd.Series:
+    out = pd.Series(math.nan, index=df.index, dtype='float64')
+    for col in candidates:
+        if col not in df.columns:
+            continue
+        vals = pd.to_numeric(df[col], errors='coerce')
+        if fahrenheit:
+            vals = vals.map(lambda v: f_from_c_or_f(v, col) if pd.notna(v) else math.nan)
+        out = out.where(out.notna(), vals)
+    return out
+
+
+def historical_matchup_fields_from_log_row(g: pd.Series) -> dict[str, Any]:
+    """Fields to copy onto each historical game row when source logs provide them.
+
+    This is intentionally permissive: it preserves any known field names if present,
+    but leaves them blank if the current scraper/model output does not have them yet.
+    """
+    batter_hand = normalize_hand(g.get('batterHand'))
+    pitcher_hand = normalize_hand(g.get('opposingPitcherHand') or g.get('pitcherHand'))
+    temp = safe_float(g.get('temperatureF'))
+    wind = safe_float(g.get('windMph'))
+    out = {
+        'batterHand': batter_hand or None,
+        'pitcherHand': pitcher_hand or None,
+        'opposingPitcherHand': pitcher_hand or None,
+        'handednessText': handedness_text(batter_hand, pitcher_hand) or None,
+        'opposingStarterName': clean_str(g.get('opposingStarterName')) or None,
+        'opposingStarterId': clean_str(g.get('opposingStarterId')) or None,
+        'park': clean_str(g.get('park')) or None,
+        'temperatureF': round(temp, 1) if temp is not None else None,
+        'windMph': round(wind, 1) if wind is not None else None,
+        'pitchMixSummary': clean_str(g.get('pitchMixSummary')) or None,
+    }
+    return {k: v for k, v in out.items() if v not in [None, '']}
 
 def compact_write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -245,9 +429,370 @@ def load_table_latest(base_dir: Path, table: str) -> pd.DataFrame:
         return pd.DataFrame()
     return pd.DataFrame()
 
+
+def parse_wind_mph(value: Any) -> float | None:
+    """Extract wind speed from either a numeric value or text like '19 mph, Out To CF'."""
+    num = safe_float(value)
+    if num is not None:
+        return num
+    text = clean_str(value)
+    if not text:
+        return None
+    m = re.search(r'(-?\d+(?:\.\d+)?)\s*mph', text, re.IGNORECASE)
+    if not m:
+        m = re.search(r'(-?\d+(?:\.\d+)?)', text)
+    return safe_float(m.group(1)) if m else None
+
+
+def first_existing_col(df: pd.DataFrame, candidates: list[str]) -> str | None:
+    for col in candidates:
+        if col in df.columns:
+            return col
+    return None
+
+
+def fill_missing_text(base: pd.Series, fallback: pd.Series) -> pd.Series:
+    base_text = base.map(clean_str) if base is not None else pd.Series('', index=fallback.index, dtype='object')
+    fallback_text = fallback.map(clean_str)
+    return base_text.where(base_text.astype(str).str.len() > 0, fallback_text)
+
+
+def fill_missing_number(base: pd.Series, fallback: pd.Series) -> pd.Series:
+    base_num = pd.to_numeric(base, errors='coerce') if base is not None else pd.Series(math.nan, index=fallback.index, dtype='float64')
+    fallback_num = pd.to_numeric(fallback, errors='coerce')
+    return base_num.where(base_num.notna(), fallback_num)
+
+
+def pitch_mix_summary_from_row(row: Any, pitcher: bool = False) -> str:
+    """Create a compact text summary from the model's numeric pitch-mix fields.
+
+    Similarity v2 only needs a transparent availability marker for now; the next
+    upgrade can use a true vector distance. This summary prevents the UI from
+    claiming pitch-mix is missing when the model output already has pitch-mix
+    factors available on the historical prediction rows.
+    """
+    parts: list[str] = []
+    if not pitcher:
+        mapping = [
+            ('power', 'pitch_mix_matchup_power_score'),
+            ('TB', 'pitch_mix_tb_factor'),
+            ('HR', 'hr_pitch_mix_factor'),
+            ('whiff', 'batter_pitch_mix_whiff_risk'),
+            ('coverage', 'pitch_mix_usage_coverage'),
+            ('types', 'pitch_mix_pitch_types_matched'),
+        ]
+    else:
+        mapping = [
+            ('damage', 'pitcher_pitch_mix_damage_allowed_score'),
+            ('whiff', 'pitcher_pitch_mix_whiff_score'),
+            ('velo', 'pitcher_pitch_mix_velocity_score'),
+            ('movement', 'pitcher_pitch_mix_movement_score'),
+            ('spin', 'pitcher_pitch_mix_spin_score'),
+        ]
+    for label, col in mapping:
+        try:
+            value = row.get(col)
+        except Exception:
+            value = None
+        num = safe_float(value)
+        if num is None:
+            continue
+        if label == 'types':
+            parts.append(f'{int(round(num))} pitch types')
+        elif label == 'coverage':
+            parts.append(f'coverage {num:.0%}' if 0 <= num <= 1.5 else f'coverage {num:.2f}')
+        else:
+            parts.append(f'{label} {num:.2f}')
+    return ' • '.join(parts[:5])
+
+
+def read_csv_context(path: Path, wanted: list[str]) -> pd.DataFrame:
+    if not path or not path.exists():
+        return pd.DataFrame()
+    try:
+        header = pd.read_csv(path, nrows=0).columns.tolist()
+    except Exception:
+        return pd.DataFrame()
+    usecols = [c for c in wanted if c in header]
+    if not usecols:
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path, usecols=usecols, low_memory=False)
+    except Exception:
+        try:
+            return pd.read_csv(path, usecols=usecols)
+        except Exception:
+            return pd.DataFrame()
+
+
+def unique_paths(paths: list[Path | None]) -> list[Path]:
+    out: list[Path] = []
+    seen: set[str] = set()
+    for path in paths:
+        if not path:
+            continue
+        try:
+            key = str(path.resolve()).lower()
+        except Exception:
+            key = str(path).lower()
+        if key in seen or not path.exists():
+            continue
+        seen.add(key)
+        out.append(path)
+    return out
+
+
+def standardize_batter_prediction_context(df: pd.DataFrame, source_name: str = '') -> pd.DataFrame:
+    if df is None or df.empty or 'gamePk' not in df.columns:
+        return pd.DataFrame()
+    id_col = first_existing_col(df, ['player_id', 'batter_id', 'batterId', 'playerId', 'personId', 'mlb_id', 'mlbam_id'])
+    if id_col is None:
+        return pd.DataFrame()
+    out = pd.DataFrame(index=df.index)
+    out['gamePk'] = pd.to_numeric(df['gamePk'], errors='coerce')
+    out['player_id'] = pd.to_numeric(df[id_col], errors='coerce')
+    out = out.dropna(subset=['gamePk', 'player_id']).copy()
+    if out.empty:
+        return pd.DataFrame()
+    src = df.loc[out.index].copy()
+    out['gamePk'] = out['gamePk'].astype(int)
+    out['player_id'] = out['player_id'].astype(int)
+    out['batterHand'] = row_text_source(src, ['batSide','bat_side','stand','batterHand','batter_hand','bats']).map(normalize_hand)
+    out['opposingPitcherHand'] = row_text_source(src, ['opp_pitch_hand','opposing_pitcher_hand','opposing_starter_hand','starterHand','oppStarterHand','opponentStarterHand','pitchHand']).map(normalize_hand)
+    out['opposingStarterName'] = row_text_source(src, ['opposing_starter','opp_starter_name','opposing_starter_name','opponentStarter','starter_name','pitcher_name','opp_pitcher_name'])
+    out['opposingStarterId'] = row_text_source(src, ['opp_starter_id','opposing_starter_id','opponentStarterId','pitcher_id','opp_pitcher_id'])
+    out['park'] = row_text_source(src, ['park','venue','venueName','venue_name','ballpark','stadium'])
+    out['temperatureF'] = row_number_source(src, ['weather_temp_f','temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','apparent_temperature','temperature','temp'], fahrenheit=True)
+    out['windMph'] = row_number_source(src, ['wind_effective_speed','wind_speed_10m','windMph','wind_mph','wind_speed'])
+    text_pitch_mix = row_text_source(src, ['pitch_mix','pitchMix','starter_pitch_mix','opp_pitch_mix','opposing_pitch_mix'])
+    numeric_pitch_mix = src.apply(lambda r: pitch_mix_summary_from_row(r), axis=1)
+    out['pitchMixSummary'] = fill_missing_text(text_pitch_mix, numeric_pitch_mix)
+    out['__source'] = source_name
+    sort_cols = []
+    for c in ['target_game_date', 'forecast_generated_date', 'gameDate']:
+        if c in src.columns:
+            out[f'__sort_{c}'] = pd.to_datetime(src[c], errors='coerce')
+            sort_cols.append(f'__sort_{c}')
+    if sort_cols:
+        out = out.sort_values(['gamePk', 'player_id'] + sort_cols)
+    out = out.groupby(['gamePk', 'player_id'], as_index=False).tail(1)
+    keep = ['gamePk','player_id','batterHand','opposingPitcherHand','opposingStarterName','opposingStarterId','park','temperatureF','windMph','pitchMixSummary','__source']
+    return out[keep].reset_index(drop=True)
+
+
+def standardize_pitcher_prediction_context(df: pd.DataFrame, source_name: str = '') -> pd.DataFrame:
+    if df is None or df.empty or 'gamePk' not in df.columns:
+        return pd.DataFrame()
+    id_col = first_existing_col(df, ['player_id', 'pitcher_id', 'pitcherId', 'playerId', 'personId', 'mlb_id', 'mlbam_id'])
+    if id_col is None:
+        return pd.DataFrame()
+    out = pd.DataFrame(index=df.index)
+    out['gamePk'] = pd.to_numeric(df['gamePk'], errors='coerce')
+    out['player_id'] = pd.to_numeric(df[id_col], errors='coerce')
+    out = out.dropna(subset=['gamePk', 'player_id']).copy()
+    if out.empty:
+        return pd.DataFrame()
+    src = df.loc[out.index].copy()
+    out['gamePk'] = out['gamePk'].astype(int)
+    out['player_id'] = out['player_id'].astype(int)
+    out['pitcherHand'] = row_text_source(src, ['pitchHand','pitch_hand','throws','throwingHand','hand']).map(normalize_hand)
+    out['park'] = row_text_source(src, ['park','venue','venueName','venue_name','ballpark','stadium'])
+    out['temperatureF'] = row_number_source(src, ['weather_temp_f','temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','apparent_temperature','temperature','temp'], fahrenheit=True)
+    out['windMph'] = row_number_source(src, ['wind_effective_speed','wind_speed_10m','windMph','wind_mph','wind_speed'])
+    text_pitch_mix = row_text_source(src, ['pitch_mix','pitchMix','starter_pitch_mix'])
+    numeric_pitch_mix = src.apply(lambda r: pitch_mix_summary_from_row(r, pitcher=True), axis=1)
+    out['pitchMixSummary'] = fill_missing_text(text_pitch_mix, numeric_pitch_mix)
+    out['__source'] = source_name
+    sort_cols = []
+    for c in ['target_game_date', 'forecast_generated_date', 'gameDate']:
+        if c in src.columns:
+            out[f'__sort_{c}'] = pd.to_datetime(src[c], errors='coerce')
+            sort_cols.append(f'__sort_{c}')
+    if sort_cols:
+        out = out.sort_values(['gamePk', 'player_id'] + sort_cols)
+    out = out.groupby(['gamePk', 'player_id'], as_index=False).tail(1)
+    keep = ['gamePk','player_id','pitcherHand','park','temperatureF','windMph','pitchMixSummary','__source']
+    return out[keep].reset_index(drop=True)
+
+
+def build_prediction_context(args: argparse.Namespace, current_csv: Path | None, kind: str) -> pd.DataFrame:
+    if kind == 'batter':
+        history = args.mlb_output_dir / 'history' / 'batter_prediction_history.csv'
+        latest = find_latest('batter_predictions_*.csv', args.mlb_output_dir)
+        sources = unique_paths([history, current_csv, latest])
+        wanted = [
+            'gamePk','player_id','batter_id','batterId','playerId','personId','mlb_id','mlbam_id',
+            'target_game_date','forecast_generated_date','gameDate','team','opponent',
+            'batSide','bat_side','stand','batterHand','batter_hand','bats',
+            'opp_pitch_hand','opposing_pitcher_hand','opposing_starter_hand','starterHand','oppStarterHand','opponentStarterHand','pitchHand',
+            'opposing_starter','opp_starter_name','opposing_starter_name','opponentStarter','starter_name','pitcher_name','opp_pitcher_name',
+            'opp_starter_id','opposing_starter_id','opponentStarterId','pitcher_id','opp_pitcher_id',
+            'park','venue','venueName','venue_name','ballpark','stadium',
+            'weather_temp_f','temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','apparent_temperature','temperature','temp',
+            'wind_effective_speed','wind_speed_10m','windMph','wind_mph','wind_speed',
+            'pitch_mix','pitchMix','starter_pitch_mix','opp_pitch_mix','opposing_pitch_mix',
+            'pitch_mix_matchup_power_score','pitch_mix_tb_factor','hr_pitch_mix_factor','batter_pitch_mix_whiff_risk','pitch_mix_usage_coverage','pitch_mix_pitch_types_matched',
+        ]
+        frames = [standardize_batter_prediction_context(read_csv_context(path, wanted), path.name) for path in sources]
+    else:
+        history = args.mlb_output_dir / 'history' / 'pitcher_prediction_history.csv'
+        latest = find_latest('pitcher_predictions_*.csv', args.mlb_output_dir)
+        sources = unique_paths([history, current_csv, latest])
+        wanted = [
+            'gamePk','player_id','pitcher_id','pitcherId','playerId','personId','mlb_id','mlbam_id',
+            'target_game_date','forecast_generated_date','gameDate','team','opponent',
+            'pitchHand','pitch_hand','throws','throwingHand','hand',
+            'park','venue','venueName','venue_name','ballpark','stadium',
+            'weather_temp_f','temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','apparent_temperature','temperature','temp',
+            'wind_effective_speed','wind_speed_10m','windMph','wind_mph','wind_speed',
+            'pitch_mix','pitchMix','starter_pitch_mix',
+            'pitcher_pitch_mix_damage_allowed_score','pitcher_pitch_mix_whiff_score','pitcher_pitch_mix_velocity_score','pitcher_pitch_mix_movement_score','pitcher_pitch_mix_spin_score',
+        ]
+        frames = [standardize_pitcher_prediction_context(read_csv_context(path, wanted), path.name) for path in sources]
+    frames = [f for f in frames if f is not None and not f.empty]
+    if not frames:
+        return pd.DataFrame()
+    combined = pd.concat(frames, ignore_index=True)
+    combined = combined.sort_values(['gamePk', 'player_id', '__source'])
+    combined = combined.groupby(['gamePk', 'player_id'], as_index=False).tail(1)
+    return combined.reset_index(drop=True)
+
+
+def build_game_context(args: argparse.Namespace) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    games = load_table_latest(args.mlb_data_dir, 'games')
+    if games is not None and not games.empty and 'gamePk' in games.columns:
+        g = pd.DataFrame()
+        g['gamePk'] = pd.to_numeric(games['gamePk'], errors='coerce')
+        g['park'] = row_text_source(games, ['venue_name','venueName','park','ballpark','stadium'])
+        g['temperatureF'] = row_number_source(games, ['weather_temp_f','temperature_f','temperatureF','temp_f','temperature_2m','apparent_temperature'], fahrenheit=True)
+        wind_text = row_text_source(games, ['wind'])
+        wind_num = row_number_source(games, ['wind_mph','windMph','wind_speed_10m','wind_speed'])
+        g['windMph'] = fill_missing_number(wind_num, wind_text.map(parse_wind_mph))
+        frames.append(g)
+    weather = load_table_latest(args.mlb_data_dir, 'game_weather')
+    if weather is not None and not weather.empty and 'gamePk' in weather.columns:
+        w = pd.DataFrame()
+        w['gamePk'] = pd.to_numeric(weather['gamePk'], errors='coerce')
+        w['temperatureF'] = row_number_source(weather, ['weather_temp_f','temperature_f','temperatureF','temperature_2m','apparent_temperature'], fahrenheit=True)
+        w['windMph'] = row_number_source(weather, ['wind_speed_10m','windMph','wind_mph','wind_speed'])
+        frames.append(w)
+    schedule = load_table_latest(args.mlb_data_dir, 'schedule')
+    if schedule is not None and not schedule.empty and 'gamePk' in schedule.columns:
+        sc = pd.DataFrame()
+        sc['gamePk'] = pd.to_numeric(schedule['gamePk'], errors='coerce')
+        sc['park'] = row_text_source(schedule, ['venue_name','venueName','park','ballpark','stadium'])
+        for col in ['away_probable_pitcher','away_probable_pitcher_id','home_probable_pitcher','home_probable_pitcher_id','away_team','home_team']:
+            if col in schedule.columns:
+                sc[col] = schedule[col]
+        frames.append(sc)
+    frames = [f.dropna(subset=['gamePk']).copy() for f in frames if f is not None and not f.empty and 'gamePk' in f.columns]
+    if not frames:
+        return pd.DataFrame()
+    # Outer merge, filling missing values from later sources.
+    base = frames[0]
+    base['gamePk'] = base['gamePk'].astype(int)
+    for extra in frames[1:]:
+        extra['gamePk'] = extra['gamePk'].astype(int)
+        base = base.merge(extra, on='gamePk', how='outer', suffixes=('', '__extra'))
+        for col in list(base.columns):
+            if not col.endswith('__extra'):
+                continue
+            orig = col[:-7]
+            if orig in base.columns:
+                if pd.api.types.is_numeric_dtype(base[orig]) or pd.api.types.is_numeric_dtype(base[col]):
+                    base[orig] = fill_missing_number(base[orig], base[col])
+                else:
+                    base[orig] = fill_missing_text(base[orig], base[col])
+                base = base.drop(columns=[col])
+            else:
+                base = base.rename(columns={col: orig})
+    return base.drop_duplicates(subset=['gamePk']).reset_index(drop=True)
+
+
+def enrich_logs_with_game_context(logs_df: pd.DataFrame, game_context: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    if logs_df is None or logs_df.empty:
+        return logs_df
+    out = logs_df.copy()
+    if 'gamePk' not in out.columns:
+        return out
+    out['gamePk'] = pd.to_numeric(out['gamePk'], errors='coerce')
+    if game_context is None or game_context.empty:
+        return out
+    ctx = game_context.copy()
+    ctx['gamePk'] = pd.to_numeric(ctx['gamePk'], errors='coerce')
+    merged = out.merge(ctx, on='gamePk', how='left', suffixes=('', '__game'))
+    for col in ['park', 'temperatureF', 'windMph']:
+        gcol = f'{col}__game'
+        if gcol in merged.columns:
+            if col in ['temperatureF', 'windMph']:
+                merged[col] = fill_missing_number(merged.get(col), merged[gcol])
+            else:
+                merged[col] = fill_missing_text(merged.get(col), merged[gcol])
+    if player_type == 'batter':
+        is_home = pd.to_numeric(merged.get('isHome'), errors='coerce') if 'isHome' in merged.columns else pd.Series(math.nan, index=merged.index)
+        away_name = merged.get('away_probable_pitcher') if 'away_probable_pitcher' in merged.columns else pd.Series('', index=merged.index)
+        home_name = merged.get('home_probable_pitcher') if 'home_probable_pitcher' in merged.columns else pd.Series('', index=merged.index)
+        away_id = merged.get('away_probable_pitcher_id') if 'away_probable_pitcher_id' in merged.columns else pd.Series('', index=merged.index)
+        home_id = merged.get('home_probable_pitcher_id') if 'home_probable_pitcher_id' in merged.columns else pd.Series('', index=merged.index)
+        opp_name = pd.Series('', index=merged.index, dtype='object')
+        opp_id = pd.Series('', index=merged.index, dtype='object')
+        opp_name = opp_name.where(is_home != 1, away_name).where(is_home == 1, home_name)
+        opp_id = opp_id.where(is_home != 1, away_id).where(is_home == 1, home_id)
+        if 'opposingStarterName' in merged.columns:
+            merged['opposingStarterName'] = fill_missing_text(merged['opposingStarterName'], opp_name)
+        else:
+            merged['opposingStarterName'] = opp_name.map(clean_str)
+        if 'opposingStarterId' in merged.columns:
+            merged['opposingStarterId'] = fill_missing_text(merged['opposingStarterId'], opp_id)
+        else:
+            merged['opposingStarterId'] = opp_id.map(clean_str)
+    drop_cols = [c for c in merged.columns if c.endswith('__game') or c in {'away_probable_pitcher','away_probable_pitcher_id','home_probable_pitcher','home_probable_pitcher_id','away_team','home_team'}]
+    return merged.drop(columns=drop_cols, errors='ignore')
+
+
+def enrich_logs_with_prediction_context(logs_df: pd.DataFrame, pred_context: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    if logs_df is None or logs_df.empty or pred_context is None or pred_context.empty:
+        return logs_df
+    if 'gamePk' not in logs_df.columns or 'player_id' not in logs_df.columns:
+        return logs_df
+    out = logs_df.copy()
+    out['gamePk'] = pd.to_numeric(out['gamePk'], errors='coerce')
+    out['player_id'] = pd.to_numeric(out['player_id'], errors='coerce')
+    ctx = pred_context.copy()
+    ctx['gamePk'] = pd.to_numeric(ctx['gamePk'], errors='coerce')
+    ctx['player_id'] = pd.to_numeric(ctx['player_id'], errors='coerce')
+    merged = out.merge(ctx, on=['gamePk','player_id'], how='left', suffixes=('', '__pred'))
+    if player_type == 'batter':
+        text_cols = ['batterHand','opposingPitcherHand','opposingStarterName','opposingStarterId','park','pitchMixSummary']
+    else:
+        text_cols = ['pitcherHand','park','pitchMixSummary']
+    for col in text_cols:
+        pcol = f'{col}__pred'
+        if pcol in merged.columns:
+            merged[col] = fill_missing_text(merged.get(col), merged[pcol])
+    for col in ['temperatureF', 'windMph']:
+        pcol = f'{col}__pred'
+        if pcol in merged.columns:
+            merged[col] = fill_missing_number(merged.get(col), merged[pcol])
+    drop_cols = [c for c in merged.columns if c.endswith('__pred') or c == '__source']
+    return merged.drop(columns=drop_cols, errors='ignore')
+
+
+def enrich_batter_logs_with_matchup_context(logs_df: pd.DataFrame, pred_context: pd.DataFrame, game_context: pd.DataFrame) -> pd.DataFrame:
+    out = enrich_logs_with_prediction_context(logs_df, pred_context, 'batter')
+    out = enrich_logs_with_game_context(out, game_context, 'batter')
+    return out
+
+
+def enrich_pitcher_logs_with_matchup_context(logs_df: pd.DataFrame, pred_context: pd.DataFrame, game_context: pd.DataFrame) -> pd.DataFrame:
+    out = enrich_logs_with_prediction_context(logs_df, pred_context, 'pitcher')
+    out = enrich_logs_with_game_context(out, game_context, 'pitcher')
+    return out
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Build MLB props analyzer JSON using split detail files.')
-    parser.add_argument('--website-repo', type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument('--website-repo', type=Path, default=Path(__file__).resolve().parent)
     parser.add_argument('--mlb-output-dir', type=Path, default=Path(r'C:\python\mlb_model_outputs'))
     parser.add_argument('--mlb-data-dir', type=Path, default=DEFAULT_MLB_DATA_DIR)
     parser.add_argument('--batter-csv', type=Path)
@@ -364,9 +909,24 @@ def prep_batter_logs(logs_df: pd.DataFrame) -> pd.DataFrame:
             df['rbi'] = pd.to_numeric(df.get(source_rbi), errors='coerce')
     if 'hrr' not in df.columns:
         df['hrr'] = pd.to_numeric(df.get('hits'), errors='coerce').fillna(0) + pd.to_numeric(df.get('runs'), errors='coerce').fillna(0) + pd.to_numeric(df.get('rbi'), errors='coerce').fillna(0)
+
+    # Optional historical matchup context. These columns are not guaranteed in every
+    # local scraper output, but when they are present we preserve them so
+    # Similarity v2 can start scoring handedness/park/weather without another
+    # frontend change. Blank fields are ignored downstream.
+    df['batterHand'] = row_text_source(df, ['batSide','bat_side','stand','batterHand','batter_hand','bats']).map(normalize_hand)
+    df['opposingPitcherHand'] = row_text_source(df, ['opp_pitch_hand','opposing_pitcher_hand','pitcherHand','starterHand','oppStarterHand','opponentStarterHand','pitchHand']).map(normalize_hand)
+    df['opposingStarterName'] = row_text_source(df, ['opp_starter_name','opposing_starter_name','opponentStarter','starter_name','pitcher_name','opp_pitcher_name'])
+    df['opposingStarterId'] = row_text_source(df, ['opp_starter_id','opposing_starter_id','opponentStarterId','pitcher_id','opp_pitcher_id'])
+    df['park'] = row_text_source(df, ['park','venue','venueName','ballpark','stadium'])
+    df['temperatureF'] = row_number_source(df, ['temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','temperature','temp'], fahrenheit=True)
+    df['windMph'] = row_number_source(df, ['wind_speed_10m','windMph','wind_mph','wind','wind_speed'])
+    df['pitchMixSummary'] = row_text_source(df, ['pitch_mix','pitchMix','starter_pitch_mix','opp_pitch_mix','opposing_pitch_mix'])
+
     keep = ['gamePk','player_id','player_name','team','opponent','game_ts','gameDateLocal','isHome','location',
             'batting_order_clean','atBats','plate_appearances','hits','totalBases','doubles','homeRuns','strikeOuts',
-            'baseOnBalls','stolenBases','runs','rbi','hrr']
+            'baseOnBalls','stolenBases','runs','rbi','hrr','batterHand','opposingPitcherHand','opposingStarterName',
+            'opposingStarterId','park','temperatureF','windMph','pitchMixSummary']
     keep = [c for c in keep if c in df.columns]
     return df[keep].sort_values(['player_id', 'game_ts']).reset_index(drop=True)
 
@@ -382,7 +942,7 @@ def choose_best_numeric_source(df: pd.DataFrame, candidates: list[str]) -> pd.Se
             best_series = series
             best_count = count
     if best_series is None:
-        return pd.Series(pd.NA, index=df.index, dtype='float64')
+        return pd.Series(math.nan, index=df.index, dtype='float64')
     return best_series
 
 
@@ -420,8 +980,16 @@ def prep_pitcher_logs(logs_df: pd.DataFrame) -> pd.DataFrame:
     for out_col, candidates in numeric_candidates.items():
         df[out_col] = choose_best_numeric_source(df, candidates)
 
+    # Optional historical context for pitcher prop logs.
+    df['pitcherHand'] = row_text_source(df, ['pitchHand','pitch_hand','throws','throwingHand','hand']).map(normalize_hand)
+    df['park'] = row_text_source(df, ['park','venue','venueName','ballpark','stadium'])
+    df['temperatureF'] = row_number_source(df, ['temperature_f','temperatureF','temp_f','game_temp_f','temperature_2m','temperature','temp'], fahrenheit=True)
+    df['windMph'] = row_number_source(df, ['wind_speed_10m','windMph','wind_mph','wind','wind_speed'])
+    df['pitchMixSummary'] = row_text_source(df, ['pitch_mix','pitchMix','starter_pitch_mix'])
+
     keep = ['gamePk','player_id','player_name','fullName','team','opponent','game_ts','gameDateLocal',
-            'isHome','location','strikeOuts','baseOnBalls','hitsAllowed','earnedRuns','outsRecorded','inningsPitched']
+            'isHome','location','strikeOuts','baseOnBalls','hitsAllowed','earnedRuns','outsRecorded','inningsPitched',
+            'pitcherHand','park','temperatureF','windMph','pitchMixSummary']
     keep = [c for c in keep if c in df.columns]
     return df[keep].sort_values(['player_id', 'game_ts']).reset_index(drop=True)
 
@@ -461,6 +1029,9 @@ def build_historical_games(player_logs: pd.DataFrame, target_ts: pd.Timestamp | 
         }
         if extra_context_col:
             row['contextValue'] = safe_int(g.get(extra_context_col))
+        # Preserve optional historical matchup fields when the source logs have them.
+        # These fields are used by the player-day profile builder for Similarity v2.
+        row.update(historical_matchup_fields_from_log_row(g))
         games.append(row)
 
     scored: list[dict[str, Any]] = []
@@ -565,9 +1136,36 @@ def batter_context_summary(row: pd.Series) -> str:
     opp_hand = clean_str(row.get('opp_pitch_hand'))
     if bat_side and opp_hand:
         parts.append(f'{bat_side} vs {opp_hand}')
-    temp_c = safe_float(row.get('temperature_2m'))
-    if temp_c is not None:
-        parts.append(f'{(temp_c * 9 / 5) + 32:.0f}°F')
+
+    # Use the same unit-aware normalizer as matchupContext.  temperature_2m in
+    # the current MLB pipeline is already Fahrenheit and must not be converted
+    # a second time.
+    temp_f = None
+    for col in [
+        'weather_temp_f',
+        'temperature_f',
+        'temperatureF',
+        'temp_f',
+        'game_temp_f',
+        'temperature_2m',
+        'apparent_temperature',
+        'temperature',
+        'temp',
+        'weather_temp_c',
+        'temperature_c',
+        'temp_c',
+        'game_temp_c',
+    ]:
+        try:
+            raw = row.get(col)
+        except Exception:
+            raw = None
+        temp_f = f_from_c_or_f(raw, col)
+        if temp_f is not None:
+            break
+    if temp_f is not None:
+        parts.append(f'{temp_f:.0f}°F')
+
     wind = safe_float(row.get('wind_speed_10m'))
     if wind is not None:
         parts.append(f'Wind {wind:.0f}')
@@ -590,6 +1188,7 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
     target_ts = display_ts(game.get('gameTs'))
     player_id = safe_int(row.get('player_id'))
     projected_order = safe_int(row.get('projected_batting_order'))
+    matchup_context = matchup_context_from_batter_row(row, game, location)
 
     player_logs = batter_logs_lookup.get(player_id or -1, pd.DataFrame())
     games, similar_games = build_historical_games(
@@ -679,6 +1278,21 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
         'injuryUpdated': '',
         'driverSummary': batter_context_summary(row),
         'boardContext': batter_context_summary(row),
+        'matchupContext': matchup_context,
+        'currentMatchupContext': matchup_context,
+        'lineupSource': clean_str(row.get('lineup_source')),
+        'lineupStatus': clean_str(row.get('lineup_status')),
+        'officialLineup': safe_int(row.get('official_lineup')),
+        'lineupConfirmed': safe_int(row.get('lineup_confirmed')),
+        'lineupPaCertaintyScore': safe_float(row.get('lineup_pa_certainty_score')),
+        'projectedLineupMethod': clean_str(row.get('projected_lineup_method')),
+        'projectedHandStartRate': safe_float(row.get('projected_hand_start_rate')),
+        'projectedHandPaRate': safe_float(row.get('projected_hand_pa_rate')),
+        'projectedHandMatchGames': safe_float(row.get('projected_hand_match_games')),
+        'projectedHandReliability': safe_float(row.get('projected_hand_reliability')),
+        'playerVsOppHandGamesSampleEst': safe_float(row.get('player_vs_opp_hand_games_sample_est')),
+        'playerVsOppHandAbSampleEst': safe_float(row.get('player_vs_opp_hand_ab_sample_est')),
+        'playerVsOppHandSplitConfidence': safe_float(row.get('player_vs_opp_hand_split_confidence')),
     }
 
     entries = []
@@ -731,6 +1345,29 @@ def build_batter_series_and_entries(row: pd.Series, market: dict[str, Any], game
             'driver_summary': batter_context_summary(row),
             'boardDriver': batter_context_summary(row),
             'summary': batter_context_summary(row),
+            'matchupContext': matchup_context,
+            'currentMatchupContext': matchup_context,
+            'batterHand': matchup_context.get('batterHand'),
+            'opposingPitcherHand': matchup_context.get('pitcherHand'),
+            'handednessText': matchup_context.get('handednessText'),
+            'temperatureF': matchup_context.get('temperatureF'),
+            'windMph': matchup_context.get('windMph'),
+            'park': matchup_context.get('park'),
+            'opponentStarterName': matchup_context.get('opponentStarterName'),
+            'opponentStarterId': matchup_context.get('opponentStarterId'),
+            'lineupSource': clean_str(row.get('lineup_source')),
+            'lineupStatus': clean_str(row.get('lineup_status')),
+            'officialLineup': safe_int(row.get('official_lineup')),
+            'lineupConfirmed': safe_int(row.get('lineup_confirmed')),
+            'lineupPaCertaintyScore': safe_float(row.get('lineup_pa_certainty_score')),
+            'projectedLineupMethod': clean_str(row.get('projected_lineup_method')),
+            'projectedHandStartRate': safe_float(row.get('projected_hand_start_rate')),
+            'projectedHandPaRate': safe_float(row.get('projected_hand_pa_rate')),
+            'projectedHandMatchGames': safe_float(row.get('projected_hand_match_games')),
+            'projectedHandReliability': safe_float(row.get('projected_hand_reliability')),
+            'playerVsOppHandGamesSampleEst': safe_float(row.get('player_vs_opp_hand_games_sample_est')),
+            'playerVsOppHandAbSampleEst': safe_float(row.get('player_vs_opp_hand_ab_sample_est')),
+            'playerVsOppHandSplitConfidence': safe_float(row.get('player_vs_opp_hand_split_confidence')),
             'hit_r5': hit_r5,
             'hit_r10': hit_r10,
             'hit_r25': hit_r20,
@@ -757,6 +1394,7 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
     game_date = clean_str(game.get('gameDate'))
     target_ts = display_ts(game.get('gameTs'))
     player_id = safe_int(row.get('player_id'))
+    matchup_context = matchup_context_from_pitcher_row(row, game, location)
 
     player_logs = pitcher_logs_lookup.get(player_id or -1, pd.DataFrame())
     minutes_col = 'outsRecorded' if market['stat'] == 'OUTS' else 'inningsPitched'
@@ -842,6 +1480,28 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
         'injuryUpdated': '',
         'driverSummary': f'Projected {pred:.1f} {market["display"].lower()} • projected {workload_value or 0:.1f} {market["context_label"]}',
         'boardContext': f'{team} vs {opp} • {clean_str(row.get("pitchHand"))}',
+        'matchupContext': matchup_context,
+        'currentMatchupContext': matchup_context,
+        'pitcherRoleType': clean_str(row.get('pitcher_role_type')),
+        'starterRoleScenario': clean_str(row.get('starter_role_scenario')),
+        'starterRoleUncertaintyScore': safe_float(row.get('starter_role_uncertainty_score')),
+        'starterRoleScenarioConfidence': safe_float(row.get('starter_role_scenario_confidence')),
+        'workloadScenarioMeanOuts': safe_float(row.get('workload_scenario_mean_outs')),
+        'roleExpectedOuts': safe_float(row.get('role_expected_outs')),
+        'roleOutsLeashCap': safe_float(row.get('role_outs_leash_cap')),
+        'predictionConfidenceScore': safe_float(row.get('prediction_confidence_score')),
+        'predictionConfidenceTier': clean_str(row.get('prediction_confidence_tier')),
+        'prob15PlusOuts': safe_float(row.get('prob_15plus_outs')),
+        'prob18PlusOuts': safe_float(row.get('prob_18plus_outs')),
+        'prob21PlusOuts': safe_float(row.get('prob_21plus_outs')),
+        'probKOver3p5': safe_float(row.get('prob_k_over_3p5')),
+        'probKOver4p5': safe_float(row.get('prob_k_over_4p5')),
+        'probKOver5p5': safe_float(row.get('prob_k_over_5p5')),
+        'probKOver6p5': safe_float(row.get('prob_k_over_6p5')),
+        'pitcherErProb01': safe_float(row.get('pitcher_er_prob_0_1')),
+        'pitcherErProb23': safe_float(row.get('pitcher_er_prob_2_3')),
+        'pitcherErProb4Plus': safe_float(row.get('pitcher_er_prob_4plus')),
+        'pitcherErRiskBucket': clean_str(row.get('pitcher_er_risk_bucket_individual')),
     }
 
     entries = []
@@ -895,6 +1555,32 @@ def build_pitcher_series_and_entries(row: pd.Series, market: dict[str, Any], gam
             'driver_summary': series['driverSummary'],
             'boardDriver': series['boardContext'],
             'summary': series['driverSummary'],
+            'matchupContext': matchup_context,
+            'currentMatchupContext': matchup_context,
+            'pitcherHand': matchup_context.get('pitcherHand'),
+            'temperatureF': matchup_context.get('temperatureF'),
+            'windMph': matchup_context.get('windMph'),
+            'park': matchup_context.get('park'),
+            'pitcherRoleType': clean_str(row.get('pitcher_role_type')),
+            'starterRoleScenario': clean_str(row.get('starter_role_scenario')),
+            'starterRoleUncertaintyScore': safe_float(row.get('starter_role_uncertainty_score')),
+            'starterRoleScenarioConfidence': safe_float(row.get('starter_role_scenario_confidence')),
+            'workloadScenarioMeanOuts': safe_float(row.get('workload_scenario_mean_outs')),
+            'roleExpectedOuts': safe_float(row.get('role_expected_outs')),
+            'roleOutsLeashCap': safe_float(row.get('role_outs_leash_cap')),
+            'predictionConfidenceScore': safe_float(row.get('prediction_confidence_score')),
+            'predictionConfidenceTier': clean_str(row.get('prediction_confidence_tier')),
+            'prob15PlusOuts': safe_float(row.get('prob_15plus_outs')),
+            'prob18PlusOuts': safe_float(row.get('prob_18plus_outs')),
+            'prob21PlusOuts': safe_float(row.get('prob_21plus_outs')),
+            'probKOver3p5': safe_float(row.get('prob_k_over_3p5')),
+            'probKOver4p5': safe_float(row.get('prob_k_over_4p5')),
+            'probKOver5p5': safe_float(row.get('prob_k_over_5p5')),
+            'probKOver6p5': safe_float(row.get('prob_k_over_6p5')),
+            'pitcherErProb01': safe_float(row.get('pitcher_er_prob_0_1')),
+            'pitcherErProb23': safe_float(row.get('pitcher_er_prob_2_3')),
+            'pitcherErProb4Plus': safe_float(row.get('pitcher_er_prob_4plus')),
+            'pitcherErRiskBucket': clean_str(row.get('pitcher_er_risk_bucket_individual')),
             'hit_r5': None,
             'hit_r10': None,
             'hit_r25': None,
@@ -951,6 +1637,15 @@ def main() -> int:
 
     batter_logs_df = prep_batter_logs(load_table_latest(args.mlb_data_dir, 'batter_game_logs'))
     pitcher_logs_df = prep_pitcher_logs(load_table_latest(args.mlb_data_dir, 'pitcher_game_logs'))
+
+    # Step 10: enrich historical game-log rows with matchup context that already
+    # exists in model-output history/current files and game/schedule/weather tables.
+    # This fills the historical fields that Similarity v2 is designed to score.
+    game_context_df = build_game_context(args)
+    batter_prediction_context = build_prediction_context(args, batter_csv, 'batter') if batter_csv and batter_csv.exists() else pd.DataFrame()
+    pitcher_prediction_context = build_prediction_context(args, pitcher_csv, 'pitcher') if pitcher_csv and pitcher_csv.exists() else pd.DataFrame()
+    batter_logs_df = enrich_batter_logs_with_matchup_context(batter_logs_df, batter_prediction_context, game_context_df)
+    pitcher_logs_df = enrich_pitcher_logs_with_matchup_context(pitcher_logs_df, pitcher_prediction_context, game_context_df)
 
     batter_logs_lookup: dict[int, pd.DataFrame] = {}
     if not batter_logs_df.empty:
