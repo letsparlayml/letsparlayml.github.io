@@ -1,6 +1,6 @@
 {
   "schemaVersion": "mlb-player-day-profile-v4",
-  "generatedAt": "2026-06-26T15:18:39+00:00",
+  "generatedAt": "2026-06-27T11:52:35+00:00",
   "gameDate": "2026-07-02",
   "profileKey": "695681",
   "sourceFileKey": "695681",
@@ -15,20 +15,20 @@
   "injuryStatus": "",
   "injuryNote": "",
   "injuryUpdated": "",
-  "boardContext": "Order 8 • R vs R • 136°F • Wind 5",
-  "driverSummary": "Order 8 • R vs R • 136°F • Wind 5",
+  "boardContext": "Order 8 • R vs R • 155°F • Wind 9",
+  "driverSummary": "Order 8 • R vs R • 155°F • Wind 9",
   "matchupContext": {
-    "raw": "Order 8 • R vs R • 136°F • Wind 5",
+    "raw": "Order 8 • R vs R • 155°F • Wind 9",
     "lineupOrder": 8,
     "lineupBand": "bottom-third lineup",
     "batterHand": "R",
     "pitcherHand": "R",
     "handednessText": "R vs R",
     "handednessBucket": "same-side matchup",
-    "temperatureF": 135.5,
-    "temperatureBucket": "hot environment",
-    "windMph": 5.1,
-    "windBucket": "low wind",
+    "temperatureF": 68.1,
+    "temperatureBucket": "mild/cool environment",
+    "windMph": 8.6,
+    "windBucket": "moderate wind",
     "currentFeatures": [
       {
         "key": "lineupOrder",
@@ -47,15 +47,15 @@
       {
         "key": "temperature",
         "label": "Temperature",
-        "value": "136°F",
-        "note": "hot environment",
+        "value": "68°F",
+        "note": "mild/cool environment",
         "available": true
       },
       {
         "key": "wind",
         "label": "Wind",
-        "value": "5 mph",
-        "note": "low wind",
+        "value": "9 mph",
+        "note": "moderate wind",
         "available": true
       },
       {
@@ -76,8 +76,8 @@
     "summaryPieces": [
       "Order 8",
       "R vs R",
-      "136°F",
-      "Wind 5"
+      "68°F",
+      "Wind 9"
     ],
     "parsedFrom": "driverSummary/boardContext",
     "featureCoverage": {
@@ -128,15 +128,15 @@
       {
         "key": "temperature",
         "label": "Temperature",
-        "value": "136°F",
-        "note": "hot environment",
+        "value": "68°F",
+        "note": "mild/cool environment",
         "available": true
       },
       {
         "key": "wind",
         "label": "Wind",
-        "value": "5 mph",
-        "note": "low wind",
+        "value": "9 mph",
+        "note": "moderate wind",
         "available": true
       },
       {
@@ -157,8 +157,8 @@
     "summaryPieces": [
       "Order 8",
       "R vs R",
-      "136°F",
-      "Wind 5"
+      "68°F",
+      "Wind 9"
     ],
     "featureCoverage": {
       "lineupOrder": true,
@@ -168,8 +168,8 @@
       "currentPark": true,
       "currentStarter": false,
       "currentPitchMix": true,
-      "historicalHandedness": false,
-      "historicalPitchMix": false,
+      "historicalHandedness": true,
+      "historicalPitchMix": true,
       "historicalPark": true,
       "historicalWeather": true,
       "sameOpponent": true,
@@ -184,17 +184,11 @@
     "similarityReadiness": {
       "currentContextReady": true,
       "canScoreCurrentHandedness": true,
-      "canScoreHistoricalHandedness": false,
-      "canScorePitchMix": false,
-      "nextRequiredInputs": [
-        "historical batter hand and pitcher hand per game-log row",
-        "pitch mix / pitch-type profile by opposing starter"
-      ]
+      "canScoreHistoricalHandedness": true,
+      "canScorePitchMix": true,
+      "nextRequiredInputs": []
     },
-    "missingForTrueSimilarity": [
-      "historical handedness",
-      "pitch mix"
-    ]
+    "missingForTrueSimilarity": []
   },
   "availableStats": [
     "H",
@@ -214,8 +208,8 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.712041664910236,
-      "modelPredDisplay": "0.71",
+      "modelPred": 0.7284884882850027,
+      "modelPredDisplay": "0.73",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
       "contextMetricValue": 8.0,
@@ -225,37 +219,37 @@
         "r10": null,
         "r5": null
       },
-      "recent5Avg": 0.8,
-      "allGamesAvg": 0.8,
+      "recent5Avg": 0.6,
+      "allGamesAvg": 0.6667,
       "comparisonLine": null,
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.4846927516992041,
-          "probabilityDisplay": "48.5%",
+          "probability": 0.4891943492080568,
+          "probabilityDisplay": "48.9%",
           "side": null,
           "href": null,
           "sourceScore": null
         },
         {
           "line": 1.5,
-          "probability": 0.16000139722272422,
-          "probabilityDisplay": "16.0%",
+          "probability": 0.16576585604031213,
+          "probabilityDisplay": "16.6%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
-        "avgValue": 0.8,
-        "maxSimScore": 37.0,
+        "count": 6,
+        "avgValue": 0.6667,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -266,7 +260,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -274,45 +268,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 1.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 1.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
-        "avgValue": 0.8,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "count": 6,
+        "totalHistoricalRows": 6,
+        "avgValue": 0.6667,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -325,17 +319,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -356,16 +396,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -373,7 +413,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -382,8 +421,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -406,16 +445,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -423,6 +462,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -431,8 +471,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -455,16 +495,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -472,16 +512,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -504,22 +545,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -529,8 +571,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -553,16 +595,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -578,8 +620,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -604,16 +646,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -621,6 +663,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -629,8 +672,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -653,16 +696,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -670,16 +713,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -702,16 +746,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -719,7 +763,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -728,8 +771,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -752,22 +795,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -777,8 +821,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -801,16 +845,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -826,9 +870,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -840,8 +933,8 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.9517535694814192,
-      "modelPredDisplay": "0.95",
+      "modelPred": 0.9601164096326288,
+      "modelPredDisplay": "0.96",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
       "contextMetricValue": 8.0,
@@ -851,17 +944,17 @@
         "r10": null,
         "r5": null
       },
-      "recent5Avg": 0.8,
-      "allGamesAvg": 0.8,
+      "recent5Avg": 0.6,
+      "allGamesAvg": 0.6667,
       "comparisonLine": null,
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 1.5,
-          "probability": 0.1995046597957731,
+          "probability": 0.2000925450593736,
           "probabilityDisplay": "20.0%",
           "side": null,
           "href": null,
@@ -869,19 +962,19 @@
         },
         {
           "line": 2.5,
-          "probability": 0.07164444132502656,
-          "probabilityDisplay": "7.2%",
+          "probability": 0.07311344189771674,
+          "probabilityDisplay": "7.3%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
-        "avgValue": 0.8,
-        "maxSimScore": 37.0,
+        "count": 6,
+        "avgValue": 0.6667,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -892,7 +985,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -900,45 +993,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 1.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 1.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
-        "avgValue": 0.8,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "count": 6,
+        "totalHistoricalRows": 6,
+        "avgValue": 0.6667,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -951,17 +1044,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -982,16 +1121,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -999,7 +1138,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -1008,8 +1146,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -1032,16 +1170,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -1049,6 +1187,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -1057,8 +1196,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -1081,16 +1220,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -1098,16 +1237,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -1130,22 +1270,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -1155,8 +1296,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -1179,16 +1320,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -1204,8 +1345,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -1230,16 +1371,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -1247,6 +1388,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -1255,8 +1397,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -1279,16 +1421,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -1296,16 +1438,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -1328,16 +1471,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -1345,7 +1488,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -1354,8 +1496,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -1378,22 +1520,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -1403,8 +1546,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -1427,16 +1570,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -1452,9 +1595,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -1466,7 +1658,7 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 1.13341747045645,
+      "modelPred": 1.134407756822148,
       "modelPredDisplay": "1.13",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
@@ -1477,17 +1669,17 @@
         "r10": null,
         "r5": null
       },
-      "recent5Avg": 1.0,
-      "allGamesAvg": 1.0,
+      "recent5Avg": 0.8,
+      "allGamesAvg": 0.8333,
       "comparisonLine": null,
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.6780688159655066,
+          "probability": 0.6783874622261847,
           "probabilityDisplay": "67.8%",
           "side": null,
           "href": null,
@@ -1495,7 +1687,7 @@
         },
         {
           "line": 1.5,
-          "probability": 0.3288457070808853,
+          "probability": 0.3292250899185283,
           "probabilityDisplay": "32.9%",
           "side": null,
           "href": null,
@@ -1503,19 +1695,19 @@
         },
         {
           "line": 2.5,
-          "probability": 0.10640432826451163,
-          "probabilityDisplay": "10.6%",
+          "probability": 0.10660917920800705,
+          "probabilityDisplay": "10.7%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
-        "avgValue": 1.0,
-        "maxSimScore": 37.0,
+        "count": 6,
+        "avgValue": 0.8333,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -1526,7 +1718,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -1534,45 +1726,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 1.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 1.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
-        "avgValue": 1.0,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "count": 6,
+        "totalHistoricalRows": 6,
+        "avgValue": 0.8333,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -1585,17 +1777,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -1616,16 +1854,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -1633,7 +1871,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -1642,8 +1879,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -1666,16 +1903,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -1683,6 +1920,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -1691,8 +1929,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -1715,16 +1953,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -1732,16 +1970,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -1764,22 +2003,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -1789,8 +2029,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -1813,16 +2053,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -1838,8 +2078,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -1864,16 +2104,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -1881,6 +2121,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -1889,8 +2130,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -1913,16 +2154,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -1930,16 +2171,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -1962,16 +2204,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -1979,7 +2221,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -1988,8 +2229,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -2012,22 +2253,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -2037,8 +2279,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -2061,16 +2303,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -2086,9 +2328,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -2100,7 +2391,7 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.038857198660607,
+      "modelPred": 0.03691617912297784,
       "modelPredDisplay": "0.04",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
@@ -2117,23 +2408,23 @@
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.03651430095544861,
-          "probabilityDisplay": "3.7%",
+          "probability": 0.03452400995225924,
+          "probabilityDisplay": "3.5%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
+        "count": 6,
         "avgValue": 0.0,
-        "maxSimScore": 37.0,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -2144,7 +2435,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -2152,45 +2443,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 0.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 0.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
+        "count": 6,
+        "totalHistoricalRows": 6,
         "avgValue": 0.0,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -2203,17 +2494,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -2234,16 +2571,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -2251,7 +2588,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -2260,8 +2596,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -2284,16 +2620,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -2301,6 +2637,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -2309,8 +2646,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -2333,16 +2670,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -2350,16 +2687,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -2382,22 +2720,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -2407,8 +2746,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -2431,16 +2770,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -2456,8 +2795,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -2482,16 +2821,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -2499,6 +2838,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -2507,8 +2847,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -2531,16 +2871,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -2548,16 +2888,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -2580,16 +2921,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -2597,7 +2938,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -2606,8 +2946,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -2630,22 +2970,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -2655,8 +2996,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -2679,16 +3020,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -2704,9 +3045,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -2718,7 +3108,7 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.07243960402531971,
+      "modelPred": 0.07140419827554109,
       "modelPredDisplay": "0.07",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
@@ -2735,23 +3125,23 @@
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.06585113985917268,
-          "probabilityDisplay": "6.6%",
+          "probability": 0.06439457767315537,
+          "probabilityDisplay": "6.4%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
+        "count": 6,
         "avgValue": 0.0,
-        "maxSimScore": 37.0,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -2762,7 +3152,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -2770,45 +3160,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 0.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 0.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
+        "count": 6,
+        "totalHistoricalRows": 6,
         "avgValue": 0.0,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -2821,17 +3211,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -2852,16 +3288,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -2869,7 +3305,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -2878,8 +3313,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -2902,16 +3337,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -2919,6 +3354,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -2927,8 +3363,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -2951,16 +3387,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -2968,16 +3404,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -3000,22 +3437,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -3025,8 +3463,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -3049,16 +3487,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -3074,8 +3512,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -3100,16 +3538,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -3117,6 +3555,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -3125,8 +3564,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -3149,16 +3588,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -3166,16 +3605,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -3198,16 +3638,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -3215,7 +3655,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -3224,8 +3663,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -3248,22 +3687,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -3273,8 +3713,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -3297,16 +3737,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -3322,9 +3762,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -3336,7 +3825,7 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.2744903992616592,
+      "modelPred": 0.2729141152122749,
       "modelPredDisplay": "0.27",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
@@ -3348,24 +3837,24 @@
         "r5": null
       },
       "recent5Avg": 0.2,
-      "allGamesAvg": 0.2,
+      "allGamesAvg": 0.1667,
       "comparisonLine": null,
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.2315682973045536,
-          "probabilityDisplay": "23.2%",
+          "probability": 0.2308533222318844,
+          "probabilityDisplay": "23.1%",
           "side": null,
           "href": null,
           "sourceScore": null
         },
         {
           "line": 1.5,
-          "probability": 0.0314391678306134,
+          "probability": 0.03111103839132978,
           "probabilityDisplay": "3.1%",
           "side": null,
           "href": null,
@@ -3373,11 +3862,11 @@
         }
       ],
       "similarity": {
-        "count": 5,
-        "avgValue": 0.2,
-        "maxSimScore": 37.0,
+        "count": 6,
+        "avgValue": 0.1667,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -3388,7 +3877,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -3396,45 +3885,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 0.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 1.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
-        "avgValue": 0.2,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "count": 6,
+        "totalHistoricalRows": 6,
+        "avgValue": 0.1667,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -3447,17 +3936,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -3478,16 +4013,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -3495,7 +4030,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -3504,8 +4038,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -3528,16 +4062,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -3545,6 +4079,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -3553,8 +4088,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -3577,16 +4112,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -3594,16 +4129,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -3626,22 +4162,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -3651,8 +4188,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -3675,16 +4212,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -3700,8 +4237,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -3726,16 +4263,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -3743,6 +4280,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -3751,8 +4289,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -3775,16 +4313,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -3792,16 +4330,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -3824,16 +4363,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -3841,7 +4380,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -3850,8 +4388,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -3874,22 +4412,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -3899,8 +4438,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -3923,16 +4462,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -3948,9 +4487,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -3962,8 +4550,8 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.9447257216339858,
-      "modelPredDisplay": "0.94",
+      "modelPred": 1.201226558214367,
+      "modelPredDisplay": "1.20",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
       "contextMetricValue": 8.0,
@@ -3973,45 +4561,45 @@
         "r10": null,
         "r5": null
       },
-      "recent5Avg": 2.0,
-      "allGamesAvg": 2.0,
+      "recent5Avg": 1.6,
+      "allGamesAvg": 1.8333,
       "comparisonLine": null,
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.6612916747540769,
-          "probabilityDisplay": "66.1%",
+          "probability": 0.7537930401158657,
+          "probabilityDisplay": "75.4%",
           "side": null,
           "href": null,
           "sourceScore": null
         },
         {
           "line": 1.5,
-          "probability": 0.24391749235585458,
-          "probabilityDisplay": "24.4%",
+          "probability": 0.3378160070877758,
+          "probabilityDisplay": "33.8%",
           "side": null,
           "href": null,
           "sourceScore": null
         },
         {
           "line": 2.5,
-          "probability": 0.07042035389314583,
-          "probabilityDisplay": "7.0%",
+          "probability": 0.12077900111362438,
+          "probabilityDisplay": "12.1%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
-        "avgValue": 2.0,
-        "maxSimScore": 37.0,
+        "count": 6,
+        "avgValue": 1.8333,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -4022,7 +4610,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 1.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -4030,45 +4618,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 3.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 4.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 1.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 0.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 2.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
-        "avgValue": 2.0,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "count": 6,
+        "totalHistoricalRows": 6,
+        "avgValue": 1.8333,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -4081,17 +4669,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -4112,16 +4746,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -4129,7 +4763,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -4138,8 +4771,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -4162,16 +4795,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -4179,6 +4812,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -4187,8 +4821,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -4211,16 +4845,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -4228,16 +4862,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -4260,22 +4895,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -4285,8 +4921,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -4309,16 +4945,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -4334,8 +4970,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -4360,16 +4996,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -4377,6 +5013,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -4385,8 +5022,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -4409,16 +5046,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -4426,16 +5063,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -4458,16 +5096,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -4475,7 +5113,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -4484,8 +5121,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -4508,22 +5145,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -4533,8 +5171,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -4557,16 +5195,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -4582,9 +5220,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 1.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -4596,7 +5283,7 @@
       "sampleType": "historical_games",
       "recentWindow": 15,
       "playerType": "batter",
-      "modelPred": 0.07018176440678725,
+      "modelPred": 0.07350258014607983,
       "modelPredDisplay": "0.07",
       "modelSigma": null,
       "contextMetricLabel": "Projected lineup spot",
@@ -4613,23 +5300,23 @@
       "comparisonLineSource": null,
       "comparisonProbability": null,
       "comparisonMode": "listed_line",
-      "gameCount": 5,
+      "gameCount": 6,
       "lineOptions": [
         {
           "line": 0.5,
-          "probability": 0.06763771352030583,
-          "probabilityDisplay": "6.8%",
+          "probability": 0.07064327599107932,
+          "probabilityDisplay": "7.1%",
           "side": null,
           "href": null,
           "sourceScore": null
         }
       ],
       "similarity": {
-        "count": 5,
+        "count": 6,
         "avgValue": 0.0,
-        "maxSimScore": 37.0,
+        "maxSimScore": 36.0,
         "bins": {
-          "Close 25%": 1,
+          "Close 25%": 2,
           "Closest 25%": 1,
           "Far 25%": 2,
           "Mid 25%": 1
@@ -4640,7 +5327,7 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 37.0,
+            "simScore": 36.0,
             "simPct": 100.0
           },
           {
@@ -4648,45 +5335,45 @@
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 34.0,
-            "simPct": 80.0
+            "simScore": 33.0,
+            "simPct": 83.3
           },
           {
             "gameDate": "2026-06-19",
             "opp": "OAK",
             "location": "Away",
             "value": 0.0,
-            "simScore": 31.0,
-            "simPct": 60.0
+            "simScore": 30.0,
+            "simPct": 66.7
+          },
+          {
+            "gameDate": "2026-06-26",
+            "opp": "OAK",
+            "location": "Home",
+            "value": 0.0,
+            "simScore": 25.0,
+            "simPct": 50.0
           },
           {
             "gameDate": "2026-06-23",
             "opp": "BAL",
             "location": "Home",
             "value": 0.0,
-            "simScore": 23.0,
-            "simPct": 40.0
-          },
-          {
-            "gameDate": "2026-06-24",
-            "opp": "BAL",
-            "location": "Home",
-            "value": 0.0,
-            "simScore": 16.0,
-            "simPct": 20.0
+            "simScore": 22.0,
+            "simPct": 33.3
           }
         ]
       },
       "similarityV2": {
         "method": "available-feature-similarity-v2",
         "description": "Ranks historical rows using available fields: opponent, home/away, lineup/context, AB/IP sample, recency, and optional historical handedness/park/weather/pitch-mix fields when present. Score is capped at 100.",
-        "count": 5,
-        "totalHistoricalRows": 5,
+        "count": 6,
+        "totalHistoricalRows": 6,
         "avgValue": 0.0,
-        "avgScore": 62.16,
-        "maxScore": 71.97,
+        "avgScore": 68.98,
+        "maxScore": 79.7,
         "bins": {
-          "Good v2": 3,
+          "Good v2": 4,
           "Partial v2": 2
         },
         "featureCoverage": {
@@ -4699,17 +5386,63 @@
           "currentPark": true,
           "currentWeather": true,
           "currentPitchMix": true,
-          "historicalHandedness": false,
-          "historicalPitchMix": false,
+          "historicalHandedness": true,
+          "historicalPitchMix": true,
           "historicalWeather": true,
           "historicalPark": true,
           "historicalStarter": true
         },
-        "warnings": [
-          "Current handedness is structured, but historical game rows still do not include batter/pitcher hand.",
-          "Current pitch mix is structured, but historical pitch-mix rows are not available yet."
-        ],
+        "warnings": [],
         "topGames": [
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
+          },
           {
             "gameKey": "id:824987",
             "gameId": 824987,
@@ -4730,16 +5463,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -4747,7 +5480,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -4756,8 +5488,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -4780,16 +5512,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -4797,6 +5529,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -4805,8 +5538,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -4829,16 +5562,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -4846,16 +5579,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -4878,22 +5612,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -4903,8 +5638,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -4927,16 +5662,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -4952,8 +5687,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
           }
         ],
@@ -4978,16 +5713,16 @@
             "temperatureF": 75.0,
             "windMph": 15.0,
             "pitchMixSummary": null,
-            "simScoreV2": 67.79,
-            "simPctV2": 67.79,
+            "simScoreV2": 73.58,
+            "simPctV2": 73.58,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 0.7,
+              "temperatureSimilarity": 4.62,
+              "windSimilarity": 1.87,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 19.09,
@@ -4995,6 +5730,7 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (75°F)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (14d)"
@@ -5003,8 +5739,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 67.79,
-            "simPct": 67.79,
+            "simScore": 73.58,
+            "simPct": 73.58,
             "simBin": "Good v2"
           },
           {
@@ -5027,16 +5763,16 @@
             "temperatureF": 77.0,
             "windMph": 11.0,
             "pitchMixSummary": null,
-            "simScoreV2": 65.54,
-            "simPctV2": 65.54,
+            "simScoreV2": 70.93,
+            "simPctV2": 70.93,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.03,
+              "temperatureSimilarity": 4.22,
+              "windSimilarity": 3.2,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 19.51,
@@ -5044,16 +5780,17 @@
             },
             "simReasonsV2": [
               "same location Away",
+              "similar temperature (77°F)",
+              "similar wind (11 mph)",
               "similar lineup/context (5 vs 8)",
-              "usable AB sample (4)",
-              "recent sample (13d)"
+              "usable AB sample (4)"
             ],
             "simMissingV2": [
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 65.54,
-            "simPct": 65.54,
+            "simScore": 70.93,
+            "simPct": 70.93,
             "simBin": "Good v2"
           },
           {
@@ -5076,16 +5813,16 @@
             "temperatureF": 83.0,
             "windMph": 4.0,
             "pitchMixSummary": null,
-            "simScoreV2": 71.97,
-            "simPctV2": 71.97,
+            "simScoreV2": 73.83,
+            "simPctV2": 73.83,
             "simBinV2": "Good v2",
             "simTierV2": "Good match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 18.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.63,
+              "temperatureSimilarity": 3.02,
+              "windSimilarity": 2.47,
               "lineupOrContext": 10.0,
               "sampleContext": 8.0,
               "recency": 20.34,
@@ -5093,7 +5830,6 @@
             },
             "simReasonsV2": [
               "same location Away",
-              "similar wind (4 mph)",
               "similar lineup/context (6 vs 8)",
               "usable AB sample (4)",
               "recent sample (11d)"
@@ -5102,8 +5838,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 71.97,
-            "simPct": 71.97,
+            "simScore": 73.83,
+            "simPct": 73.83,
             "simBin": "Good v2"
           },
           {
@@ -5126,22 +5862,23 @@
             "temperatureF": 73.0,
             "windMph": 8.0,
             "pitchMixSummary": null,
-            "simScoreV2": 55.2,
-            "simPctV2": 55.2,
+            "simScoreV2": 60.99,
+            "simPctV2": 60.99,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 3.03,
+              "temperatureSimilarity": 5.02,
+              "windSimilarity": 3.8,
               "lineupOrContext": 14.0,
               "sampleContext": 5.0,
               "recency": 21.17,
               "hasResult": 12.0
             },
             "simReasonsV2": [
+              "similar temperature (73°F)",
               "similar wind (8 mph)",
               "similar lineup/context (7 vs 8)",
               "usable AB sample (3)",
@@ -5151,8 +5888,8 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 55.2,
-            "simPct": 55.2,
+            "simScore": 60.99,
+            "simPct": 60.99,
             "simBin": "Partial v2"
           },
           {
@@ -5175,16 +5912,16 @@
             "temperatureF": 81.0,
             "windMph": 9.0,
             "pitchMixSummary": null,
-            "simScoreV2": 50.28,
-            "simPctV2": 50.28,
+            "simScoreV2": 54.87,
+            "simPctV2": 54.87,
             "simBinV2": "Partial v2",
             "simTierV2": "Partial match",
             "simComponentsV2": {
               "sameOpponent": 0.0,
               "sameLocation": 0.0,
               "samePark": 0.0,
-              "temperatureSimilarity": 0.0,
-              "windSimilarity": 2.7,
+              "temperatureSimilarity": 3.42,
+              "windSimilarity": 3.87,
               "lineupOrContext": 6.0,
               "sampleContext": 8.0,
               "recency": 21.58,
@@ -5200,9 +5937,58 @@
               "historical handedness",
               "historical pitch mix"
             ],
-            "simScore": 50.28,
-            "simPct": 50.28,
+            "simScore": 54.87,
+            "simPct": 54.87,
             "simBin": "Partial v2"
+          },
+          {
+            "gameKey": "id:824014",
+            "gameId": 824014,
+            "gameDate": "2026-06-26",
+            "label": "2026-06-26",
+            "shortLabel": "06-26",
+            "seq": 6,
+            "opp": "OAK",
+            "location": "Home",
+            "isHome": 1,
+            "value": 0.0,
+            "minutes": 1.0,
+            "contextValue": 9.0,
+            "batterHand": "R",
+            "pitcherHand": "R",
+            "handednessText": "R vs R",
+            "park": "Angel Stadium",
+            "temperatureF": 67.1,
+            "windMph": 8.3,
+            "pitchMixSummary": "power 1.00 • TB 1.00 • HR 1.00 • whiff 1.00 • coverage 0%",
+            "simScoreV2": 79.7,
+            "simPctV2": 79.7,
+            "simBinV2": "Good v2",
+            "simTierV2": "Good match",
+            "simComponentsV2": {
+              "sameOpponent": 0.0,
+              "sameLocation": 0.0,
+              "sameHandedness": 18.0,
+              "samePark": 0.0,
+              "temperatureSimilarity": 5.8,
+              "windSimilarity": 3.9,
+              "pitchMixAvailable": 2.0,
+              "lineupOrContext": 14.0,
+              "sampleContext": 2.0,
+              "recency": 22.0,
+              "hasResult": 12.0
+            },
+            "simReasonsV2": [
+              "historical hand match R vs R",
+              "similar temperature (67°F)",
+              "similar wind (8 mph)",
+              "pitch-mix field available",
+              "similar lineup/context (9 vs 8)"
+            ],
+            "simMissingV2": [],
+            "simScore": 79.7,
+            "simPct": 79.7,
+            "simBin": "Good v2"
           }
         ]
       }
@@ -5663,110 +6449,213 @@
           "simPct": null
         }
       }
+    },
+    {
+      "gameKey": "id:824014",
+      "gameId": 824014,
+      "gameDate": "2026-06-26",
+      "label": "2026-06-26",
+      "shortLabel": "06-26",
+      "seq": 6,
+      "opp": "OAK",
+      "location": "Home",
+      "isHome": 1,
+      "minutes": 1.0,
+      "contextValue": 1.0,
+      "rawContextValue": 9,
+      "simBin": "all",
+      "simScore": null,
+      "simPct": null,
+      "stats": {
+        "2B": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "BB": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "H": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HR": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "HRR": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "K": {
+          "value": 1.0,
+          "rawValue": 1.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "SB": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        },
+        "TB": {
+          "value": 0.0,
+          "rawValue": 0.0,
+          "minutes": 1.0,
+          "contextValue": 9.0,
+          "simBin": "all",
+          "simScore": null,
+          "simPct": null
+        }
+      }
     }
   ],
   "chartSeries": [
     {
       "stat": "H",
       "label": "Hits",
-      "modelPred": 0.712041664910236,
+      "modelPred": 0.7284884882850027,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
         1.0,
         0.0,
         1.0,
         1.0,
-        1.0
+        1.0,
+        0.0
       ]
     },
     {
       "stat": "TB",
       "label": "Total Bases",
-      "modelPred": 0.9517535694814192,
+      "modelPred": 0.9601164096326288,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
         1.0,
         0.0,
         1.0,
         1.0,
-        1.0
+        1.0,
+        0.0
       ]
     },
     {
       "stat": "HRR",
       "label": "Hits+Runs+RBI",
-      "modelPred": 1.13341747045645,
+      "modelPred": 1.134407756822148,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
         1.0,
         1.0,
         1.0,
         1.0,
-        1.0
+        1.0,
+        0.0
       ]
     },
     {
       "stat": "HR",
       "label": "Home Runs",
-      "modelPred": 0.038857198660607,
+      "modelPred": 0.03691617912297784,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -5777,23 +6666,26 @@
     {
       "stat": "2B",
       "label": "Doubles",
-      "modelPred": 0.07243960402531971,
+      "modelPred": 0.07140419827554109,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -5804,77 +6696,86 @@
     {
       "stat": "BB",
       "label": "Walks",
-      "modelPred": 0.2744903992616592,
+      "modelPred": 0.2729141152122749,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
         0.0,
         0.0,
         0.0,
         0.0,
-        1.0
+        1.0,
+        0.0
       ]
     },
     {
       "stat": "K",
       "label": "Strikeouts",
-      "modelPred": 0.9447257216339858,
+      "modelPred": 1.201226558214367,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
         3.0,
         4.0,
         1.0,
         0.0,
-        2.0
+        2.0,
+        1.0
       ]
     },
     {
       "stat": "SB",
       "label": "Stolen Bases",
-      "modelPred": 0.07018176440678725,
+      "modelPred": 0.07350258014607983,
       "sampleType": "historical_games",
       "x": [
         "06-18",
         "06-19",
         "06-21",
         "06-23",
-        "06-24"
+        "06-24",
+        "06-26"
       ],
       "gameKeys": [
         "id:824989",
         "id:824990",
         "id:824987",
         "id:824017",
-        "id:824018"
+        "id:824018",
+        "id:824014"
       ],
       "y": [
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -5897,9 +6798,6 @@
     "multiPropReady": true,
     "coreBatterPropsReady": true,
     "availableStatCount": 8,
-    "warnings": [
-      "historical handedness not available yet",
-      "historical pitch mix not available yet"
-    ]
+    "warnings": []
   }
 }
